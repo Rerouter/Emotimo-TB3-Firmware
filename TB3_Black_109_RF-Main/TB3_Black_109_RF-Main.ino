@@ -145,8 +145,6 @@ float         total_pano_move_time = 0;
 //External Interrupt Variables
 volatile bool iostate = 0; //new variable for interrupt
 volatile bool changehappened = false; //new variable for interrupt
-unsigned long shuttertimer_open = 0;
-unsigned long shuttertimer_close = 0;
 boolean   ext_shutter_open = false;
 uint8_t   ext_shutter_count = 0;
 uint8_t   ext_hdr_shots = 1; //this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external

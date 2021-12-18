@@ -265,24 +265,28 @@ void VideoLoop ()
 
 void ExternalTriggerLoop ()
 {
+  uint32_t shuttertimer_open = 0;
+  uint32_t shuttertimer_close = 0;
   //New interrupt Flag Checks
   if (changehappened)
   {
     changehappened = false;
-    if (!iostate) //start the clock as the cam shutter witch closed and sense pin, was brought low
+    if (!iostate) //The trigger is active, start recording the time
     {
       ext_shutter_open = true;
-      shuttertimer_open = micros();
+
 #if DEBUG
+      shuttertimer_open = micros();
       Serial.print("shuttertimer_a="); Serial.print(shuttertimer_open);
 #endif
     }
     else //shutter closed - sense pin goes back high - stop the clock and report
     {
       ext_shutter_open = false;
-      shuttertimer_close = micros(); //turn on the led / shutter
       ext_shutter_count++;
+
 #if DEBUG
+      shuttertimer_close = micros(); //turn on the led / shutter
       Serial.print(" ext_shutter_count="); Serial.print(ext_shutter_count);
       Serial.print(" shuttertimer_b="); Serial.print(shuttertimer_close); Serial.print("diff="); Serial.println(shuttertimer_close - shuttertimer_open);
 #endif
@@ -429,7 +433,6 @@ void PanoLoop ()
   //move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
   //if (Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
-  Serial.println("loop");
   
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
