@@ -85,7 +85,7 @@ int8_t TopThird7by5 [36][2] = {{0, 0}, {0, -1}, {0, -2}, { -1, -2}, { -1, -1}, {
 
 void Set_angle_of_view()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     AUX_ON = false; // turn off Aux as only PT Needed for this step
 
@@ -103,7 +103,7 @@ void Set_angle_of_view()
     draw(78, 2, 1); //lcd.at(2,1,"Tilt AOV: ");
     lcd.at(2, 11, steps_to_deg_decimal(0));
     
-    first_time = 0;
+    Global.redraw = false;
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
@@ -127,14 +127,14 @@ void Set_angle_of_view()
 
 void Define_Overlap_Percentage()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(79, 1, 3); //lcd.at(1,2,"   % Overlap");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     //olpercentage=20;
     Display_olpercentage();
-    first_time = 0;
+    Global.redraw = false;
     delay(prompt_time);
     NunChuckRequestData(); //  Use this to clear out any button registry from the last step
   }
@@ -207,15 +207,13 @@ void button_actions_olpercentage()
 
 void Set_PanoArrayType()
 {
-  int8_t joyYDown = 0;
-
   /*
     3x3,
     7x3, 5x5 top third, 7x5 top third
     int PanoArrayTypes=1; // 1 is 9 shot center, 2 is 25 shot center, 3 is SevenbyThree, 4 is NineByFive1, 5 is NineByFive2
   */
 
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     lcd.at(1, 2, "Set Array Type");
@@ -229,7 +227,7 @@ void Set_PanoArrayType()
       case PANO_5x5TopThird:  lcd.at(2, 4, "5x5 Top1/3");     break;
       case PANO_7X5TopThird:  lcd.at(2, 4, "7x5 Top1/3");     break;     
     }	
-    first_time = 0;
+    Global.redraw = false;
     delay(prompt_time);
   }
 
@@ -241,31 +239,31 @@ void Set_PanoArrayType()
     NunChuckProcessData();
   }
 
-  joyYDown = joy_capture_y_map();
+  switch(joy_capture_y_map())
+  {
+    case -1: // Up
+      PanoArrayType++;
+      if (PanoArrayType > PanoArrayTypeOptions)
+      {
+        PanoArrayType = PanoArrayTypeOptions;
+      }
+      else
+      {
+        Global.redraw = true;
+      }
+      break;
 
-  if (joyYDown == -1) // Up
-  {
-    PanoArrayType++;
-    if (PanoArrayType > PanoArrayTypeOptions)
-    {
-      PanoArrayType = PanoArrayTypeOptions;
-    }
-    else
-    {
-      first_time = 1;
-    }
-  }
-  else if (joyYDown == 1) // Down
-  {
-    PanoArrayType--;
-    if (PanoArrayType < 1)
-    {
-      PanoArrayType = 1;
-    }
-    else
-    {
-      first_time = 1;
-    }
+    case 1: // Down
+      PanoArrayType--;
+      if (PanoArrayType < 1)
+      {
+        PanoArrayType = 1;
+      }
+      else
+      {
+        Global.redraw = true;
+      }
+      break;
   }
 
   switch(PanoArrayType)
@@ -322,7 +320,7 @@ String steps_to_deg_decimal(int32_t steps)
 
 void Pano_Review_Confirm()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
@@ -339,7 +337,7 @@ void Pano_Review_Confirm()
     lcd.empty();
     Pano_DisplayReviewProg();
     diplay_last_tm = millis();
-    first_time = 0;
+    Global.redraw = false;
   }
 
   if ((millis() - diplay_last_tm) > 1000)
@@ -400,7 +398,7 @@ void pano_button_actions_review()
       Program_Engaged = true; //leave this for pano
       Interrupt_Fire_Engaged = true; //just to start off first shot immediately
       lcd_backlight_cur = 100;
-      first_time = 1;
+      Global.redraw = false;
       lcd.bright(20);
       if (move_with_acceleration)
       {
@@ -678,7 +676,7 @@ void button_actions290()
       lcd.bright(100);
       if      (progtype == PANOGIGA)     progstep = 206; //  move to the main program at the interval setting - UD050715
       else if (progtype == PORTRAITPANO) progstep = 306; //  move to the main program at the interval setting UD050715
-      first_time = 1;
+      Global.redraw = false;
       delay(prompt_time);
       break;
   }

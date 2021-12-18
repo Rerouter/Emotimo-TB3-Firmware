@@ -127,7 +127,49 @@ NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 #define MAX_AUX_MOVE_DISTANCE 311 //(31.1 inches)
 //end TB3 section
 
-uint32_t      build_version = 10953; //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
+struct LONG {
+  int32_t x;
+  int32_t y;
+  int32_t z;
+};
+
+struct Global {
+  // Moving all the EEPROM Stored Globals into a single struct to clean up needing to keep track of addresses, 
+  // EEPROM.put() uses the update function which reads to see if there is a difference before writing, so this method apart from taking longer will be safer over all
+  // 512 Bytes for Uno
+  // 4096 Bytes for 2560
+  uint32_t build_version        = 10953;  //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
+  boolean  redraw               = 1;      //variable to help with LCD dispay variable that need to show one time
+  uint16_t progtype             = 0;      //updownmenu selection
+  uint32_t intval               = 2;      //seconds x10  - used for the interval prompt and display
+  uint32_t interval             = 2000;   //calculated and is in ms
+  uint32_t camera_fired         = 0;      //number of shots fired
+  uint32_t camera_moving_shots  = 200;    // frames for new duration/frames prompt
+  uint32_t camera_total_shots   = 0;      // used at the end target for camera fired to compare against
+  uint16_t overaldur            = 20;     // seconds now for video only
+  uint16_t prefire_time         = 1;      // currently hardcoded here to .1 second - this powers up motor early for the shot
+  uint16_t rampval              = 50;
+  uint16_t static_tm            = 1;      // new variable
+  uint16_t lead_in              = 1;
+  uint16_t lead_out             = 1;
+  uint16_t progstep             = 0;      // used to define case for main loop
+  boolean  Program_Engaged      = false;
+  uint8_t  POWERSAVE_PT;                  // 1=None - always on  2 - low   3=standard    4=High
+  uint8_t  POWERSAVE_AUX;                 // 1=None - always on  2 - low   3=standard    4=High
+  boolean  AUX_ON;                        // 1=Aux Enabled, 0=Aux disabled
+  boolean  PAUSE_ENABLED;                 // 1=Pause Enabled, 0=Pause disabled
+  uint8_t  LCD_BRIGHTNESS_DURING_RUN;     // 0 is off 8 is max
+  uint16_t AUX_MAX_JOG_STEPS_PER_SEC;     // value x 1000  20 is the top or 20000 steps per second.
+  boolean  AUX_REV;                       // 1=Aux Enabled, 0=Aux disabled
+  LONG     current_steps;
+  int32_t  motor_steps_pt[MAX_MOVE_POINTS][MOTORS]; // 3 total points.   Start point is always 0
+  uint16_t keyframe[2][6];                          // this is basically the keyframes {start, end of rampup, start or rampdown, end}   - doesn't vary by motor at this point
+  int32_t  linear_steps_per_shot [MOTORS];          // This is for the calculated or estimated steps per shot in a segment for each motor
+  int32_t  ramp_params_steps [MOTORS];
+} Global;
+
+
+//uint32_t      build_version = 10953; //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
 uint32_t      intval = 2; //seconds x10  - used for the interval prompt and display
 uint32_t      interval = 2000; //calculated and is in ms
 uint32_t      camera_fired     = 0; //number of shots fired
@@ -302,12 +344,6 @@ long NClastread = 1000; //control variable for NC reads cycles
 //Stepper Setup
 unsigned long  feedrate_micros = 0;
 
-struct LONG {
-  int32_t x;
-  int32_t y;
-  int32_t z;
-};
-
 LONG current_steps;
 LONG target_steps;
 LONG delta_steps;
@@ -449,7 +485,7 @@ void setup()
 
   // Handle EEPROM Interaction and upgrades
   //Check to see if our hardcoded build version set in progam is different than what was last put in EEPROM - detect upgrade.
-  if (build_version != check_version())
+  if (Global.build_version != check_version())
   { //4 byte string that now holds the build version.
 #if DEBUG
     Serial.println(check_version());

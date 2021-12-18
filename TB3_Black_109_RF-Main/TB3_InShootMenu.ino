@@ -85,10 +85,7 @@ void SMS_Resume() //this runs once and is quick - not persistent
 
 void InProg_Select_Option()
 {
-  int8_t joyYDown = 0;
-  //int xLeftRight=0;
-
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     switch(inprogtype)
@@ -125,7 +122,7 @@ void InProg_Select_Option()
     }
 
     lcd.at(2, 1, "UpDown  C-Select");
-    first_time = 0;
+    Global.redraw = false;
     if (POWERSAVE_PT > 2)   disable_PT();
     if (POWERSAVE_AUX > 2)   disable_AUX();
     delay(prompt_time);
@@ -176,27 +173,25 @@ void InProg_Select_Option()
   }
 
 
-  joyYDown = joy_capture_y_map();
+  switch(joy_capture_y_map())
+  {
+    case -1: // Up
+      inprogtype++;
+      if (inprogtype > (INPROG_OPTIONS - 1)) 	inprogtype = (INPROG_OPTIONS - 1);
+      else
+      {
+        Global.redraw = true;
+      }
+      break;
 
-  if (joyYDown == -1)
-  { //
-    inprogtype++;
-    if (inprogtype > (INPROG_OPTIONS - 1)) 	inprogtype = (INPROG_OPTIONS - 1);
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
-  }
-  else if (joyYDown == 1)
-  { //
-    inprogtype--;
-    if (inprogtype > (INPROG_OPTIONS - 1))	inprogtype = 0;
-    else
-    {
-      first_time = 1;
-      delay(250);
-    }
+    case 1: // Down
+      inprogtype--;
+      if (inprogtype > (INPROG_OPTIONS - 1))	inprogtype = 0;
+      else
+      {
+        Global.redraw = true;
+      }
+      break;
   }
   button_actions_InProg_Select_Option();
 }
@@ -257,7 +252,7 @@ void button_actions_InProg_Select_Option()
         }
       }
       else if  (inprogtype == INPROG_GOTO_FRAME) { //Go to specific frame
-        first_time = 1;
+        Global.redraw = true;
         lcd.at(1, 4, "Going to");
         lcd.at(2, 4, "Frame:");
         lcd.at(2, 11, goto_shot);
@@ -265,7 +260,7 @@ void button_actions_InProg_Select_Option()
         inprogtype = INPROG_RESUME;
       }
       else if  (inprogtype == INPROG_INTERVAL) { //Change Interval and static time
-        first_time = 1;
+        Global.redraw = true;
         //look at current gap between interval and static time = available move time.
         uint32_t available_move_time = interval / 100 - static_tm; //this is the gap we keep interval isn't live
         //Serial.print("AMT:");Serial.println(available_move_time);

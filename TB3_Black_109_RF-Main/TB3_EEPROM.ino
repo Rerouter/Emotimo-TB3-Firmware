@@ -190,7 +190,7 @@ void set_defaults_in_ram()
 	//EEPROM Variables
 
 	//build_version=10930;//			Serial.println(build_version);
-	first_time=1;//			Serial.println(first_time);
+	Global.redraw = true;//			Serial.println(Global.redraw);
 	//progtype=0;//			Serial.println(progtype);
 	intval=20;//			Serial.println(intval);
 	interval=2000;//			Serial.println(interval);
@@ -243,7 +243,7 @@ void set_defaults_in_setup()
 	AUX_MAX_JOG_STEPS_PER_SEC=15000;//	Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
 	AUX_REV=0;//					Serial.println(AUX_REV);
 	
-	eeprom_write(1, build_version);
+	eeprom_write(1, Global.build_version);
 	eeprom_write(96, POWERSAVE_PT);
 	eeprom_write(98, POWERSAVE_AUX);
 	eeprom_write(100, AUX_ON);
@@ -263,10 +263,10 @@ void write_defaults_to_eeprom_memory()
 
 void write_all_ram_to_eeprom()
 {
-	//eeprom_write(1, build_version);
-	//eeprom_write(5, first_time);
-	eeprom_write(7, progtype);
-	eeprom_write(9, intval);
+	//eeprom_write(1, Global.build_version);       // uint32_t
+	//eeprom_write(5, Global.redraw);          // boolean
+	eeprom_write(7, progtype);              // uint8_t
+	eeprom_write(9, intval);                // uint32_t ## ISSUE
 	eeprom_write(11, interval);
 	eeprom_write(15, camera_fired);
 	eeprom_write(17, camera_moving_shots);
@@ -311,8 +311,8 @@ void write_all_ram_to_eeprom()
  
 void restore_from_eeprom_memory()
 {
-	//eeprom_read(1, build_version);
-	//eeprom_read(5, first_time);
+	//eeprom_read(1, Global.build_version);
+	//eeprom_read(5, Global.redraw);
 	eeprom_read(7, progtype);
 	eeprom_read(9, intval);
 	eeprom_read(11, interval);
@@ -358,8 +358,8 @@ void restore_from_eeprom_memory()
 
 void review_RAM_Contents()
 {
-	Serial.println(build_version);
-	Serial.println(first_time);
+	Serial.println(Global.build_version);
+	Serial.println(Global.redraw);
 	Serial.println(intval);
 	Serial.println(interval);
 	//Serial.println(camera_exp_tm);

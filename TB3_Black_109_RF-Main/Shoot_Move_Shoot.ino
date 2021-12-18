@@ -124,7 +124,7 @@ void ShootMoveShoot()
     if (POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(prompt_time * 2);
     progstep = 90;
-    first_time = 1;
+    Global.redraw = true;
   }
 
   //This portion always runs in empty space of loop.
@@ -205,7 +205,7 @@ void VideoLoop ()
       //end start delay
 
       if (!break_continuous) Auto_Repeat_Video(); //only run this if there isn't a break command
-      first_time = 1;
+      Global.redraw = true;
     }
     else if (!motorMoving && (sequence_repeat_type == 1)) { //new end condition for RUN ONCE
       lcd.empty();
@@ -214,7 +214,7 @@ void VideoLoop ()
       if (POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
       if (POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
       progstep = 90;
-      first_time = 1;
+      Global.redraw = true;
       delay(100);
       //NunChuckRequestData();
     }
@@ -256,17 +256,36 @@ void VideoLoop ()
       if (POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
       delay(prompt_time * 2);
       progstep = 90;
-      first_time = 1;
+      Global.redraw = true;
       //delay(100);
       //NunChuckRequestData();
     }
   } // End video loop for 3 Point moves
 }
 
+
+void ExternalTrigger() // Fleshing out the core external shutter functionality
+{
+  if (changehappened)
+  {
+    changehappened = false;
+    if (!iostate) //The trigger is active, start recording the time
+    {
+      ext_shutter_open = true;
+    }
+    else //shutter closed - sense pin goes back high - stop the clock and report
+    {
+      ext_shutter_open = false;
+      ext_shutter_count++;
+    }
+  }
+}
+
+
 void ExternalTriggerLoop ()
 {
-  uint32_t shuttertimer_open = 0;
-  uint32_t shuttertimer_close = 0;
+  uint32_t shuttertimer_open = 0;   // Used for debug
+  uint32_t shuttertimer_close = 0;  // Used for debug 
   //New interrupt Flag Checks
   if (changehappened)
   {
@@ -304,8 +323,7 @@ void ExternalTriggerLoop ()
     Serial.print(millis());
     Serial.println(";");
 #endif
-    //Fire Camera
-    //don't fire the camera with the timer, just turn on our focus and shutter pins - we will turn them off when we sense the shot is done.
+    //Fire the Camera without a timer, just turn on the focus and shutter pins - and stop when the shot is done.
     CameraFocus(true); //Fire without a timer
     CameraShutter(true);
   }
@@ -332,7 +350,7 @@ void ExternalTriggerLoop ()
 
       //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
       if (POWERSAVE_PT > 2)   disable_PT();
-      if (POWERSAVE_AUX > 2)   disable_AUX(); //
+      if (POWERSAVE_AUX > 2)  disable_AUX(); //
 
       //Update display
       display_status();  //update after shot complete to avoid issues with pausing
@@ -353,7 +371,7 @@ void ExternalTriggerLoop ()
     if (POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(prompt_time * 2);
     progstep = 90;
-    first_time = 1;
+    Global.redraw = true;
   }
   NunChuckRequestData();
   NunChuckProcessData();
@@ -364,12 +382,12 @@ void ExternalTriggerLoop ()
 
 void EndOfProgramLoop ()
 {
-  if (first_time) {
+  if (Global.redraw) {
     lcd.empty();
     lcd.at(1, 4, "Repeat - C");
     lcd.at(2, 4, "Reverse - Z");
     NunChuckRequestData();
-    first_time = 0;
+    Global.redraw = false;
     delay(100);
   }
 
@@ -527,7 +545,7 @@ void PanoLoop ()
     if (POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(2000);
     progstep = 290;
-    first_time = 1;
+    Global.redraw = true;
   }
   //updateMotorVelocities();  //uncomment this for DF Loop
   NunChuckRequestData();
@@ -539,14 +557,14 @@ void PanoLoop ()
 
 void PanoEnd ()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     stopISR1();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     draw(59, 2, 1); //lcd.at(2,1," Repeat Press C");
     NunChuckRequestData();
-    first_time = 0;
+    Global.redraw = false;
     delay(100);
   }
   NunChuckRequestData();

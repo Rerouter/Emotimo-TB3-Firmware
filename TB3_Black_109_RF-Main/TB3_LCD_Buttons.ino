@@ -70,7 +70,7 @@ uint8_t HandleButtons()
 
 void Choose_Program()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     // Clean Up any previous states
     if (POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
@@ -127,7 +127,7 @@ void Choose_Program()
 
     draw(65, 2, 1);  //lcd.at(2,1,"UpDown  C-Select");
     delay(prompt_time/2);
-    first_time = 0;
+    Global.redraw = false;
   }
 
   if ((millis() - NClastread) > 50) {
@@ -136,38 +136,22 @@ void Choose_Program()
     NunChuckRequestData();
     NunChuckProcessData();
     
-    int8_t joyYDown = joy_capture_y_map();
-    if (joyYDown == 1) 
+    switch(joy_capture_y_map())
     {
-      first_time = 1;
-      if (progtype == (MENU_ITEMS - 1)) { progtype = 0; }
-      else                              { progtype++;   }
-    }
-    else if (joyYDown == -1)
-    {
-      first_time = 1;
-      if (progtype)  { progtype--;               }
-      else           { progtype = (MENU_ITEMS - 1);  // accomodating rollover
-      }
+      case -1: // Up
+        Global.redraw = true;
+        if (progtype)  { progtype--;               }
+        else           { progtype = (MENU_ITEMS - 1);  // accomodating rollover
+        }
+        break;
+
+      case 1: // Down
+        Global.redraw = false;
+        if (progtype == (MENU_ITEMS - 1)) { progtype = 0; }
+        else                              { progtype++;   }
     }
   }
 
-
-//#define MENU_ITEMS  8
-//enum progtype : uint8_t {
-//  REG2POINTMOVE = 0,
-//  REV2POINTMOVE = 1,
-//  REG3POINTMOVE = 2,
-//  REV3POINTMOVE = 3,
-//  PANOGIGA      = 4,
-//  PORTRAITPANO  = 5,
-//  DFSLAVE       = 6,
-//  SETUPMENU     = 7,
-//  ASCOMSLAVE    = 98,
-//  AUXDISTANCE   = 99
-//};
-
-  
   switch (HandleButtons())
   {
     case C_Pressed:
@@ -263,7 +247,7 @@ void Choose_Program()
 //Move to Start Point
 void Move_to_Startpoint()
 {
-  if (first_time) {
+  if (Global.redraw) {
     lcd.empty();
     lcd.bright(6);
     
@@ -278,7 +262,7 @@ void Move_to_Startpoint()
       draw(3, 2, 1); //lcd.at(2,1,CZ1);
     }
 
-    first_time = 0;
+    Global.redraw = false;
     delay(prompt_time);
 
     //   Velocity Engine update
@@ -336,7 +320,7 @@ void button_actions_move_start()
 
 void Move_to_Endpoint()
 {
-  if (first_time) {
+  if (Global.redraw) {
 
     lcd.empty();
 
@@ -351,7 +335,7 @@ void Move_to_Endpoint()
       draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     }
 
-    first_time = 0;
+    Global.redraw = false;
     startISR1 ();
     delay(prompt_time);
     enable_PanTilt();
@@ -435,7 +419,7 @@ void button_actions_move_end()
 
 void Move_to_Point_X(uint8_t Point)
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     if (progstep == 201 || progstep == 301)
@@ -465,7 +449,7 @@ void Move_to_Point_X(uint8_t Point)
 
     if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     else draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    first_time = 0;
+    Global.redraw = false;
     delay(prompt_time);
     
 
@@ -576,7 +560,7 @@ void button_actions_move_x(uint8_t Point)
 //Set Camera Interval
 void Set_Cam_Interval()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(17, 1, 1); //lcd.at(1,1,"Set Sht Interval");
@@ -585,7 +569,7 @@ void Set_Cam_Interval()
     draw(18, 1, 1); //lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayInterval();
-    first_time = 0;
+    Global.redraw = false;
   }
 
   uint16_t intval_last = intval;
@@ -676,7 +660,7 @@ void button_actions_intval(uint16_t intval)
 
 void Set_Duration() //This is really setting frames
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     //			1234567890123456
@@ -700,7 +684,7 @@ void Set_Duration() //This is really setting frames
     camera_total_shots = camera_moving_shots;
     camera_fired = 0;
     //Display_Duration();
-    first_time = 0;
+    Global.redraw = false;
   }
   NunChuckRequestData();
   NunChuckProcessData();
@@ -792,7 +776,7 @@ void button_actions_overaldur()
 
 void Set_Static_Time()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(22, 1, 1); //lcd.at(1,1,"Set Static Time");
@@ -804,7 +788,7 @@ void Set_Static_Time()
     if (intval == EXTTRIG_INTVAL) max_shutter = 600; //external trigger
     if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano mode - allows
     DisplayStatic_tm();
-    first_time = 0;
+    Global.redraw = false;
   }
 
   uint16_t static_tm_last = static_tm;
@@ -874,7 +858,7 @@ void button_actions_stat_time()
 
 void Set_Ramp()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(29, 1, 1); //lcd.at(1,1,"	Set Ramp");
@@ -888,7 +872,7 @@ void Set_Ramp()
 
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayRampval();
-    first_time = 0;
+    Global.redraw = false;
   }
 
   uint16_t rampval_last = rampval;
@@ -952,7 +936,7 @@ void button_actions_rampval()
 void Set_LeadIn_LeadOut()
 {
 
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(36, 1, 1); //lcd.at(1,1,"Set Static Lead");
@@ -961,7 +945,7 @@ void Set_LeadIn_LeadOut()
     lcd.empty();
     draw(38, 1, 6); //lcd.at(1,1,"IN -	Out");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    first_time = 0;
+    Global.redraw = false;
     lcd.at(1, 9, lead_out);
     cursorpos = cursorleft;
     DisplayLeadIn_LeadOut();
@@ -1152,7 +1136,7 @@ void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
 
 void Review_Confirm()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
@@ -1161,7 +1145,7 @@ void Review_Confirm()
     delay(prompt_time);
     //delay(100);
     lcd.empty();
-    first_time = 0;
+    Global.redraw = false;
     diplay_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 2;
@@ -1305,7 +1289,7 @@ void button_actions_review()
         lcd.at(1, 1, "Waiting for Trig");
       }
       //lcd_backlight_cur= 100;
-      first_time = 1;
+      Global.redraw = true;
       lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
       break;
 
@@ -1319,7 +1303,7 @@ void button_actions_review()
 void progstep_forward()
 {
   lcd.empty();
-  first_time = 1;
+  Global.redraw = true;
   progstep_forward_dir = true;
   if (progstep < 65535) progstep++;
   delay(100);
@@ -1330,7 +1314,7 @@ void progstep_forward()
 void progstep_backward()
 {
   lcd.empty();
-  first_time = 1;
+  Global.redraw = true;
   progstep_forward_dir = false;
   if (progstep) progstep--;
   delay(100);
@@ -1341,7 +1325,7 @@ void progstep_backward()
 void progstep_goto(uint16_t prgstp)
 {
   lcd.empty();
-  first_time = 1;
+  Global.redraw = true;
   progstep = prgstp;
   delay(100);
   NunChuckClearData(); //  Use this to clear out any button registry from the last step
@@ -1459,7 +1443,7 @@ void Auto_Repeat_Video()
     }
   */
   //lcd_backlight_cur= 100;
-  first_time = 1;
+  Global.redraw = true;
   lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
 }//end of 91
 
@@ -1489,13 +1473,13 @@ void display_status()
   //1234567890123456
   //XXXX/XXXX LeadIn		LeadOT Rampup RampDn, Pause
   //HH:MM:SS  XX.XXV
-  if (first_time)
+  if (Global.redraw)
   {
     lcd.empty();
     lcd.at(1, 6, "/"); //Add to one time display update
     lcd.at(2, 13, ".");
     lcd.at(2, 16, "v");
-    first_time = 0;
+    Global.redraw = false;
   }
   //update upper left camera fired/total shots
   unsigned int camera_fired_display = camera_fired + 1;
@@ -1599,7 +1583,7 @@ void display_status()
         draw(60, 1, 1); //lcd.at(1,1,"Battery too low");
         draw(61, 2, 1); //lcd.at(2,1,"  to continue");
       }
-      first_time = 1;
+      Global.redraw = true;
     }
     else batt_low_cnt = 0;
   }//end of powerdown if
@@ -1681,7 +1665,7 @@ void draw(uint8_t array_num, uint8_t col, uint8_t row)
 
 void Enter_Aux_Endpoint()
 {
-  if (first_time)
+  if (Global.redraw)
   {
     //routine for just moving to end point if nothing was stored.
     lcd.empty();
@@ -1705,7 +1689,7 @@ void Enter_Aux_Endpoint()
     //delay(prompt_time)
     aux_dist = current_steps.z * 10 / STEPS_PER_INCH_AUX; //t
     DisplayAUX_Dist();
-    first_time = 0;
+    Global.redraw = false;
   }
 
   int32_t aux_dist_last = aux_dist;
