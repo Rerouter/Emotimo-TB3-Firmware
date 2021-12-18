@@ -164,8 +164,12 @@ bool WiiNunchuck3::getData()
   }
 
   if(failcount < 40)  failcount++;
-  else clearData();
-  return 0; //failure
+  else
+  {
+    clearData();
+    return 0; //failure
+  }
+  return 1;
 }
 
 

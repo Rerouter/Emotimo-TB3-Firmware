@@ -16,15 +16,15 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-uint8_t  joy_x_axis_Offset,      joy_y_axis_Offset;
-uint8_t  joy_x_axis_Threshold,   joy_y_axis_Threshold;
-uint16_t acc_x_axis_Offset,    accel_y_axis_Offset;
-uint16_t acc_x_axis_Threshold, accel_y_axis_Threshold;
+uint8_t  joy_x_axis_Offset,    joy_y_axis_Offset;
+uint8_t  joy_x_axis_Threshold, joy_y_axis_Threshold;
+uint16_t acc_x_axis_Offset,    acc_y_axis_Offset;
+uint16_t acc_x_axis_Threshold, acc_y_axis_Threshold;
 
 int prev_joy_x_reading = 0;
 int prev_joy_y_reading = 0;
-int prev_accel_x_reading = 0;
-int prev_accel_y_reading = 0;
+int prev_acc_x_reading = 0;
+int prev_acc_y_reading = 0;
 
 
 void calibrate_joystick(uint8_t tempx, uint8_t tempy)
@@ -41,7 +41,7 @@ void NunChuckRequestData() //error correction and reinit on disconnect  - takes 
   do
   {
     Nunchuck.getData();
-
+    
     if (!Nunchuck.joyx() && !Nunchuck.joyy() )
     { //error condition //throw this out and read again
       delay(1);
@@ -106,7 +106,7 @@ void NunChuckClearData()
 {
   joy_x_axis   = 0;
   joy_y_axis   = 0;
-  acc_x_axis = 0;
+  acc_x_axis   = 0;
   accel_y_axis = 0;
   ButtonState = Read_Again;
 }
@@ -139,18 +139,18 @@ void applyjoymovebuffer_exponential()  //exponential stuff
   joy_y_axis = prev_joy_y_reading + buffer_y;
   if (abs(joy_y_axis) < 5) joy_y_axis = 0;
 
-  //if ((acc_x_axis-prev_accel_x_reading)>ss_buffer) acc_x_axis=(prev_accel_x_reading+ss_buffer);
-  //else if ((acc_x_axis-prev_accel_x_reading)<-ss_buffer) acc_x_axis=(prev_accel_x_reading-ss_buffer);
+  //if ((acc_x_axis-prev_acc_x_reading)>ss_buffer) acc_x_axis=(prev_acc_x_reading+ss_buffer);
+  //else if ((acc_x_axis-prev_acc_x_reading)<-ss_buffer) acc_x_axis=(prev_acc_x_reading-ss_buffer);
 
-  buffer_z = (int_acc_x_axis - prev_accel_x_reading) / 2;
-  acc_x_axis = prev_accel_x_reading + buffer_z;
+  buffer_z = (int_acc_x_axis - prev_acc_x_reading) / 2;
+  acc_x_axis = prev_acc_x_reading + buffer_z;
   if (abs(acc_x_axis) < 5) acc_x_axis = 0;
 
   //Serial.print(joy_x_axis);Serial.print(" ___ ");Serial.println(joy_y_axis);
 
   prev_joy_x_reading = int_joy_x_axis;
   prev_joy_y_reading = int_joy_y_axis;
-  prev_accel_x_reading = int_acc_x_axis;
+  prev_acc_x_reading = int_acc_x_axis;
 
   int32_t x = int_joy_x_axis   + current_steps.x;
   int32_t y = int_joy_y_axis   + current_steps.y;
@@ -176,14 +176,14 @@ void applyjoymovebuffer_linear()
   if ((joy_y_axis - prev_joy_y_reading) > ss_buffer) joy_y_axis = (prev_joy_y_reading + ss_buffer);
   else if ((joy_y_axis - prev_joy_y_reading) < -ss_buffer) joy_y_axis = (prev_joy_y_reading - ss_buffer);
 
-  if ((acc_x_axis - prev_accel_x_reading) > ss_buffer) acc_x_axis = (prev_accel_x_reading + ss_buffer);
-  else if ((acc_x_axis - prev_accel_x_reading) < -ss_buffer) acc_x_axis = (prev_accel_x_reading - ss_buffer);
+  if ((acc_x_axis - prev_acc_x_reading) > ss_buffer) acc_x_axis = (prev_acc_x_reading + ss_buffer);
+  else if ((acc_x_axis - prev_acc_x_reading) < -ss_buffer) acc_x_axis = (prev_acc_x_reading - ss_buffer);
 
   //Serial.print(joy_x_axis);Serial.print(" ___ ");Serial.println(joy_y_axis);
 
   prev_joy_x_reading   = joy_x_axis;
   prev_joy_y_reading   = joy_y_axis;
-  prev_accel_x_reading = acc_x_axis;
+  prev_acc_x_reading = acc_x_axis;
 
   int32_t x = joy_x_axis   + current_steps.x;
   int32_t y = joy_y_axis   + current_steps.y;
@@ -206,22 +206,17 @@ void axis_button_deadzone()
   joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
   joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
   acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (AUX_REV) acc_x_axis *= -1;
-  joy_x_axis *= -1;
+  if (AUX_REV)    acc_x_axis *= -1;
+  if (joy_x_axis) joy_x_axis *= -1; // Invert the direction to make the joystick directly point the camera
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
 
-  if (abs(joy_x_axis) < 6)	joy_x_axis = 0;
-  if (joy_x_axis > 5)		  joy_x_axis -= 5;
-  else if (joy_x_axis < -5)	joy_x_axis += 5;
+  uint8_t deadband = 7; // results in 100-7 or +-93 - this is for the joystick
+  uint8_t deadband2 = 100; //  this is for the accelerometer
 
-  if (abs(joy_y_axis) < 6)	joy_y_axis = 0;
-  if (joy_y_axis > 5)		  joy_y_axis -= 5;
-  else if (joy_y_axis < -5.0)  joy_y_axis += 5;
-
-  if (abs(acc_x_axis) < 31) acc_x_axis = 0;
-  if (acc_x_axis > 30)	   acc_x_axis -= 30;
-  else if (acc_x_axis < -30) acc_x_axis += 30;
+  joy_x_axis = NunchuckDeadband(joy_x_axis, deadband);
+  joy_y_axis = NunchuckDeadband(joy_y_axis, deadband);
+  acc_x_axis = NunchuckDeadband(acc_x_axis, deadband2);
 }
 
 
