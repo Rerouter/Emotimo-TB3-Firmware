@@ -185,7 +185,7 @@ void eeprom_read( uint16_t pos, byte& val, byte len )
 void set_defaults_in_ram()
 {
 	//non stored variables	
-	sequence_repeat_type=1;
+	SETTINGS.sequence_repeat_type=1;
 
 	//EEPROM Variables
 
@@ -223,34 +223,34 @@ void set_defaults_in_ram()
 	EEPROM_STORED.current_steps.z=0;//			Serial.println(EEPROM_STORED.current_steps.z);
 	//EEPROM_STORED.progstep=0;//			Serial.println(EEPROM_STORED.progstep);
 	//EEPROM_STORED.Program_Engaged=0;//			Serial.println(EEPROM_STORED.Program_Engaged);
-	//EEPROM_STORED.POWERSAVE_PT=3;//			Serial.println(EEPROM_STORED.POWERSAVE_PT);
-	//EEPROM_STORED.POWERSAVE_AUX=3;//			Serial.println(EEPROM_STORED.POWERSAVE_AUX);
-	//EEPROM_STORED.AUX_ON=3;//			Serial.println(EEPROM_STORED.AUX_ON);
-	//EEPROM_STORED.PAUSE_ENABLED=3;//			Serial.println(EEPROM_STORED.PAUSE_ENABLED);
-	//EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN=3;//			Serial.println(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	//EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC=15000;//			Serial.println(EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
-	//EEPROM_STORED.AUX_REV=2;//			Serial.println(EEPROM_STORED.AUX_REV);
+	//SETTINGS.POWERSAVE_PT=3;//			Serial.println(SETTINGS.POWERSAVE_PT);
+	//SETTINGS.POWERSAVE_AUX=3;//			Serial.println(SETTINGS.POWERSAVE_AUX);
+	//SETTINGS.AUX_ON=3;//			Serial.println(SETTINGS.AUX_ON);
+	//SETTINGS.PAUSE_ENABLED=3;//			Serial.println(SETTINGS.PAUSE_ENABLED);
+	//SETTINGS.LCD_BRIGHTNESS_DURING_RUN=3;//			Serial.println(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	//SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC=15000;//			Serial.println(SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+	//SETTINGS.AUX_REV=2;//			Serial.println(SETTINGS.AUX_REV);
 }
 
 
 void set_defaults_in_setup()
 {
-	EEPROM_STORED.POWERSAVE_PT=3;//			Serial.println(EEPROM_STORED.POWERSAVE_PT);
-	EEPROM_STORED.POWERSAVE_AUX=3;//			Serial.println(EEPROM_STORED.POWERSAVE_AUX);
-	EEPROM_STORED.AUX_ON=1;//					Serial.println(EEPROM_STORED.AUX_ON);
-	EEPROM_STORED.PAUSE_ENABLED=1;//			Serial.println(EEPROM_STORED.PAUSE_ENABLED);
-	EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN=3;//		Serial.println(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC=15000;//	Serial.println(EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
-	EEPROM_STORED.AUX_REV=0;//					Serial.println(EEPROM_STORED.AUX_REV);
+	SETTINGS.POWERSAVE_PT=3;//			Serial.println(SETTINGS.POWERSAVE_PT);
+	SETTINGS.POWERSAVE_AUX=3;//			Serial.println(SETTINGS.POWERSAVE_AUX);
+	SETTINGS.AUX_ON=1;//					Serial.println(SETTINGS.AUX_ON);
+	SETTINGS.PAUSE_ENABLED=1;//			Serial.println(SETTINGS.PAUSE_ENABLED);
+	SETTINGS.LCD_BRIGHTNESS_DURING_RUN=3;//		Serial.println(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC=15000;//	Serial.println(SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+	SETTINGS.AUX_REV=0;//					Serial.println(SETTINGS.AUX_REV);
 	
 	eeprom_write(1, EEPROM_STORED.build_version);
-	eeprom_write(96, EEPROM_STORED.POWERSAVE_PT);
-	eeprom_write(98, EEPROM_STORED.POWERSAVE_AUX);
-	eeprom_write(100, EEPROM_STORED.AUX_ON);
-	eeprom_write(101, EEPROM_STORED.PAUSE_ENABLED);
-	eeprom_write(102, EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	eeprom_write(104, EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
-	eeprom_write(106, EEPROM_STORED.AUX_REV);
+	eeprom_write(96, SETTINGS.POWERSAVE_PT);
+	eeprom_write(98, SETTINGS.POWERSAVE_AUX);
+	eeprom_write(100, SETTINGS.AUX_ON);
+	eeprom_write(101, SETTINGS.PAUSE_ENABLED);
+	eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+	eeprom_write(106, SETTINGS.AUX_REV);
 }
 
 
@@ -297,13 +297,13 @@ void write_all_ram_to_eeprom()
 	eeprom_write(89, EEPROM_STORED.current_steps.z);
 	eeprom_write(93, EEPROM_STORED.progstep);
 	//eeprom_write(95, EEPROM_STORED.Program_Engaged);
-	//eeprom_write(96, EEPROM_STORED.POWERSAVE_PT);
-	//eeprom_write(98, EEPROM_STORED.POWERSAVE_AUX);
-	//eeprom_write(100, EEPROM_STORED.AUX_ON);
-	//eeprom_write(101, EEPROM_STORED.PAUSE_ENABLED);
-	//eeprom_write(102, EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	//eeprom_write(104, EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
-	//eeprom_write(106, EEPROM_STORED.AUX_REV);
+	//eeprom_write(96, SETTINGS.POWERSAVE_PT);
+	//eeprom_write(98, SETTINGS.POWERSAVE_AUX);
+	//eeprom_write(100, SETTINGS.AUX_ON);
+	//eeprom_write(101, SETTINGS.PAUSE_ENABLED);
+	//eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	//eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+	//eeprom_write(106, SETTINGS.AUX_REV);
 }
 
 
@@ -345,13 +345,13 @@ void restore_from_eeprom_memory()
 	eeprom_read(89, EEPROM_STORED.current_steps.z);
 	//eeprom_read(93, EEPROM_STORED.progstep);
 	//eeprom_read(95, EEPROM_STORED.Program_Engaged);
-	eeprom_read(96, EEPROM_STORED.POWERSAVE_PT);
-	eeprom_read(98, EEPROM_STORED.POWERSAVE_AUX);
-	eeprom_read(100, EEPROM_STORED.AUX_ON);
-	eeprom_read(101, EEPROM_STORED.PAUSE_ENABLED);
-	eeprom_read(102, EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	eeprom_read(104, EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
-	eeprom_read(106, EEPROM_STORED.AUX_REV);
+	eeprom_read(96, SETTINGS.POWERSAVE_PT);
+	eeprom_read(98, SETTINGS.POWERSAVE_AUX);
+	eeprom_read(100, SETTINGS.AUX_ON);
+	eeprom_read(101, SETTINGS.PAUSE_ENABLED);
+	eeprom_read(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	eeprom_read(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+	eeprom_read(106, SETTINGS.AUX_REV);
 	//delay(100);
 }
 
@@ -392,10 +392,10 @@ void review_RAM_Contents()
 	Serial.println(EEPROM_STORED.current_steps.z);
 	Serial.println(EEPROM_STORED.progstep);
 	Serial.println(EEPROM_STORED.Program_Engaged);
-	Serial.println(EEPROM_STORED.POWERSAVE_PT);
-	Serial.println(EEPROM_STORED.POWERSAVE_AUX);
-	Serial.println(EEPROM_STORED.AUX_ON);
-	Serial.println(EEPROM_STORED.PAUSE_ENABLED);
-	Serial.println(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
-	Serial.println(EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC);
+	Serial.println(SETTINGS.POWERSAVE_PT);
+	Serial.println(SETTINGS.POWERSAVE_AUX);
+	Serial.println(SETTINGS.AUX_ON);
+	Serial.println(SETTINGS.PAUSE_ENABLED);
+	Serial.println(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+	Serial.println(SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
 }

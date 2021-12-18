@@ -266,7 +266,7 @@ void DFSetup()
 	sendPositionCounter = 10;
 	nextMoveLoaded = false;
 	hardStopRequested = false;
-	motorMoving=0;//eMotimo added - 
+	FLAGS.motorMoving=0;//eMotimo added - 
 
 	for (uint8_t i = 0; i < 32; i++)
 		txBuf[i] = 0;
@@ -301,14 +301,14 @@ void DFSetup()
 	}
 
 	//Hardcode Max Jog Speeds to start
-	motors[0].jogMaxVelocity=PAN_MAX_JOG_STEPS_PER_SEC;
-	motors[0].jogMaxAcceleration=PAN_MAX_JOG_STEPS_PER_SEC/2;
+	motors[0].jogMaxVelocity=SETTINGS.PAN_MAX_JOG_STEPS_PER_SEC;
+	motors[0].jogMaxAcceleration=SETTINGS.PAN_MAX_JOG_STEPS_PER_SEC/2;
 
-	motors[1].jogMaxVelocity=TILT_MAX_JOG_STEPS_PER_SEC;
-	motors[1].jogMaxAcceleration=TILT_MAX_JOG_STEPS_PER_SEC/2;
+	motors[1].jogMaxVelocity=SETTINGS.TILT_MAX_JOG_STEPS_PER_SEC;
+	motors[1].jogMaxAcceleration=SETTINGS.TILT_MAX_JOG_STEPS_PER_SEC/2;
 
-	motors[2].jogMaxVelocity=EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC;
-	motors[2].jogMaxAcceleration=EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC/2;
+	motors[2].jogMaxVelocity=SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC;
+	motors[2].jogMaxAcceleration=SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC/2;
 
 	//TB3  Specific Setup Pins (Same for Orange and Black
 	motors[0].stepPin = MOTOR0_STEP;
@@ -549,7 +549,7 @@ void DFloop()
 			sendPositionCounter = 20;
 			for (uint8_t i = 0; i < MOTOR_COUNT; i++)
 			{
-				if (bitRead(motorMoving, i) || bitRead(sendPosition, i))
+				if (bitRead(FLAGS.motorMoving, i) || bitRead(sendPosition, i))
 				{
 					sendMessage(MSG_MP, i);
 					// ramValues[i] = motors[i].position;
@@ -579,7 +579,7 @@ void updateMotorVelocities()
 		motors[m].nextMotorMoveSteps = 0;
 		motors[m].nextMotorMoveSpeed = 0;
 
-		if (bitRead(motorMoving, m))
+		if (bitRead(FLAGS.motorMoving, m))
 		{
 			Motor *motor = &motors[m];
 			uint16_t seg = motor->currentMove;
@@ -587,7 +587,7 @@ void updateMotorVelocities()
 			if (motor->moveTime[seg] == 0)
 			{
 				motors[m].nextMotorMoveSpeed = 0;
-				bitClear(motorMoving, m);
+				bitClear(FLAGS.motorMoving, m);
 			}
 			else
 			{
@@ -639,7 +639,7 @@ void setupMotorMove(uint8_t motorIndex, int32_t destination)
 	if ( destination != motors[motorIndex].position )
 	{
 		calculatePointToPoint(motorIndex, destination);
-		bitSet(motorMoving, motorIndex);
+		bitSet(FLAGS.motorMoving, motorIndex);
 	}
 }
 
@@ -1009,7 +1009,7 @@ void processSerialCommand()
 					break;
 
 				case CMD_BF:
-					parseError = motorMoving || userCmd.argCount < 5 || ((userCmd.argCount - 2) % 4) != 0;
+					parseError = FLAGS.motorMoving || userCmd.argCount < 5 || ((userCmd.argCount - 2) % 4) != 0;
 					if (!parseError)
 					{
 						goMoDelayTime = 500;
@@ -1037,7 +1037,7 @@ void processSerialCommand()
 					break;
 
 				case CMD_GO:
-					parseError = motorMoving || (userCmd.argCount > 0) || !goMoReady;
+					parseError = FLAGS.motorMoving || (userCmd.argCount > 0) || !goMoReady;
 					if (!parseError)
 					{
 						for (uint8_t m = 0; m < MOTOR_COUNT; m++)
@@ -1053,7 +1053,7 @@ void processSerialCommand()
 								}
 								motors[m].destination = motors[m].gomoMovePosition[4]; // TODO change this!
 								motors[m].currentMove = 0;
-								bitSet(motorMoving, m);
+								bitSet(FLAGS.motorMoving, m);
 							}
 						}
 						updateMotorVelocities();
@@ -1070,7 +1070,7 @@ void processSerialCommand()
 						int32_t destination = 0;
 						if (jogMotor(motor, userCmd.args[1], &destination))
 						{
-							if (!bitRead(motorMoving, motor) || destination != motors[motor].destination)
+							if (!bitRead(FLAGS.motorMoving, motor) || destination != motors[motor].destination)
 							{
 								setupMotorMove(motor, destination);
 							}
@@ -1153,7 +1153,7 @@ void sendMessage(byte msg, byte motorIndex)
 			case MSG_MS:
 				SERIAL_DEVICE.print("ms ");
 				for (uint8_t i = 0; i < MOTOR_COUNT; i++)
-					SERIAL_DEVICE.print(bitRead(motorMoving, i) ? '1' : '0');
+					SERIAL_DEVICE.print(bitRead(FLAGS.motorMoving, i) ? '1' : '0');
 				SERIAL_DEVICE.print("\r\n");
 				break;
 
@@ -1224,7 +1224,7 @@ void nextMessage()
 				sprintf(txBuf, "ms ");
 				bufPtr = txBuf + 3;
 				for (uint8_t i = 0; i < MOTOR_COUNT; i++)
-					*bufPtr++ = bitRead(motorMoving, i) ? '1' : '0';
+					*bufPtr++ = bitRead(FLAGS.motorMoving, i) ? '1' : '0';
 				*bufPtr++ = '\r';
 				*bufPtr++ = '\n';
 				*bufPtr = 0;
@@ -1354,7 +1354,7 @@ void inchMotor(uint8_t motorIndex, int32_t target)
 
 	if ( dest != motor->position )
 	{
-		bitSet(motorMoving, motorIndex);
+		bitSet(FLAGS.motorMoving, motorIndex);
 	}
 }
 
@@ -1616,11 +1616,11 @@ void synched3PtMove_max(int32_t xtarget, int32_t ytarget, int32_t ztarget) //
 		calculateVelocityMotor(mot, LongestMoveTime, quickest_ramp); //this sets the velocity & accel for a movecalc
 		calculatePointToPoint_move(mot);
 		DisplayMove(mot);
-		if (motors[mot].destination!=motors[mot].position) bitSet(motorMoving, mot);
-		else bitClear(motorMoving, mot);
+		if (motors[mot].destination!=motors[mot].position) bitSet(FLAGS.motorMoving, mot);
+		else bitClear(FLAGS.motorMoving, mot);
 	}
 	#if DEBUG_MOTOR
-	Serial.print("motorMoving byte="); Serial.println(motorMoving);
+	Serial.print("FLAGS.motorMoving byte="); Serial.println(FLAGS.motorMoving);
 	#endif	  
 }
 
@@ -1696,31 +1696,31 @@ void synched3AxisMove_timed(int32_t xtarget, int32_t ytarget, int32_t ztarget, f
 	//Check our velocity calc
 
 	float limited_motor_move_time_max = 0;
-	maxVelLimit = false;
+	FLAGS.maxVelLimit = false;
 	for (uint8_t mot = 0; mot < 3; mot++)
 	{
 		float limited_motor_move_time = calculateVelocityMotor(mot, local_time, local_ramp);
 		if (limited_motor_move_time > limited_motor_move_time_max) limited_motor_move_time_max = limited_motor_move_time;
 		calculatePointToPoint_move(mot);
 		DisplayMove(mot);
-		if (motors[mot].destination != motors[mot].position)	bitSet(motorMoving, mot);
-		else													bitClear(motorMoving, mot);
+		if (motors[mot].destination != motors[mot].position)	bitSet(FLAGS.motorMoving, mot);
+		else													bitClear(FLAGS.motorMoving, mot);
 	}
 
 	if (limited_motor_move_time_max > local_time)
 	{  //run the routine again with new max time if the real calculated values hit limits.
-		maxVelLimit = true;
+		FLAGS.maxVelLimit = true;
 		for (uint8_t mot = 0; mot < 3; mot++)
 		{
 			calculateVelocityMotor(mot, limited_motor_move_time_max, local_ramp);
 			calculatePointToPoint_move(mot);
 			DisplayMove(mot);
-			if (motors[mot].destination!=motors[mot].position)	bitSet(motorMoving, mot);
-			else												bitClear(motorMoving, mot);
+			if (motors[mot].destination!=motors[mot].position)	bitSet(FLAGS.motorMoving, mot);
+			else												bitClear(FLAGS.motorMoving, mot);
 		}
 	}
 	#if DEBUG_MOTOR
-	Serial.print("motorMoving byte="); Serial.println(motorMoving);
+	Serial.print("FLAGS.motorMoving byte="); Serial.println(FLAGS.motorMoving);
 	#endif
 }
 

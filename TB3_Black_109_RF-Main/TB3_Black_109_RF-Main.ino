@@ -48,7 +48,7 @@
 	-Added test against power policy for loop 52 (ext triggering)
 	-Added ramping and new motor move to starts and ends (decoupled inputs)
 	-Added coordinated return to start and three axis moves.
-	-Updated the motorMoving to accurately assign this
+	-Updated the FLAGS.motorMoving to accurately assign this
 	-Broke up move profiles.  Added slow down routine to the move to start/move to end.
 	-Throttled the calc of the move to respect max jog speeds by axis.  If we hit this we indicates "Speed Limit" on video run screen.  If you hit this, lengthen move and/or decrease ramp
 	-Added to the Setup Menu the Motor Speed parameter - from 2000 to 20000 max to allow folks to tune.the speeds for AUX.  Pan and Tilt are hardcoded.
@@ -84,12 +84,8 @@ NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 #define DEBUG_GOTO 0
 
 // Defines
-#define POWERDOWN_LV false //set this to cause the TB3 to power down below 10 volts
 #define MAX_MOVE_POINTS 3
 #define VIDEO_FEEDRATE_NUMERATOR 375L // Set this for 42000L, or 375L for faster calc moves
-#define PAN_MAX_JOG_STEPS_PER_SEC 10000
-#define TILT_MAX_JOG_STEPS_PER_SEC 10000
-//#define AUX_MAX_JOG_STEPS_PER_SEC 15000.0 //this is defined in the setup menu now.
 
 //Interval Options
 #define VIDEO_INTVAL  2
@@ -112,19 +108,7 @@ NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 #define MS3			    A2
 #define IO_2		    2 // drives middle of 2.5 mm connector on I/O port
 #define IO_3		    3 // drives tip of 2.5 mm connector on I/O port
-#define STEPS_PER_DEG  444.444 //160000 MS per 360 degees = 444.4444444
 
-/*
-  STEPS_PER_INCH_AUX for various motors with 17 tooth final gear on 5mm pitch belt
-  Phidgets 99:1	95153
-  Phidgets 27:1	25676
-  Phidgets 5:1	4955
-  20:1 Ratio	19125
-  10:1 Ratio	9562
-*/
-
-#define STEPS_PER_INCH_AUX 19125 //
-#define MAX_AUX_MOVE_DISTANCE 311 //(31.1 inches)
 //end TB3 section
 
 struct LONG {
@@ -139,10 +123,40 @@ struct Flags {  //Program Status Flags
     boolean Move_Engauged          = false;
     boolean Interrupt_Fire_Engaged = false;
     boolean redraw                = 1;      // variable to help with LCD dispay variable that need to show one time
+    boolean maxVelLimit = false;      // Program Flag for motor speed limited
+    uint8_t motorMoving = 0;          // Program Flag for motor moving
 } FLAGS;
 
 
-struct Global {
+struct Settings { // User changable Settings
+  boolean  AUX_ON;                        // 1=Aux Enabled, 0=Aux disabled
+  boolean  PAUSE_ENABLED;                 // 1=Pause Enabled, 0=Pause disabled
+  uint8_t  LCD_BRIGHTNESS_DURING_RUN;     // 0 is off 8 is max
+  uint16_t AUX_MAX_JOG_STEPS_PER_SEC;     // value x 1000  20 is the top or 20000 steps per second.
+  uint16_t PAN_MAX_JOG_STEPS_PER_SEC = 10000;
+  uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
+  uint8_t  POWERSAVE_PT;                  // 1=None - always on  2 - low   3=standard    4=High
+  uint8_t  POWERSAVE_AUX;                 // 1=None - always on  2 - low   3=standard    4=High
+  boolean  AUX_REV;                       // 1=Aux Enabled, 0=Aux disabled
+  int8_t   sequence_repeat_type = 1;      //1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
+  float    STEPS_PER_DEG = 444.444;       //160000 MS per 360 degees = 444.4444444
+
+  /*
+  STEPS_PER_INCH_AUX for various motors with 17 tooth final gear on 5mm pitch belt
+  Phidgets 99:1  95153
+  Phidgets 27:1 25676
+  Phidgets 5:1  4955
+  20:1 Ratio  19125
+  10:1 Ratio  9562
+*/
+  uint32_t STEPS_PER_INCH_AUX = 19125;      //
+  uint32_t MAX_AUX_MOVE_DISTANCE = 311;     //(31.1 inches) ## Need to update to mm
+
+  boolean POWERDOWN_LV = false;             //set this to cause the TB3 to power down below 10 volts
+} SETTINGS;
+  
+
+struct Global { // EEPROM Stored Globals
   // Moving all the EEPROM Stored Globals into a single struct to clean up needing to keep track of addresses, 
   // EEPROM.put() uses the update function which reads to see if there is a difference before writing, so this method apart from taking longer will be safer over all
   // 512 Bytes for Uno
@@ -163,13 +177,6 @@ struct Global {
   uint16_t lead_out             = 1;
   uint16_t progstep             = 0;      // used to define case for main loop
   boolean  Program_Engaged      = false;
-  uint8_t  POWERSAVE_PT;                  // 1=None - always on  2 - low   3=standard    4=High
-  uint8_t  POWERSAVE_AUX;                 // 1=None - always on  2 - low   3=standard    4=High
-  boolean  AUX_ON;                        // 1=Aux Enabled, 0=Aux disabled
-  boolean  PAUSE_ENABLED;                 // 1=Pause Enabled, 0=Pause disabled
-  uint8_t  LCD_BRIGHTNESS_DURING_RUN;     // 0 is off 8 is max
-  uint16_t AUX_MAX_JOG_STEPS_PER_SEC;     // value x 1000  20 is the top or 20000 steps per second.
-  boolean  AUX_REV;                       // 1=Aux Enabled, 0=Aux disabled
   boolean  REVERSE_PROG_ORDER;            // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
   boolean  MOVE_REVERSED_FOR_RUN = 0;
   LONG     current_steps;
@@ -180,45 +187,50 @@ struct Global {
 } EEPROM_STORED;
 
 
-int PanStepCount;
-int TiltStepCount;
+struct Global2 { // Non Stored Globals
+  uint32_t start_delay_tm        = 0;      // ms timestamp to help with delay comparison
+  uint32_t goto_shot = 0;
+  uint16_t sequence_repeat_count = 0;      // counter to hold variable for how many time we have repeated
+  uint32_t interval_tm           = 0;      // mc time to help with interval comparison
+  uint32_t interval_tm_last      = 0;      // mc time to help with interval comparison
+  uint32_t display_last_tm       = 0;      // ## Seems like a duplicate of prompt time?
+  uint16_t prompt_time           = 500;    // in ms for delays of instructions
+  uint16_t prompt_delay          = 0;      // to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
 
+  boolean  reset_prog            = 1;      // used to handle program reset or used stored ## May want to rework into actually allowing to continue
+  boolean  first_time2           = 1;
+  uint32_t max_shutter;                    // Maximum shutter time in 0.1 second increments
 
-uint32_t start_delay_tm = 0;  //ms timestamp to help with delay comparison
-uint32_t goto_shot = 0;
+  uint16_t start_delay_sec       = 0;
+  float    total_pano_move_time  = 0;
 
-int8_t   sequence_repeat_type = 1; //1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
-uint16_t sequence_repeat_count = 0; //counter to hold variable for how many time we have repeated
+  // 3 Point motor routine values
+  uint32_t percent;                        //% through a leg
+  uint32_t feedrate_micros       = 0;
 
-uint32_t     interval_tm      = 0;  //mc time to help with interval comparison
-uint32_t     interval_tm_last = 0; //mc time to help with interval comparison
+  uint32_t NClastread            = 1000;   // How many microseconds to wait before trying to read from the joystick again
 
-uint8_t lcd_dim_tm     = 10;
-unsigned long diplay_last_tm = 0;
-uint8_t  lcd_backlight_cur = 100;
-unsigned int  prompt_time = 500; // in ms for delays of instructions
-//unsigned int  prompt_time=350; // for faster debugging
-int  prompt_delay = 0; //to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
-//int prompt_val;
+  uint8_t  joy_y_lock_count      = 0;
+  uint8_t  joy_x_lock_count      = 0;
 
-boolean   reset_prog  = 1; //used to handle program reset or used stored
-boolean   first_time2 = 1;
-uint32_t     max_shutter; // Maximum shutter time in 0.1 second increments
-//unsigned int max_prefire;
+  uint8_t  CZ_Button_Read_Count  = 0;
+  uint8_t  C_Button_Read_Count   = 0;
+  uint8_t  Z_Button_Read_Count   = 0;
 
-uint16_t      start_delay_sec = 0;
-float         total_pano_move_time = 0;
+  int8_t joy_x_axis, joy_y_axis, acc_x_axis, acc_y_axis;
+
+  LONG target_steps;
+  LONG delta_steps;
+} GLOBAL;
+
 
 //External Interrupt Variables
-volatile bool iostate = 0; //new variable for interrupt
-volatile bool changehappened = false; //new variable for interrupt
-boolean   ext_shutter_open = false;
-uint8_t   ext_shutter_count = 0;
-uint8_t   ext_hdr_shots = 1; //this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external
-
-//3 Point motor routine values
-uint32_t  percent; //% through a leg
-
+volatile bool iostate           = false; // Flag for the state of the trigger input when a change occurs
+volatile bool changehappened    = false; // Flag to record when the trigger has changed state
+boolean       ext_shutter_open  = false; // Flag that the camera shutter is likely open
+uint8_t       ext_shutter_count = 0;
+uint8_t       ext_hdr_shots     = 1; //this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external
+volatile bool nextMoveLoaded    = false; // Program flag for next move ready
 
 
 
@@ -290,17 +302,7 @@ enum reviewprog : uint8_t {
   StartDelay   = 3
 };
 
-
 //remote and interface variables
-
-int8_t joy_x_axis, joy_y_axis, acc_x_axis, accel_y_axis;
-
-unsigned int joy_y_lock_count = 0;
-unsigned int joy_x_lock_count = 0;
-
-int CZ_Button_Read_Count = 0;
-int C_Button_Read_Count = 0;
-int Z_Button_Read_Count = 0;
 
 uint8_t ButtonState = 4;
 enum ButtonState : uint8_t {
@@ -312,21 +314,9 @@ enum ButtonState : uint8_t {
 };
 
 
-unsigned int NCReadMillis = 42; //frequency at which we read the nunchuck for moves  1000/24 = 42  1000/30 = 33
-long NClastread = 1000; //control variable for NC reads cycles
-
-//Stepper Setup
-unsigned long  feedrate_micros = 0;
-
-LONG target_steps;
-LONG delta_steps;
-
-//End setup of Steppers
-
 //Start of DF Vars
 #define DFMOCO_VERSION 1
 #define DFMOCO_VERSION_STRING "1.2.6"
-
 
 // supported boards
 #define ARDUINO			1
@@ -386,14 +376,6 @@ LONG delta_steps;
 //End TB3 Black Port Mapping
 
 
-volatile boolean nextMoveLoaded;  // Program flag for next move ready
-boolean maxVelLimit = false;      // Program Flag for motor speed limited
-uint8_t motorMoving = 0;          // Program Flag for motor moving
-
-
-//End of DFVars
-
-
 /*
 	=========================================
 	Setup functions
@@ -446,7 +428,7 @@ void setup()
   lcd.cursorOff();
   lcd.bright(4);
 
-  delay(prompt_time * 2);
+  delay(GLOBAL.prompt_time * 2);
   lcd.empty();
   delay(100);
   draw(2, 1, 1); // Connect Joystick
@@ -479,7 +461,6 @@ void setup()
 
   //begin  Setup for Nunchuck
   Nunchuck.init(0);
-  delay(50);
   for (uint8_t reads = 1; reads < 17; reads++)
   {
     Nunchuck.getData();
@@ -669,7 +650,7 @@ void PanoGigaMenu() // 200
       break;
 
     case 203:   //
-      Define_Overlap_Percentage();
+      Define_Overlap_percentage();
       break;
 
     case 204:   //
@@ -712,7 +693,7 @@ void PanoSimpleMenu() // 300
       break;
 
     case 303:   //
-      Define_Overlap_Percentage();
+      Define_Overlap_percentage();
       break;
 
     case 304:   //
@@ -861,7 +842,7 @@ void MenuMess()
 void loop()
 { //Main Loop
   while (1)
-  { //use debugging WHEN HIT here for monitoring - {sequence_repeat_type},{EEPROM_STORED.progstep},{EEPROM_STORED.progtype},{EEPROM_STORED.camera_fired}
+  { //use debugging WHEN HIT here for monitoring - {SETTINGS.sequence_repeat_type},{EEPROM_STORED.progstep},{EEPROM_STORED.progtype},{EEPROM_STORED.camera_fired}
     switch (EEPROM_STORED.progstep)
     {
       //start of 2 point SMS/Video routine
@@ -990,7 +971,7 @@ void loop()
         break;
 
       case 203:   //
-        Define_Overlap_Percentage();
+        Define_Overlap_percentage();
         break;
 
       case 204:   //
@@ -1033,7 +1014,7 @@ void loop()
         break;
 
       case 303:   //
-        Define_Overlap_Percentage();
+        Define_Overlap_percentage();
         break;
 
       case 304:   //

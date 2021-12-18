@@ -102,7 +102,7 @@ void CameraShoot(uint32_t exp_tm)
   }
 
 #if DEBUG
-  Serial.print("ShutON "); Serial.print(millis() - interval_tm); Serial.print(";");
+  Serial.print("ShutON "); Serial.print(millis() - GLOBAL.interval_tm); Serial.print(";");
 #endif
 }
 
@@ -114,7 +114,7 @@ void CameraStop()
   CameraShutter(false);
 
 #if DEBUG
-  Serial.print("ShutOff "); Serial.print(millis() - interval_tm); Serial.print(";");
+  Serial.print("ShutOff "); Serial.print(millis() - GLOBAL.interval_tm); Serial.print(";");
 #endif
 }
 

@@ -23,29 +23,28 @@ void Check_Prog()  //this is a routine for the button presses in the program
   switch (HandleButtons())
   {
     case C_Pressed:
-      C_Button_Read_Count++; //c button on
+      if (GLOBAL.C_Button_Read_Count < 250) GLOBAL.C_Button_Read_Count++; // C Held Counter
       if ((millis() - input_last_tm) > 2000)
       {
-        C_Button_Read_Count = 0;
+        GLOBAL.C_Button_Read_Count = 0;
         input_last_tm = millis();
       }
       break;
 
     case CZ_Pressed:
-      CZ_Button_Read_Count++;
-      delay(10);
+      if (GLOBAL.CZ_Button_Read_Count < 250) GLOBAL.CZ_Button_Read_Count++; // CZ Held Counter
       if ((millis() - input_last_tm) > 2000)
       {
-        CZ_Button_Read_Count = 0;
+        GLOBAL.CZ_Button_Read_Count = 0;
         input_last_tm = millis();
       }
       break;
 
     case Z_Pressed:
-      Z_Button_Read_Count++;
+      if (GLOBAL.Z_Button_Read_Count < 250) GLOBAL.Z_Button_Read_Count++; // Z Held Counter
       if ((millis() - input_last_tm) > 2000)
       {
-        Z_Button_Read_Count = 0;
+        GLOBAL.Z_Button_Read_Count = 0;
         input_last_tm = millis();
       }
       break;
@@ -54,7 +53,7 @@ void Check_Prog()  //this is a routine for the button presses in the program
 
 /*
   void Program_Engaged_Toggle()	{  //used for pausing
-	  CZ_Button_Read_Count=0;
+	  GLOBAL.CZ_Button_Read_Count=0;
 	  ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
 	  EEPROM_STORED.Program_Engaged=!EEPROM_STORED.Program_Engaged; //toggle off the loop
   }
@@ -63,10 +62,10 @@ void Check_Prog()  //this is a routine for the button presses in the program
 
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
-  CZ_Button_Read_Count = 0;
+  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = false; //toggle off the loop
-  if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-  if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+  if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+  if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
   inprogtype = 0; //default this to the first option, Resume
   progstep_goto(1001); //send us to a loop where we can select options
 }
@@ -74,7 +73,7 @@ void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 
 void SMS_Resume() //this runs once and is quick - not persistent
 {
-  CZ_Button_Read_Count = 0;
+  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = true; //toggle off the loop
   lcd.empty();
   lcd.at(1, 1, "Resuming");
@@ -104,7 +103,7 @@ void InProg_Select_Option()
 
       case INPROG_GOTO_FRAME:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
-        goto_shot = EEPROM_STORED.camera_fired;
+        GLOBAL.goto_shot = EEPROM_STORED.camera_fired;
         DisplayGoToShot();
         break;
 
@@ -123,15 +122,15 @@ void InProg_Select_Option()
 
     lcd.at(2, 1, "UpDown  C-Select");
     FLAGS.redraw = false;
-    if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-    if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
-    delay(prompt_time);
+    if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+    if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+    delay(GLOBAL.prompt_time);
 
   } //end first time
 
-  if ((millis() - NClastread) > 50)
+  if ((millis() - GLOBAL.NClastread) > 50)
   {
-    NClastread = millis();
+    GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
   }
@@ -141,19 +140,19 @@ void InProg_Select_Option()
     case INPROG_GOTO_FRAME:
     {
       //read leftright values for the goto frames
-      uint32_t goto_shot_last = goto_shot;
+      uint32_t goto_shot_last = GLOBAL.goto_shot;
   
-      if (goto_shot < 20) joy_x_lock_count = 0;
-      goto_shot += joy_capture_x3();
-      if (goto_shot < 1) {
-        goto_shot = 1;
-        delay(prompt_time / 2);
+      if (GLOBAL.goto_shot < 20) GLOBAL.joy_x_lock_count = 0;
+      GLOBAL.goto_shot += joy_capture_x3();
+      if (GLOBAL.goto_shot < 1) {
+        GLOBAL.goto_shot = 1;
+        delay(GLOBAL.prompt_time / 2);
       }
-      else if (goto_shot > EEPROM_STORED.camera_total_shots) {
-        goto_shot = EEPROM_STORED.camera_total_shots;
-        delay(prompt_time / 2);
+      else if (GLOBAL.goto_shot > EEPROM_STORED.camera_total_shots) {
+        GLOBAL.goto_shot = EEPROM_STORED.camera_total_shots;
+        delay(GLOBAL.prompt_time / 2);
       }
-      if (goto_shot_last != goto_shot) {
+      if (goto_shot_last != GLOBAL.goto_shot) {
         DisplayGoToShot();
       }
       break;
@@ -163,7 +162,7 @@ void InProg_Select_Option()
       //read leftright values for the goto frames
       uint32_t intval_last = EEPROM_STORED.intval;
   
-      if (EEPROM_STORED.intval < 20) joy_x_lock_count = 0;
+      if (EEPROM_STORED.intval < 20) GLOBAL.joy_x_lock_count = 0;
       EEPROM_STORED.intval += joy_capture_x3();
       EEPROM_STORED.intval = constrain(EEPROM_STORED.intval, 5, 6000); //no limits, you can crunch static time
       if (intval_last != EEPROM_STORED.intval) {
@@ -209,8 +208,8 @@ void button_actions_InProg_Select_Option()
       }
       else if (inprogtype == INPROG_RTS) { //Return to restart the shot  - send to review screen of relative move
         EEPROM_STORED.REVERSE_PROG_ORDER = false;
-        //if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
-        //if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
+        //if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
+        //if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
         //EEPROM_STORED.Program_Engaged=true;
         EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
@@ -231,8 +230,8 @@ void button_actions_InProg_Select_Option()
       }
       else if  (inprogtype == INPROG_GOTO_END) { //Go to end point - basically a reverse move setup from wherever we are.
         EEPROM_STORED.REVERSE_PROG_ORDER = true;
-        //if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
-        //if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
+        //if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
+        //if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
         //EEPROM_STORED.Program_Engaged=true;
         EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
@@ -255,8 +254,8 @@ void button_actions_InProg_Select_Option()
         FLAGS.redraw = true;
         lcd.at(1, 4, "Going to");
         lcd.at(2, 4, "Frame:");
-        lcd.at(2, 11, goto_shot);
-        goto_position(goto_shot);
+        lcd.at(2, 11, GLOBAL.goto_shot);
+        goto_position(GLOBAL.goto_shot);
         inprogtype = INPROG_RESUME;
       }
       else if  (inprogtype == INPROG_INTERVAL) { //Change Interval and static time
@@ -290,8 +289,8 @@ void button_actions_InProg_Select_Option()
 
 void DisplayGoToShot()
 {
-  lcd.at(1, 13, goto_shot);
-  if	    (goto_shot < 10)	  lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
+  lcd.at(1, 13, GLOBAL.goto_shot);
+  if	    (GLOBAL.goto_shot < 10)	  lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  else if (GLOBAL.goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
+  else if (GLOBAL.goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
 }

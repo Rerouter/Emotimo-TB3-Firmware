@@ -100,33 +100,33 @@ void goto_position(uint32_t gotoshot_temp)
 		{  //3 point moves
 			if (EEPROM_STORED.camera_fired<EEPROM_STORED.keyframe[1][1]) { //Lead In
 				Move_State_3PT = LeadIn3PT;
-				percent = 0.0;
-				if (DEBUG_GOTO) Serial.print("LeadIn: " + String(percent));
+				GLOBAL.percent = 0.0;
+				if (DEBUG_GOTO) Serial.print("LeadIn: " + String(GLOBAL.percent));
 			}	   
 			else if (EEPROM_STORED.camera_fired<EEPROM_STORED.keyframe[1][2]) { //First Leg
 				Move_State_3PT = FirstLeg3PT;
-				percent = (EEPROM_STORED.camera_fired-EEPROM_STORED.keyframe[1][1]) / (EEPROM_STORED.keyframe[1][2] - EEPROM_STORED.keyframe[1][1]);
-				if (DEBUG_GOTO) Serial.print("Leg 1: " + String(percent));
+				GLOBAL.percent = (EEPROM_STORED.camera_fired-EEPROM_STORED.keyframe[1][1]) / (EEPROM_STORED.keyframe[1][2] - EEPROM_STORED.keyframe[1][1]);
+				if (DEBUG_GOTO) Serial.print("Leg 1: " + String(GLOBAL.percent));
 			}
 			else if (EEPROM_STORED.camera_fired<EEPROM_STORED.keyframe[1][3]) {  //Second Leg
 				Move_State_3PT = SecondLeg3PT;
-				percent = (EEPROM_STORED.camera_fired - EEPROM_STORED.keyframe[1][2]) / (EEPROM_STORED.keyframe[1][3] - EEPROM_STORED.keyframe[1][2]);
-				if (DEBUG_GOTO) Serial.print("Leg 2: " + String(percent));
+				GLOBAL.percent = (EEPROM_STORED.camera_fired - EEPROM_STORED.keyframe[1][2]) / (EEPROM_STORED.keyframe[1][3] - EEPROM_STORED.keyframe[1][2]);
+				if (DEBUG_GOTO) Serial.print("Leg 2: " + String(GLOBAL.percent));
 			}
 			//else if (EEPROM_STORED.camera_fired<EEPROM_STORED.keyframe[3]) {  //Third Leg
 			// Move_State_3PT = ThirdLeg3PT;
-			// percent = (EEPROM_STORED.camera_fired - EEPROM_STORED.keyframe[2]) / EEPROM_STORED.keyframe[3] - EEPROM_STORED.keyframe[2];
-			//  if (DEBUG_GOTO) Serial.print("Leg 3: " + String(percent));
+			// GLOBAL.percent = (EEPROM_STORED.camera_fired - EEPROM_STORED.keyframe[2]) / EEPROM_STORED.keyframe[3] - EEPROM_STORED.keyframe[2];
+			//  if (DEBUG_GOTO) Serial.print("Leg 3: " + String(GLOBAL.percent));
 			//}
 			else if (EEPROM_STORED.camera_fired<EEPROM_STORED.keyframe[1][4]) {  //Lead Out
 				Move_State_3PT = LeadOut3PT;
-				percent = 0;
-				if (DEBUG_GOTO) Serial.print("LeadOT: " + String(percent));
+				GLOBAL.percent = 0;
+				if (DEBUG_GOTO) Serial.print("LeadOT: " + String(GLOBAL.percent));
 			}
 			else
 			{
 				Move_State_3PT = Finished3PT;   //Finished
-				if (DEBUG_GOTO) Serial.print("Finished " + String(percent));  
+				if (DEBUG_GOTO) Serial.print("Finished " + String(GLOBAL.percent));  
 				return;
 			}
 
@@ -158,12 +158,12 @@ void goto_position(uint32_t gotoshot_temp)
 
 		//VIDEO Loop
 		if ((EEPROM_STORED.progtype==REG2POINTMOVE || EEPROM_STORED.progtype==REV2POINTMOVE || EEPROM_STORED.progtype==AUXDISTANCE) && (EEPROM_STORED.intval==VIDEO_INTVAL)) { // must lock this down to be only 2point, not three
-			feedrate_micros = calculate_feedrate_delay_video();
+			GLOBAL.feedrate_micros = calculate_feedrate_delay_video();
 			if (Move_State_2PT == Linear2PT) {
 				EEPROM_STORED.camera_fired += (EEPROM_STORED.keyframe[0][3] - EEPROM_STORED.keyframe[0][2]); //skip all the calcs mid motor move
 			}
-			if (DEBUG_GOTO) Serial.print("Feedrate:" + String(feedrate_micros) + ";");
-			// pull this from the actual move, reset with just adding deltas to the dda_move(feedrate_micros);
+			if (DEBUG_GOTO) Serial.print("Feedrate:" + String(GLOBAL.feedrate_micros) + ";");
+			// pull this from the actual move, reset with just adding deltas to the dda_move(GLOBAL.feedrate_micros);
 
 			EEPROM_STORED.current_steps.x = x;
 			EEPROM_STORED.current_steps.y = y;
@@ -171,10 +171,10 @@ void goto_position(uint32_t gotoshot_temp)
 		}
 		//SMS Loop and all three point moves
 		else {
-			feedrate_micros = calculate_feedrate_delay_1(); //calculates micro delay based on available move time
-			if (EEPROM_STORED.intval!= VIDEO_INTVAL) feedrate_micros = min(abs(feedrate_micros), 2000); //get a slow move, but not too slow, give the motors a chance to rest for non video moves.
-			if (DEBUG_GOTO) Serial.print("Feedrate:" + String(feedrate_micros) + ";");
-			// pull this from the actual move, reset with just adding deltas to the dda_move(feedrate_micros); 
+			GLOBAL.feedrate_micros = calculate_feedrate_delay_1(); //calculates micro delay based on available move time
+			if (EEPROM_STORED.intval!= VIDEO_INTVAL) GLOBAL.feedrate_micros = min(abs(GLOBAL.feedrate_micros), 2000); //get a slow move, but not too slow, give the motors a chance to rest for non video moves.
+			if (DEBUG_GOTO) Serial.print("Feedrate:" + String(GLOBAL.feedrate_micros) + ";");
+			// pull this from the actual move, reset with just adding deltas to the dda_move(GLOBAL.feedrate_micros); 
 			EEPROM_STORED.current_steps.x = x;
 			EEPROM_STORED.current_steps.y = y;
 			EEPROM_STORED.current_steps.z = z;
@@ -214,7 +214,7 @@ void goto_position(uint32_t gotoshot_temp)
 			updateMotorVelocities();
 		}
 	}
-	while (motorMoving);
+	while (FLAGS.motorMoving);
 	//delay(10000);
 	stopISR1 ();
 

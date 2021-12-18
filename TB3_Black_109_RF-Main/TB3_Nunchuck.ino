@@ -74,29 +74,29 @@ int16_t NunchuckDeadband(int16_t input, int16_t deadband)
 
 void NunChuckProcessData()
 {
-  joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
-  joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
-  acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (EEPROM_STORED.AUX_REV) acc_x_axis *= -1;
-  joy_y_axis *= -1;
+  GLOBAL.joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
+  GLOBAL.joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
+  GLOBAL.acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
+  if (SETTINGS.AUX_REV) GLOBAL.acc_x_axis *= -1;
+  if (GLOBAL.joy_y_axis) GLOBAL.joy_y_axis *= -1;
 
   //create a deadband
   uint8_t deadband = 7; // results in 100-7 or +-93 - this is for the joystick
   uint8_t deadband2 = 100; //  this is for the accelerometer
 
-  joy_x_axis = NunchuckDeadband(joy_x_axis, deadband);
-  joy_y_axis = NunchuckDeadband(joy_y_axis, deadband);
-  acc_x_axis = NunchuckDeadband(acc_x_axis, deadband2);
+  GLOBAL.joy_x_axis = NunchuckDeadband(GLOBAL.joy_x_axis, deadband);
+  GLOBAL.joy_y_axis = NunchuckDeadband(GLOBAL.joy_y_axis, deadband);
+  GLOBAL.acc_x_axis = NunchuckDeadband(GLOBAL.acc_x_axis, deadband2);
 
   //check for joystick y lock for more than one second
-  if (abs(joy_y_axis) > 83)	  joy_y_lock_count++;
-  else						            joy_y_lock_count = 0;
-  if (joy_y_lock_count > 250) joy_y_lock_count = 250; //prevent overflow
+  if (abs(GLOBAL.joy_y_axis) > 83)	  GLOBAL.joy_y_lock_count++;
+  else						            GLOBAL.joy_y_lock_count = 0;
+  if (GLOBAL.joy_y_lock_count > 250) GLOBAL.joy_y_lock_count = 250; //prevent overflow
 
   //check for joystick x lock for more than one second
-  if (abs(joy_x_axis) > 83)	  joy_x_lock_count++;
-  else						            joy_x_lock_count = 0;
-  if (joy_x_lock_count > 250) joy_x_lock_count = 250; //prevent overflow
+  if (abs(GLOBAL.joy_x_axis) > 83)	  GLOBAL.joy_x_lock_count++;
+  else						            GLOBAL.joy_x_lock_count = 0;
+  if (GLOBAL.joy_x_lock_count > 250) GLOBAL.joy_x_lock_count = 250; //prevent overflow
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
 }
@@ -104,10 +104,10 @@ void NunChuckProcessData()
 
 void NunChuckClearData()
 {
-  joy_x_axis   = 0;
-  joy_y_axis   = 0;
-  acc_x_axis   = 0;
-  accel_y_axis = 0;
+  GLOBAL.joy_x_axis   = 0;
+  GLOBAL.joy_y_axis   = 0;
+  GLOBAL.acc_x_axis   = 0;
+  GLOBAL.acc_y_axis   = 0;
   ButtonState = Read_Again;
 }
 
@@ -115,9 +115,9 @@ void NunChuckClearData()
 void applyjoymovebuffer_exponential()  //exponential stuff
 {
   //scale based on read frequency  base is 500 reads per second  - now 20 reads per second = 25x
-  int32_t int_joy_x_axis   = (int32_t(joy_x_axis) *   int32_t(joy_x_axis) *   int32_t(joy_x_axis)) >> 4;
-  int32_t int_joy_y_axis   = (int32_t(joy_y_axis) *   int32_t(joy_y_axis) *   int32_t(joy_y_axis)) >> 4;
-  int32_t int_acc_x_axis   = (int32_t(acc_x_axis) *   int32_t(acc_x_axis) *   int32_t(acc_x_axis)) >> 4;
+  int32_t int_joy_x_axis   = (int32_t(GLOBAL.joy_x_axis) *   int32_t(GLOBAL.joy_x_axis) *   int32_t(GLOBAL.joy_x_axis)) >> 4;
+  int32_t int_joy_y_axis   = (int32_t(GLOBAL.joy_y_axis) *   int32_t(GLOBAL.joy_y_axis) *   int32_t(GLOBAL.joy_y_axis)) >> 4;
+  int32_t int_acc_x_axis   = (int32_t(GLOBAL.acc_x_axis) *   int32_t(GLOBAL.acc_x_axis) *   int32_t(GLOBAL.acc_x_axis)) >> 4;
 
   //slow down changes to avoid sudden stops and starts
   //uint8_t ss_buffer=100;
@@ -129,22 +129,22 @@ void applyjoymovebuffer_exponential()  //exponential stuff
   //else if ((joy_x_axis-prev_joy_x_reading)<-ss_buffer) joy_x_axis=(prev_joy_x_reading-ss_buffer);
 
   buffer_x = (int_joy_x_axis - prev_joy_x_reading) / 5;
-  joy_x_axis = prev_joy_x_reading + buffer_x;
-  if (abs(joy_x_axis) < 5) joy_x_axis = 0;
+  int_joy_x_axis = prev_joy_x_reading + buffer_x;
+  if (abs(int_joy_x_axis) < 5) int_joy_x_axis = 0;
 
   //if ((joy_y_axis-prev_joy_y_reading)>ss_buffer) joy_y_axis=(prev_joy_y_reading+ss_buffer);
   //else if ((joy_y_axis-prev_joy_y_reading)<-ss_buffer) joy_y_axis=(prev_joy_y_reading-ss_buffer);
 
   buffer_y = (int_joy_y_axis - prev_joy_y_reading) / 5;
-  joy_y_axis = prev_joy_y_reading + buffer_y;
-  if (abs(joy_y_axis) < 5) joy_y_axis = 0;
+  int_joy_y_axis = prev_joy_y_reading + buffer_y;
+  if (abs(int_joy_y_axis) < 5) int_joy_y_axis = 0;
 
   //if ((acc_x_axis-prev_acc_x_reading)>ss_buffer) acc_x_axis=(prev_acc_x_reading+ss_buffer);
   //else if ((acc_x_axis-prev_acc_x_reading)<-ss_buffer) acc_x_axis=(prev_acc_x_reading-ss_buffer);
 
   buffer_z = (int_acc_x_axis - prev_acc_x_reading) / 2;
-  acc_x_axis = prev_acc_x_reading + buffer_z;
-  if (abs(acc_x_axis) < 5) acc_x_axis = 0;
+  int_acc_x_axis = prev_acc_x_reading + buffer_z;
+  if (abs(int_acc_x_axis) < 5) int_acc_x_axis = 0;
 
   //Serial.print(joy_x_axis);Serial.print(" ___ ");Serial.println(joy_y_axis);
 
@@ -155,130 +155,123 @@ void applyjoymovebuffer_exponential()  //exponential stuff
   int32_t x = int_joy_x_axis   + EEPROM_STORED.current_steps.x;
   int32_t y = int_joy_y_axis   + EEPROM_STORED.current_steps.y;
   int32_t z = int_acc_x_axis + EEPROM_STORED.current_steps.z;
-  if (EEPROM_STORED.AUX_ON) set_target(x, y, z);
+  if (SETTINGS.AUX_ON) set_target(x, y, z);
   else		set_target(x, y, 0);
-  feedrate_micros = calculate_feedrate_delay_2();
+  GLOBAL.feedrate_micros = calculate_feedrate_delay_2();
 }
 
 
 void applyjoymovebuffer_linear()
 {
   //control max speeds of the axis
-  joy_y_axis = map(joy_y_axis, -90, 90, -35, 35); //
+  GLOBAL.joy_y_axis = map(GLOBAL.joy_y_axis, -90, 90, -35, 35); //
 
   //slow down changes to avoid sudden stops and starts
 
   uint8_t ss_buffer = 1;
 
-  if ((joy_x_axis - prev_joy_x_reading) > ss_buffer) joy_x_axis = (prev_joy_x_reading + ss_buffer);
-  else if ((joy_x_axis - prev_joy_x_reading) < -ss_buffer) joy_x_axis = (prev_joy_x_reading - ss_buffer);
+  if ((GLOBAL.joy_x_axis - prev_joy_x_reading) > ss_buffer) GLOBAL.joy_x_axis = (prev_joy_x_reading + ss_buffer);
+  else if ((GLOBAL.joy_x_axis - prev_joy_x_reading) < -ss_buffer) GLOBAL.joy_x_axis = (prev_joy_x_reading - ss_buffer);
 
-  if ((joy_y_axis - prev_joy_y_reading) > ss_buffer) joy_y_axis = (prev_joy_y_reading + ss_buffer);
-  else if ((joy_y_axis - prev_joy_y_reading) < -ss_buffer) joy_y_axis = (prev_joy_y_reading - ss_buffer);
+  if ((GLOBAL.joy_y_axis - prev_joy_y_reading) > ss_buffer) GLOBAL.joy_y_axis = (prev_joy_y_reading + ss_buffer);
+  else if ((GLOBAL.joy_y_axis - prev_joy_y_reading) < -ss_buffer) GLOBAL.joy_y_axis = (prev_joy_y_reading - ss_buffer);
 
-  if ((acc_x_axis - prev_acc_x_reading) > ss_buffer) acc_x_axis = (prev_acc_x_reading + ss_buffer);
-  else if ((acc_x_axis - prev_acc_x_reading) < -ss_buffer) acc_x_axis = (prev_acc_x_reading - ss_buffer);
+  if ((GLOBAL.acc_x_axis - prev_acc_x_reading) > ss_buffer) GLOBAL.acc_x_axis = (prev_acc_x_reading + ss_buffer);
+  else if ((GLOBAL.acc_x_axis - prev_acc_x_reading) < -ss_buffer) GLOBAL.acc_x_axis = (prev_acc_x_reading - ss_buffer);
 
-  //Serial.print(joy_x_axis);Serial.print(" ___ ");Serial.println(joy_y_axis);
+  //Serial.print(GLOBAL.joy_x_axis);Serial.print(" ___ ");Serial.println(GLOBAL.joy_y_axis);
 
-  prev_joy_x_reading   = joy_x_axis;
-  prev_joy_y_reading   = joy_y_axis;
-  prev_acc_x_reading = acc_x_axis;
+  prev_joy_x_reading   = GLOBAL.joy_x_axis;
+  prev_joy_y_reading   = GLOBAL.joy_y_axis;
+  prev_acc_x_reading   = GLOBAL.acc_x_axis;
 
-  int32_t x = joy_x_axis   + EEPROM_STORED.current_steps.x;
-  int32_t y = joy_y_axis   + EEPROM_STORED.current_steps.y;
-  int32_t z = acc_x_axis + EEPROM_STORED.current_steps.z;
+  int32_t x = GLOBAL.joy_x_axis   + EEPROM_STORED.current_steps.x;
+  int32_t y = GLOBAL.joy_y_axis   + EEPROM_STORED.current_steps.y;
+  int32_t z = GLOBAL.acc_x_axis + EEPROM_STORED.current_steps.z;
 
   set_target(x, y, z);
-  feedrate_micros = calculate_feedrate_delay_2();
+  GLOBAL.feedrate_micros = calculate_feedrate_delay_2();
 }
 
 
 void nc_sleep()
 {
-  if (abs(joy_x_axis) > 15 || abs(joy_y_axis) > 15)  digitalWrite(MOTOR_EN, LOW);
+  if (abs(GLOBAL.joy_x_axis) > 15 || abs(GLOBAL.joy_y_axis) > 15)  digitalWrite(MOTOR_EN, LOW);
   else																				       digitalWrite(MOTOR_EN, HIGH);
 }
 
 
 void axis_button_deadzone()
 {
-  joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
-  joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
-  acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (EEPROM_STORED.AUX_REV)    acc_x_axis *= -1;
-  if (joy_x_axis) joy_x_axis *= -1; // Invert the direction to make the joystick directly point the camera
+  GLOBAL.joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
+  GLOBAL.joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
+  GLOBAL.acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
+  if (SETTINGS.AUX_REV)    GLOBAL.acc_x_axis *= -1;
+  if (GLOBAL.joy_x_axis) GLOBAL.joy_x_axis *= -1; // Invert the direction to make the joystick directly point the camera
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
 
   uint8_t deadband = 7; // results in 100-7 or +-93 - this is for the joystick
   uint8_t deadband2 = 100; //  this is for the accelerometer
 
-  joy_x_axis = NunchuckDeadband(joy_x_axis, deadband);
-  joy_y_axis = NunchuckDeadband(joy_y_axis, deadband);
-  acc_x_axis = NunchuckDeadband(acc_x_axis, deadband2);
+  GLOBAL.joy_x_axis = NunchuckDeadband(GLOBAL.joy_x_axis, deadband);
+  GLOBAL.joy_y_axis = NunchuckDeadband(GLOBAL.joy_y_axis, deadband);
+  GLOBAL.acc_x_axis = NunchuckDeadband(GLOBAL.acc_x_axis, deadband2);
 }
 
 
-int joy_capture2() //captures joystick input
+int8_t joy_capture2() //captures joystick input
 {
-  prompt_delay = (500 - 5 * abs(joy_y_axis));
-  return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
+  GLOBAL.prompt_delay = (500 - 5 * abs(GLOBAL.joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
+  return -1 * constrain(map(GLOBAL.joy_y_axis, -20, 20, -1, 2), -1, 1);
 }
 
 
-int joy_capture3() //captures joystick input and conditions it for UI
+int8_t joy_capture3() //captures joystick input and conditions it for UI
 {
-  if (joy_y_lock_count > 245) { //really really fast
-    prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
+  if (GLOBAL.joy_y_lock_count > 245) { //really really fast
+    GLOBAL.prompt_delay = 0;
+    return -1 * map(GLOBAL.joy_y_axis, -55, 55, -40, 40);
   }
-  else if (joy_y_lock_count > 50) { //really fast
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
+  else if (GLOBAL.joy_y_lock_count > 50) { //really fast
+    GLOBAL.prompt_delay = 10;
+    return -1 * map(GLOBAL.joy_y_axis, -100, 100, -10, 10);
   }
-  else if (joy_y_lock_count > 20) { //pretty fast
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
+  else if (GLOBAL.joy_y_lock_count > 20) { //pretty fast
+    GLOBAL.prompt_delay = 70;
+    return -1 * map(GLOBAL.joy_y_axis, -80, 80, -10, 10);
   }
-  else if (abs(joy_y_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_y_axis));
-    if (prompt_delay < 0) prompt_delay = 15;
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
+  else if (abs(GLOBAL.joy_y_axis) > 10) { //go variable add delay which we run later
+    GLOBAL.prompt_delay = (500 - 5 * abs(GLOBAL.joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
+    return -1 * constrain(map(GLOBAL.joy_y_axis, -20, 20, -1, 2), -1, 1);
   }
   else { //null loop
-    prompt_delay = 0;
+    GLOBAL.prompt_delay = 0;
     return (0);
   }
 }
 
 
-int joy_capture_4() //captures joystick input and conditions it for UI
+int8_t joy_capture_4() //captures joystick input and conditions it for UI
 {
-  if (joy_y_lock_count > 100) { //really really fast
-    //Serial.println("reallyreallyfast");
-    prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
+  if (GLOBAL.joy_y_lock_count > 100) { //really really fast
+    GLOBAL.prompt_delay = 0;
+    return -1 * map(GLOBAL.joy_y_axis, -55, 55, -40, 40);
   }
-  else if (joy_y_lock_count > 50) { //really fast
-    //Serial.println("reallyfast");
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
+  else if (GLOBAL.joy_y_lock_count > 50) { //really fast
+    GLOBAL.prompt_delay = 10;
+    return -1 * map(GLOBAL.joy_y_axis, -100, 100, -10, 10);
   }
-  else if (joy_y_lock_count > 20) { //pretty fast
-    //Serial.println("prettyfast");
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
+  else if (GLOBAL.joy_y_lock_count > 20) { //pretty fast
+    GLOBAL.prompt_delay = 70;
+    return -1 * map(GLOBAL.joy_y_axis, -80, 80, -10, 10);
   }
-  else if (abs(joy_y_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_y_axis));
-    if (prompt_delay < 0) prompt_delay = 15;
-    //Serial.print("slow");Serial.println(prompt_delay);
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
+  else if (abs(GLOBAL.joy_y_axis) > 10) { //go variable add delay which we run later
+    GLOBAL.prompt_delay = (500 - 5 * abs(GLOBAL.joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
+    return -1 * constrain(map(GLOBAL.joy_y_axis, -20, 20, -1, 2), -1, 1);
   }
   else { //null loop
-    //Serial.println("nullloop");
-    prompt_delay = 0;
+    GLOBAL.prompt_delay = 0;
     return (0);
   }
 }
@@ -286,42 +279,36 @@ int joy_capture_4() //captures joystick input and conditions it for UI
 
 int joy_capture_x_map() //captures joystick input for left and right
 {
-  return map(joy_x_axis, -85, 85, -1, 1);
+  return map(GLOBAL.joy_x_axis, -85, 85, -1, 1);
 }
 
 
 int8_t joy_capture_y_map() //captures joystick input for up down
 {
-  return map(joy_y_axis, -85, 85, -1, 1);
+  return map(GLOBAL.joy_y_axis, -85, 85, -1, 1);
 }
 
 
 int joy_capture_x3() //captures joystick input and conditions it for UI
 {
-  if (joy_x_lock_count > 245) { //really really fast
-    //Serial.println("reallyreallyfast");
-    prompt_delay = 0;
-    return -1 * map(-joy_x_axis, -55, 55, -40, 40);
+  if (GLOBAL.joy_x_lock_count > 245) { //really really fast
+    GLOBAL.prompt_delay = 0;
+    return -1 * map(-GLOBAL.joy_x_axis, -55, 55, -40, 40);
   }
-  else if (joy_x_lock_count > 50) { //really fast
-    //Serial.println("reallyfast");
-    prompt_delay = 10;
-    return -1 * map(-joy_x_axis, -100, 100, -10, -10);
+  else if (GLOBAL.joy_x_lock_count > 50) { //really fast
+    GLOBAL.prompt_delay = 10;
+    return -1 * map(-GLOBAL.joy_x_axis, -100, 100, -10, -10);
   }
-  else if (joy_x_lock_count > 20) { //pretty fast
-    //Serial.println("prettyfast");
-    prompt_delay = 70;
-    return -1 * map(-joy_x_axis, -80, 80, -10, 10);
+  else if (GLOBAL.joy_x_lock_count > 20) { //pretty fast
+    GLOBAL.prompt_delay = 70;
+    return -1 * map(-GLOBAL.joy_x_axis, -80, 80, -10, 10);
   }
-  else if (abs(joy_x_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 6 * abs(joy_x_axis));
-    if (prompt_delay < 0) prompt_delay = 15;
-    //Serial.print("slow");Serial.println(prompt_delay);
-    return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -1, 1);
+  else if (abs(GLOBAL.joy_x_axis) > 10) { //go variable add delay which we run later
+    GLOBAL.prompt_delay = (500 - 5 * abs(GLOBAL.joy_x_axis)); // The joystick is constrained to +-100 so this should never equal below 0
+    return -1 * constrain(map(-GLOBAL.joy_x_axis, -20, 20, -1, 2), -1, 1);
   }
   else { //null loop
-    //Serial.println("nullloop");
-    prompt_delay = 0;
+    GLOBAL.prompt_delay = 0;
     return (0);
   }
 }
@@ -330,9 +317,9 @@ int joy_capture_x3() //captures joystick input and conditions it for UI
 void updateMotorVelocities2()   //Happens  20 times a second
 {
   //limit speeds
-  //uint32_t motormax0 = PAN_MAX_JOG_STEPS_PER_SEC;
-  //uint32_t motormax1 = TILT_MAX_JOG_STEPS_PER_SEC;
-  //uint32_t motormax2 = EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC;
+  //uint32_t motormax0 = SETTINGS.PAN_MAX_JOG_STEPS_PER_SEC;
+  //uint32_t motormax1 = SETTINGS.TILT_MAX_JOG_STEPS_PER_SEC;
+  //uint32_t motormax2 = SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC;
   //if (motormax2 > 0.75) motormax2 = .75; //limits max speed during jog to reduce vibration
 
   //accelerations - accumulator limit is is 65553. Loop is 20Hz.   If we want zero to max to be 1 sec, we choose
@@ -354,9 +341,9 @@ void updateMotorVelocities2()   //Happens  20 times a second
 
   //set the accumulator value for the 1/20th second move - this is our accumulator value
   //axis_button_deadzone constrains the axis's to max of 101, so max of 64393 out of 65535
-  int32_t signedMotorMoveSpeedTarget0 = (int32_t(joy_x_axis) * int32_t(joy_x_axis) * int32_t(joy_x_axis)) >> 4;
-  int32_t signedMotorMoveSpeedTarget1 = (int32_t(joy_y_axis) * int32_t(joy_y_axis) * int32_t(joy_y_axis)) >> 4;
-  int32_t signedMotorMoveSpeedTarget2 = (int32_t(acc_x_axis) * int32_t(acc_x_axis) * int32_t(acc_x_axis)) >> 4;
+  int32_t signedMotorMoveSpeedTarget0 = (int32_t(GLOBAL.joy_x_axis) * int32_t(GLOBAL.joy_x_axis) * int32_t(GLOBAL.joy_x_axis)) >> 4;
+  int32_t signedMotorMoveSpeedTarget1 = (int32_t(GLOBAL.joy_y_axis) * int32_t(GLOBAL.joy_y_axis) * int32_t(GLOBAL.joy_y_axis)) >> 4;
+  int32_t signedMotorMoveSpeedTarget2 = (int32_t(GLOBAL.acc_x_axis) * int32_t(GLOBAL.acc_x_axis) * int32_t(GLOBAL.acc_x_axis)) >> 4;
 
   //pan accel
   if (signedMotorMoveSpeedTarget0 != signedlastMotorMoveSpeed0)
@@ -409,9 +396,9 @@ void updateMotorVelocities2()   //Happens  20 times a second
 
   for (uint8_t mot = 0; mot < 3; mot++)
   {
-    if (motors[mot].nextMotorMoveSpeed) bitSet(motorMoving, mot);
-    else								                bitClear(motorMoving, mot);
-    //Serial.print("motorMoving:");Serial.println(motorMoving);
+    if (motors[mot].nextMotorMoveSpeed) bitSet(FLAGS.motorMoving, mot);
+    else								                bitClear(FLAGS.motorMoving, mot);
+    //Serial.print("FLAGS.motorMoving:");Serial.println(FLAGS.motorMoving);
   }
 
   motors[0].dir = (signedMotorMoveSpeedTarget0 > 0) ? 1 : 0;

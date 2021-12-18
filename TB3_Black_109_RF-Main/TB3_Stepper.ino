@@ -75,12 +75,12 @@ void init_steppers()
 void dda_move(long micro_delay)
 {
   //enable our steppers
-  if (EEPROM_STORED.AUX_ON) enable_AUX();
+  if (SETTINGS.AUX_ON) enable_AUX();
   enable_PanTilt();
 
   //figure out our deltas
-  max_delta = max(delta_steps.x, delta_steps.y);
-  max_delta = max(delta_steps.z, max_delta);
+  max_delta = max(GLOBAL.delta_steps.x, GLOBAL.delta_steps.y);
+  max_delta = max(GLOBAL.delta_steps.z, max_delta);
 
   //init stuff.
   long x_counter = -max_delta / 2;
@@ -98,13 +98,13 @@ void dda_move(long micro_delay)
   //do our DDA line!
   do
   {
-    x_can_step = can_step(EEPROM_STORED.current_steps.x, target_steps.x);
-    y_can_step = can_step(EEPROM_STORED.current_steps.y, target_steps.y);
-    z_can_step = can_step(EEPROM_STORED.current_steps.z, target_steps.z);
+    x_can_step = can_step(EEPROM_STORED.current_steps.x, GLOBAL.target_steps.x);
+    y_can_step = can_step(EEPROM_STORED.current_steps.y, GLOBAL.target_steps.y);
+    z_can_step = can_step(EEPROM_STORED.current_steps.z, GLOBAL.target_steps.z);
 
     if (x_can_step)
     {
-      x_counter += delta_steps.x;
+      x_counter += GLOBAL.delta_steps.x;
 
       if (x_counter > 0)
       {
@@ -119,7 +119,7 @@ void dda_move(long micro_delay)
 
     if (y_can_step)
     {
-      y_counter += delta_steps.y;
+      y_counter += GLOBAL.delta_steps.y;
       if (y_counter > 0)
       {
         //do_step(MOTOR1_STEP);
@@ -133,7 +133,7 @@ void dda_move(long micro_delay)
 
     if (z_can_step)
     {
-      z_counter += delta_steps.z;
+      z_counter += GLOBAL.delta_steps.z;
       if (z_counter > 0)
       {
         //do_step(MOTOR2_STEP);
@@ -157,9 +157,9 @@ void dda_move(long micro_delay)
   while (x_can_step || y_can_step || z_can_step);
 
   //set our points to be the same
-  EEPROM_STORED.current_steps.x = target_steps.x;
-  EEPROM_STORED.current_steps.y = target_steps.y;
-  EEPROM_STORED.current_steps.z = target_steps.z;
+  EEPROM_STORED.current_steps.x = GLOBAL.target_steps.x;
+  EEPROM_STORED.current_steps.y = GLOBAL.target_steps.y;
+  EEPROM_STORED.current_steps.z = GLOBAL.target_steps.z;
   calculate_deltas();
 }
 
@@ -176,9 +176,9 @@ bool can_step(long current, long target)
 
 void set_target(int32_t x, int32_t y, int32_t z)
 {
-  target_steps.x = x;
-  target_steps.y = y;
-  target_steps.z = z;
+  GLOBAL.target_steps.x = x;
+  GLOBAL.target_steps.y = y;
+  GLOBAL.target_steps.z = z;
 
   motors[0].destination = x;
   motors[1].destination = y;
@@ -204,14 +204,14 @@ void set_position(int32_t x, int32_t y, int32_t z)
 
 void calculate_deltas()
 {
-  delta_steps.x = abs(target_steps.x - EEPROM_STORED.current_steps.x);
-  delta_steps.y = abs(target_steps.y - EEPROM_STORED.current_steps.y);
-  delta_steps.z = abs(target_steps.z - EEPROM_STORED.current_steps.z);
+  GLOBAL.delta_steps.x = abs(GLOBAL.target_steps.x - EEPROM_STORED.current_steps.x);
+  GLOBAL.delta_steps.y = abs(GLOBAL.target_steps.y - EEPROM_STORED.current_steps.y);
+  GLOBAL.delta_steps.z = abs(GLOBAL.target_steps.z - EEPROM_STORED.current_steps.z);
 
   //what is our direction
-  x_direction = (target_steps.x >= EEPROM_STORED.current_steps.x);
-  y_direction = (target_steps.y >= EEPROM_STORED.current_steps.y);
-  z_direction = (target_steps.z >= EEPROM_STORED.current_steps.z);
+  x_direction = (GLOBAL.target_steps.x >= EEPROM_STORED.current_steps.x);
+  y_direction = (GLOBAL.target_steps.y >= EEPROM_STORED.current_steps.y);
+  z_direction = (GLOBAL.target_steps.z >= EEPROM_STORED.current_steps.z);
 
   //set our direction pins as well
   digitalWrite(MOTOR0_DIR, x_direction);
@@ -225,15 +225,15 @@ long calculate_feedrate_delay_1()
   long master_steps = 0;
 
   //find the dominant axis.
-  if (delta_steps.x > delta_steps.y)
+  if (GLOBAL.delta_steps.x > GLOBAL.delta_steps.y)
   {
-    if (delta_steps.z > delta_steps.x)	master_steps = delta_steps.z;
-    else								master_steps = delta_steps.x;
+    if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x)	master_steps = GLOBAL.delta_steps.z;
+    else								master_steps = GLOBAL.delta_steps.x;
   }
   else
   {
-    if (delta_steps.z > delta_steps.y)	master_steps = delta_steps.z;
-    else								master_steps = delta_steps.y;
+    if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.y)	master_steps = GLOBAL.delta_steps.z;
+    else								master_steps = GLOBAL.delta_steps.y;
   }
 
 #if DEBUG_MOTOR
@@ -278,15 +278,15 @@ long calculate_feedrate_delay_video()
   long current_feedrate = 0;
 
   //find the dominant axis.
-  if (delta_steps.z > delta_steps.x)
+  if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x)
   {
-    if (delta_steps.y > delta_steps.z)	master_steps = delta_steps.y;
-    else								master_steps = delta_steps.z;
+    if (GLOBAL.delta_steps.y > GLOBAL.delta_steps.z)	master_steps = GLOBAL.delta_steps.y;
+    else								master_steps = GLOBAL.delta_steps.z;
   }
   else
   {
-    if (delta_steps.y > delta_steps.x)	master_steps = delta_steps.y;
-    else								master_steps = delta_steps.x;
+    if (GLOBAL.delta_steps.y > GLOBAL.delta_steps.x)	master_steps = GLOBAL.delta_steps.y;
+    else								master_steps = GLOBAL.delta_steps.x;
   }
 #if DEBUG_MOTOR
   Serial.print("master_steps= ");
@@ -313,15 +313,15 @@ long calculate_feedrate_delay_2() //used for real time moves
   long master_steps = 0;
 
   //find the dominant axis.
-  if (delta_steps.x > delta_steps.y)
+  if (GLOBAL.delta_steps.x > GLOBAL.delta_steps.y)
   {
-    if (delta_steps.z > delta_steps.x) master_steps = delta_steps.z;
-    else							   master_steps = delta_steps.x;
+    if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x) master_steps = GLOBAL.delta_steps.z;
+    else							   master_steps = GLOBAL.delta_steps.x;
   }
   else
   {
-    if (delta_steps.z > delta_steps.y) master_steps = delta_steps.z;
-    else							   master_steps = delta_steps.y;
+    if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.y) master_steps = GLOBAL.delta_steps.z;
+    else							   master_steps = GLOBAL.delta_steps.y;
   }
   //Serial.print("master_steps="); Serial.println(master_steps);
   long fr = 10000L / master_steps;

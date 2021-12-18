@@ -73,8 +73,8 @@ void Choose_Program()
   if (FLAGS.redraw)
   {
     // Clean Up any previous states
-    if (EEPROM_STORED.POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
-    if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX(); //
+    if (SETTINGS.POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
+    if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX(); //
     lcd.empty();                            //  Clear the LCD
 
     // Select what menu item we want.
@@ -126,12 +126,12 @@ void Choose_Program()
     }
 
     draw(65, 2, 1);  //lcd.at(2,1,"UpDown  C-Select");
-    delay(prompt_time/2);
+    delay(GLOBAL.prompt_time/2);
     FLAGS.redraw = false;
   }
 
-  if ((millis() - NClastread) > 50) {
-    NClastread = millis();
+  if ((millis() - GLOBAL.NClastread) > 50) {
+    GLOBAL.NClastread = millis();
 
     NunChuckRequestData();
     NunChuckProcessData();
@@ -161,40 +161,40 @@ void Choose_Program()
       {
         case REG2POINTMOVE: //new 2 point move
           EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(1);
           break;
 
         case REV2POINTMOVE:   //reverse beta 2Pt
           EEPROM_STORED.REVERSE_PROG_ORDER = true;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(1);
           break;
 
         case REG3POINTMOVE: //new 3 point move
           EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(101); //three point move
           break;
 
         case REV3POINTMOVE: //new 3 point move reverse
           EEPROM_STORED.REVERSE_PROG_ORDER = true;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(101); //three point move
           break;
@@ -217,10 +217,10 @@ void Choose_Program()
 
         case PORTRAITPANO:  //Pano Beta
           EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(301);
           break;
@@ -231,10 +231,10 @@ void Choose_Program()
 
         case AUXDISTANCE:   //
           EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          reset_prog = 1;
+          GLOBAL.reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(prompt_time);
+          delay(GLOBAL.prompt_time);
           lcd.empty();
           progstep_goto(401);
           break;
@@ -263,7 +263,7 @@ void Move_to_Startpoint()
     }
 
     FLAGS.redraw = false;
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
@@ -292,12 +292,12 @@ void button_actions_move_start()
 
       do //run this loop until the motors stop
       {
-        //Serial.print("motorMoving:");Serial.println(motorMoving);
+        //Serial.print("FLAGS.motorMoving:");Serial.println(FLAGS.motorMoving);
         if (!nextMoveLoaded)
         {
           updateMotorVelocities2();
         }
-      } while (motorMoving);
+      } while (FLAGS.motorMoving);
 
       lcd.empty();
       set_position(0, 0, 0); //sets current steps to 0
@@ -308,7 +308,7 @@ void button_actions_move_start()
 #endif
       if (!EEPROM_STORED.REVERSE_PROG_ORDER) draw(9, 1, 3);  //lcd.at(1,3,"Start Pt. Set");
       else					           draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
 
@@ -337,15 +337,15 @@ void Move_to_Endpoint()
 
     FLAGS.redraw = false;
     startISR1 ();
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     enable_PanTilt();
-    if (EEPROM_STORED.AUX_ON) enable_AUX();  //
+    if (SETTINGS.AUX_ON) enable_AUX();  //
   }
   /*
     NunChuckRequestData();
     NunChuckProcessData();
     applyjoymovebuffer_exponential();
-    dda_move(feedrate_micros);
+    dda_move(GLOBAL.feedrate_micros);
     button_actions_move_end();  //read buttons, look for home set on c
     delayMicroseconds(200);
     //delay(1);
@@ -371,13 +371,13 @@ void button_actions_move_end()
       NunChuckClearData();
       do //run this loop until the motors stop
       {
-        //Serial.print("motorMoving:");Serial.println(motorMoving);
+        //Serial.print("FLAGS.motorMoving:");Serial.println(FLAGS.motorMoving);
         if (!nextMoveLoaded)
         {
           updateMotorVelocities2();
         }
       }
-      while (motorMoving);
+      while (FLAGS.motorMoving);
 
       //end stop the motors
 
@@ -407,7 +407,7 @@ void button_actions_move_end()
       if (!EEPROM_STORED.REVERSE_PROG_ORDER) draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
       else					             draw(9, 1, 3); //lcd.at(1,3,"Start Pt. Set");
 
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
     case Z_Pressed:
@@ -450,7 +450,7 @@ void Move_to_Point_X(uint8_t Point)
     if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     else draw(3, 2, 1); //lcd.at(2,1,CZ1);
     FLAGS.redraw = false;
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     
 
     //   Velocity Engine update
@@ -481,13 +481,13 @@ void button_actions_move_x(uint8_t Point)
   
         do //run this loop until the motors stop
         {
-          //Serial.print("motorMoving:");Serial.println(motorMoving);
+          //Serial.print("FLAGS.motorMoving:");Serial.println(FLAGS.motorMoving);
           if (!nextMoveLoaded)
           {
             updateMotorVelocities2();
           }
         }
-        while (motorMoving);
+        while (FLAGS.motorMoving);
         //end stop the motors
   
         if (Point == 0) set_position(0, 0, 0);		 //reset for home position
@@ -533,7 +533,7 @@ void button_actions_move_x(uint8_t Point)
           lcd.at (1, 4, "Center Set");
         }
   
-        delay(prompt_time);
+        delay(GLOBAL.prompt_time);
         progstep_forward();
         break;
      
@@ -544,13 +544,13 @@ void button_actions_move_x(uint8_t Point)
   
         do //run this loop until the motors stop
         {
-          //Serial.print("motorMoving:");Serial.println(motorMoving);
+          //Serial.print("FLAGS.motorMoving:");Serial.println(FLAGS.motorMoving);
           if (!nextMoveLoaded)
           {
             updateMotorVelocities2();
           }
         }
-        while (motorMoving); // Wait for the motors to stop
+        while (FLAGS.motorMoving); // Wait for the motors to stop
         progstep_backward();
       break;
   }
@@ -564,7 +564,7 @@ void Set_Cam_Interval()
   {
     lcd.empty();
     draw(17, 1, 1); //lcd.at(1,1,"Set Sht Interval");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     lcd.empty();
     draw(18, 1, 1); //lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
@@ -575,7 +575,7 @@ void Set_Cam_Interval()
   uint16_t intval_last = EEPROM_STORED.intval;
   NunChuckRequestData();
   NunChuckProcessData();
-  if (EEPROM_STORED.intval < 20) joy_y_lock_count = 0;
+  if (EEPROM_STORED.intval < 20) GLOBAL.joy_y_lock_count = 0;
   EEPROM_STORED.intval += joy_capture3();
   EEPROM_STORED.intval  = constrain(EEPROM_STORED.intval, 2, 6000); //remove the option for Ext Trigger right now
   if (intval_last != EEPROM_STORED.intval) {
@@ -583,8 +583,7 @@ void Set_Cam_Interval()
   }
 
   button_actions_intval(EEPROM_STORED.intval);  //read buttons, look for c button press to set interval
-  delay (70);
-  //delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -646,7 +645,7 @@ void button_actions_intval(uint16_t intval)
 
       lcd.empty();
       draw(21, 1, 3); //lcd.at(1,3,"Interval Set"); // try this to push correct character
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
     }
@@ -666,7 +665,7 @@ void Set_Duration() //This is really setting frames
     //			1234567890123456
     draw(32, 1, 5); //lcd.at(1,5,	"Set Move");
     draw(33, 2, 5); //lcd.at(2,5,	"Duration");
-    delay(prompt_time * 1.5);
+    delay(GLOBAL.prompt_time * 1.5);
     lcd.empty();
     draw(34, 1, 10); //lcd.at(1,9,"H:MM:SS");
     if ((EEPROM_STORED.intval > 3) || (EEPROM_STORED.intval == EXTTRIG_INTVAL))
@@ -722,13 +721,13 @@ void Set_Duration() //This is really setting frames
     } //end update time and shots
   } //end sms
   button_actions_overaldur();  //read buttons, look for c button press to set overall time
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
 void Display_Duration()
 {
-  calc_time_remain(total_pano_move_time);
+  calc_time_remain(GLOBAL.total_pano_move_time);
   display_time(1, 1);
 
   if ((EEPROM_STORED.intval > 3) || (EEPROM_STORED.intval == EXTTRIG_INTVAL))
@@ -763,7 +762,7 @@ void button_actions_overaldur()
     case C_Pressed:
       lcd.empty();
       draw(35, 1, 3); //lcd.at(1,3,"Duration Set");
-      delay (prompt_time);
+      delay (GLOBAL.prompt_time);
       progstep_forward();
       break;
 
@@ -780,13 +779,13 @@ void Set_Static_Time()
   {
     lcd.empty();
     draw(22, 1, 1); //lcd.at(1,1,"Set Static Time");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     lcd.empty();
     draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    max_shutter = EEPROM_STORED.intval - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
-    if (EEPROM_STORED.intval == EXTTRIG_INTVAL) max_shutter = 600; //external trigger
-    if (EEPROM_STORED.progtype == PANOGIGA || EEPROM_STORED.progtype == PORTRAITPANO) max_shutter = 36000; //pano mode - allows
+    GLOBAL.max_shutter = EEPROM_STORED.intval - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
+    if (EEPROM_STORED.intval == EXTTRIG_INTVAL) GLOBAL.max_shutter = 600; //external trigger
+    if (EEPROM_STORED.progtype == PANOGIGA || EEPROM_STORED.progtype == PORTRAITPANO) GLOBAL.max_shutter = 36000; //pano mode - allows
     DisplayStatic_tm();
     FLAGS.redraw = false;
   }
@@ -795,14 +794,14 @@ void Set_Static_Time()
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (EEPROM_STORED.static_tm < 20) joy_y_lock_count = 0;
+  if (EEPROM_STORED.static_tm < 20) GLOBAL.joy_y_lock_count = 0;
   EEPROM_STORED.static_tm += joy_capture3();
-  if (EEPROM_STORED.static_tm > 60000) EEPROM_STORED.static_tm = max_shutter;
-  EEPROM_STORED.static_tm = constrain(EEPROM_STORED.static_tm, 1, max_shutter);
+  if (EEPROM_STORED.static_tm > 60000) EEPROM_STORED.static_tm = GLOBAL.max_shutter;
+  EEPROM_STORED.static_tm = constrain(EEPROM_STORED.static_tm, 1, GLOBAL.max_shutter);
 
   if (static_tm_last != EEPROM_STORED.static_tm) DisplayStatic_tm();
   button_actions_stat_time();  //read buttons, look for c button press to set interval
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -845,7 +844,7 @@ void button_actions_stat_time()
       //if (EEPROM_STORED.intval!=3)  camera_exp_tm=(long)EEPROM_STORED.static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
       lcd.empty();
       draw(25, 1, 1); //lcd.at(1,1,"Static Time Set"); // try this to push correct character
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
 
@@ -862,12 +861,12 @@ void Set_Ramp()
   {
     lcd.empty();
     draw(29, 1, 1); //lcd.at(1,1,"	Set Ramp");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     lcd.empty();
     draw(30, 1, 1); //lcd.at(1,1,"Ramp:	 Frames");
     if (EEPROM_STORED.intval == VIDEO_INTVAL) {
       EEPROM_STORED.camera_moving_shots = 147; //allow for up to 49 % ramp
-      lcd.at(1, 10, "Percent");
+      lcd.at(1, 10, "GLOBAL.percent");
     }
 
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
@@ -878,17 +877,17 @@ void Set_Ramp()
   uint16_t rampval_last = EEPROM_STORED.rampval;
   NunChuckRequestData();
   NunChuckProcessData();
-  if (EEPROM_STORED.rampval < 20) joy_y_lock_count = 0;
+  if (EEPROM_STORED.rampval < 20) GLOBAL.joy_y_lock_count = 0;
   EEPROM_STORED.rampval += joy_capture3();
   if (EEPROM_STORED.rampval < 1) {
     EEPROM_STORED.rampval = 1;
-    delay(prompt_time / 2);
+    delay(GLOBAL.prompt_time / 2);
   }
   //if (EEPROM_STORED.rampval>500) {EEPROM_STORED.rampval=2;}
 
   if ( EEPROM_STORED.rampval * 3 > EEPROM_STORED.camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
     EEPROM_STORED.rampval = EEPROM_STORED.camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
-    delay(prompt_time / 2);
+    delay(GLOBAL.prompt_time / 2);
   }
 
   //EEPROM_STORED.rampval=constrain(EEPROM_STORED.rampval,1,500); //
@@ -897,7 +896,7 @@ void Set_Ramp()
   }
   //delay(50);
   button_actions_rampval();  //read buttons, look for c button press to set interval
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -922,7 +921,7 @@ void button_actions_rampval()
 
       lcd.empty();
       draw(31, 1, 5); //lcd.at(1,5,"Ramp Set");
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
 
@@ -941,7 +940,7 @@ void Set_LeadIn_LeadOut()
     lcd.empty();
     draw(36, 1, 1); //lcd.at(1,1,"Set Static Lead");
     draw(37, 2, 2); //lcd.at(2,2,"In/Out Frames");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     lcd.empty();
     draw(38, 1, 6); //lcd.at(1,1,"IN -	Out");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
@@ -951,18 +950,18 @@ void Set_LeadIn_LeadOut()
     DisplayLeadIn_LeadOut();
   }
 
-  int16_t joyxysum_last = joy_x_axis + joy_y_axis; //figure out if changing
+  int16_t joyxysum_last = GLOBAL.joy_x_axis + GLOBAL.joy_y_axis; //figure out if changing
 
   NunChuckRequestData();
   NunChuckProcessData();
   cursorpos += joy_capture_x_map();
 
-  if (joyxysum_last != (joy_x_axis + joy_y_axis) || abs(joy_x_axis + joy_y_axis) > 10) { //check to see if there is an input, otherwise don't update display
+  if (joyxysum_last != (GLOBAL.joy_x_axis + GLOBAL.joy_y_axis) || abs(GLOBAL.joy_x_axis + GLOBAL.joy_y_axis) > 10) { //check to see if there is an input, otherwise don't update display
     DisplayLeadIn_LeadOut();
   }
 
   button_actions_lead_in_out();  //read buttons, look for c button press to ramp
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -1067,9 +1066,9 @@ void button_actions_lead_in_out()
         //restore_from_eeprom_memory();
         if (DEBUG) review_RAM_Contents();
 
-        //delay(prompt_time);
-        if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
-        if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
+        //delay(GLOBAL.prompt_time);
+        if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
+        if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
       */  //end of code block to be moved from LeadinLeadOut
 
       progstep_forward();
@@ -1127,9 +1126,9 @@ void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
   review_RAM_Contents();
 #endif
 
-  //delay(prompt_time);
-  if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-  if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+  //delay(GLOBAL.prompt_time);
+  if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+  if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
   //end of code block pulled from LeadinLeadOut
 }
 
@@ -1141,40 +1140,40 @@ void Review_Confirm()
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
-    //delay(prompt_time);
-    delay(prompt_time);
+    //delay(GLOBAL.prompt_time);
+    delay(GLOBAL.prompt_time);
     //delay(100);
     lcd.empty();
     FLAGS.redraw = false;
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 2;
-    start_delay_sec = 0;
+    GLOBAL.start_delay_sec = 0;
   }
 
-  if ((millis() - diplay_last_tm) > (prompt_time * 4))
+  if ((millis() - GLOBAL.display_last_tm) > (GLOBAL.prompt_time * 4))
   { //test for display update
-    //if ((millis()-diplay_last_tm) >(700)){ //test for display update
+    //if ((millis()-GLOBAL.display_last_tm) >(700)){ //test for display update
 
     reviewprog ++;
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
     if (reviewprog > 4) reviewprog = 2;
-    first_time2 = true;
+    GLOBAL.first_time2 = true;
     DisplayReviewProg();
   } //end test for display update
 
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (abs(joy_y_axis) > 20)
+  if (abs(GLOBAL.joy_y_axis) > 20)
   { //do read time updates to delay program
     reviewprog = 4;
     DisplayReviewProg();
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
   }
 
   button_actions_review();
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -1208,23 +1207,23 @@ void DisplayReviewProg()
 
     case 4:   //
       //lcd.empty();
-      if (first_time2)
+      if (GLOBAL.first_time2)
       {
         lcd.at(1, 1, "Set Start Delay");
         lcd.at(2, 1, "			");
         draw(34, 2, 10); //lcd.at(2,10,"H:MM:SS");
-        first_time2 = false;
+        GLOBAL.first_time2 = false;
       }
 
-      if (start_delay_sec < 20) joy_y_lock_count = 0; //this is an unsigned int
-      start_delay_sec += joy_capture3();
-      //if (start_delay_sec<0) {start_delay_sec=0;} //this statement doesn't do anything as this is an unsigned int
-      if (start_delay_sec > 43200) {
-        start_delay_sec = 0;
+      if (GLOBAL.start_delay_sec < 20) GLOBAL.joy_y_lock_count = 0; //this is an unsigned int
+      GLOBAL.start_delay_sec += joy_capture3();
+      //if (GLOBAL.start_delay_sec<0) {GLOBAL.start_delay_sec=0;} //this statement doesn't do anything as this is an unsigned int
+      if (GLOBAL.start_delay_sec > 43200) {
+        GLOBAL.start_delay_sec = 0;
       }
-      calc_time_remain_dur_sec (start_delay_sec);
+      calc_time_remain_dur_sec (GLOBAL.start_delay_sec);
       display_time(2, 1);
-      //lcd.at(1,11,start_delay_sec);
+      //lcd.at(1,11,GLOBAL.start_delay_sec);
       // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
       // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
       break;
@@ -1239,38 +1238,38 @@ void button_actions_review()
     case C_Pressed:
       lcd.empty();
       EEPROM_STORED.MOVE_REVERSED_FOR_RUN = false; //Reset This
-      start_delay_tm = ((millis() / 1000L) + start_delay_sec); //system seconds in the future - use this as big value to compare against
+      GLOBAL.start_delay_tm = ((millis() / 1000L) + GLOBAL.start_delay_sec); //system seconds in the future - use this as big value to compare against
       draw(34, 2, 10); //lcd.at(2,10,"H:MM:SS");
       lcd.at(1, 2, "Delaying Start");
-      CZ_Button_Read_Count = 0; //reset this to zero to start
+      GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
 
-      while (start_delay_tm > millis() / 1000L)
+      while (GLOBAL.start_delay_tm > millis() / 1000L)
       {
         //enter delay routine
         calc_time_remain_start_delay ();
-        if ((millis() - diplay_last_tm) > 1000) display_time(2, 1);
+        if ((millis() - GLOBAL.display_last_tm) > 1000) display_time(2, 1);
         NunChuckRequestData();
         NunChuckProcessData();
         Check_Prog(); //look for long button press
-        if (CZ_Button_Read_Count > 20 && !EEPROM_STORED.Program_Engaged)
+        if (GLOBAL.CZ_Button_Read_Count > 20 && !EEPROM_STORED.Program_Engaged)
         {
-          start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
-          CZ_Button_Read_Count = 0; //reset this to zero to start
+          GLOBAL.start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
+          GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
         }
       }
 
       enable_PanTilt();
-      if (EEPROM_STORED.AUX_ON) enable_AUX();  //
+      if (SETTINGS.AUX_ON) enable_AUX();  //
 
       //draw(49,1,1);//lcd.at(1,1,"Program Running");
-      //delay(prompt_time/3);
+      //delay(GLOBAL.prompt_time/3);
 
       if (EEPROM_STORED.intval == EXTTRIG_INTVAL)  lcd.at(2, 1, "Waiting for Man.");
 
       EEPROM_STORED.Program_Engaged = true;
       FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
-      interval_tm = 0; //set this to 0 to immediately trigger the first shot
-      sequence_repeat_count = 0; //this is zeroed out every time we start a new shot
+      GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
+      GLOBAL.sequence_repeat_count = 0; //this is zeroed out every time we start a new shot
 
       if (EEPROM_STORED.intval > 3) { //SMS Mode
         lcd.empty(); //clear for non video
@@ -1288,9 +1287,8 @@ void button_actions_review()
         ext_shutter_count = 0; //set this to avoid any prefire shots or cable insertions.
         lcd.at(1, 1, "Waiting for Trig");
       }
-      //lcd_backlight_cur= 100;
       FLAGS.redraw = true;
-      lcd.bright(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
+      lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
       break;
 
     case Z_Pressed:
@@ -1339,8 +1337,8 @@ void button_actions_end_of_program()
     case C_Pressed:
       // Normal
       EEPROM_STORED.REVERSE_PROG_ORDER = false;
-      if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-      if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
@@ -1360,8 +1358,8 @@ void button_actions_end_of_program()
 
     case Z_Pressed:
       EEPROM_STORED.REVERSE_PROG_ORDER = true;
-      if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-      if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
@@ -1384,7 +1382,7 @@ void button_actions_end_of_program()
 
 void Auto_Repeat_Video()
 { //Auto Reverse
-  sequence_repeat_count++;
+  GLOBAL.sequence_repeat_count++;
   EEPROM_STORED.REVERSE_PROG_ORDER = true;
   EEPROM_STORED.camera_fired = 0;
   lcd.bright(8);
@@ -1395,22 +1393,22 @@ void Auto_Repeat_Video()
 
   lcd.empty();
   EEPROM_STORED.MOVE_REVERSED_FOR_RUN = false; //Reset This
-  //start_delay_tm=((millis()/1000L)+start_delay_sec); //system seconds in the future - use this as big value to compare against
+  //GLOBAL.start_delay_tm=((millis()/1000L)+GLOBAL.start_delay_sec); //system seconds in the future - use this as big value to compare against
   //draw(34,2,10);//lcd.at(2,10,"H:MM:SS");
   //lcd.at(1,2,"Delaying Start");
-  CZ_Button_Read_Count = 0; //reset this to zero to start
+  GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
 
   /*
-    while (start_delay_tm>millis()/1000L) {
+    while (GLOBAL.start_delay_tm>millis()/1000L) {
   	//enter delay routine
   	calc_time_remain_start_delay ();
-  	if ((millis()-diplay_last_tm) > 1000) display_time(2,1);
+  	if ((millis()-GLOBAL.display_last_tm) > 1000) display_time(2,1);
   	NunChuckRequestData();
   	NunChuckProcessData();
   	Check_Prog(); //look for long button press
-  	if (CZ_Button_Read_Count>20 && !EEPROM_STORED.Program_Engaged) {
-  		start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
-  		CZ_Button_Read_Count=0; //reset this to zero to start
+  	if (GLOBAL.CZ_Button_Read_Count>20 && !EEPROM_STORED.Program_Engaged) {
+  		GLOBAL.start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
+  		GLOBAL.CZ_Button_Read_Count=0; //reset this to zero to start
   	}
     }
   */
@@ -1418,12 +1416,12 @@ void Auto_Repeat_Video()
   enable_AUX();  //
 
   draw(49, 1, 1); //lcd.at(1,1,"Program Running");
-  //delay(prompt_time/3);
+  //delay(GLOBAL.prompt_time/3);
 
   EEPROM_STORED.Program_Engaged = true;
   FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
 
-  interval_tm = 0; //set this to 0 to immediately trigger the first shot
+  GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
 
   if (EEPROM_STORED.intval > 3) { //SMS Mode
     lcd.empty(); //clear for non video
@@ -1442,15 +1440,14 @@ void Auto_Repeat_Video()
   	lcd.at(1,1,"Waiting for Trig");
     }
   */
-  //lcd_backlight_cur= 100;
   FLAGS.redraw = true;
-  lcd.bright(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
+  lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
 }//end of 91
 
 
 void Pause_Prog()
 {
-  CZ_Button_Read_Count = 0;
+  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = !EEPROM_STORED.Program_Engaged; //turn off the loop
   if (!EEPROM_STORED.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!
@@ -1569,7 +1566,7 @@ void display_status()
   }
   else lcd.at(2, 14, batt2);
 
-  if (POWERDOWN_LV) {
+  if (SETTINGS.POWERDOWN_LV) {
     if (batt1 < 9) {
       draw(7, 2, 1); //lcd.at(2,1,"Low Power");
 
@@ -1624,9 +1621,9 @@ void calc_time_remain_dur_sec (unsigned int sec)
 void calc_time_remain_start_delay ()
 {
   unsigned long current_sec = (millis() / 1000);
-  timeh =  (start_delay_tm - current_sec) / 3600;	// hours
-  timem =  (start_delay_tm - current_sec) / 60 % 60; // minutes
-  time_s = (start_delay_tm - current_sec) % 60;		// seconds
+  timeh =  (GLOBAL.start_delay_tm - current_sec) / 3600;	// hours
+  timem =  (GLOBAL.start_delay_tm - current_sec) / 60 % 60; // minutes
+  time_s = (GLOBAL.start_delay_tm - current_sec) % 60;		// seconds
 }
 
 
@@ -1670,11 +1667,10 @@ void Enter_Aux_Endpoint()
     //routine for just moving to end point if nothing was stored.
     lcd.empty();
     lcd.at(1, 1, "Enter Aux End Pt");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
 
     //move the aux motor 0.5 inches in the positive direction
-
-    int32_t z = STEPS_PER_INCH_AUX / 2;
+    int32_t z = SETTINGS.STEPS_PER_INCH_AUX / 2;
     set_target(0, 0, z);
 
     dda_move(20);
@@ -1686,8 +1682,8 @@ void Enter_Aux_Endpoint()
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    //delay(prompt_time)
-    aux_dist = EEPROM_STORED.current_steps.z * 10 / STEPS_PER_INCH_AUX; //t
+    //delay(GLOBAL.prompt_time)
+    aux_dist = EEPROM_STORED.current_steps.z * 10 / SETTINGS.STEPS_PER_INCH_AUX; //t
     DisplayAUX_Dist();
     FLAGS.redraw = false;
   }
@@ -1697,8 +1693,7 @@ void Enter_Aux_Endpoint()
   NunChuckProcessData();
 
   aux_dist += joy_capture3();
-  //aux_dist=constrain(aux_dist,-999,999);
-  aux_dist = constrain(aux_dist, -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE);
+  aux_dist = constrain(aux_dist, int32_t(-SETTINGS.MAX_AUX_MOVE_DISTANCE), int32_t(SETTINGS.MAX_AUX_MOVE_DISTANCE));
 
   //STEPS_PER_INCH_AUX
 
@@ -1711,7 +1706,7 @@ void Enter_Aux_Endpoint()
   //EEPROM_STORED.motor_steps_pt[2][2]=(aux_dist*47812L)/10;
   //lcd.at(2,1,(long)EEPROM_STORED.motor_steps_pt[2][2]);
   button_actions_Enter_Aux_Endpoint();  //read buttons, look for c button press to set interval
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 
   //delay(1);
 }
@@ -1753,12 +1748,12 @@ void button_actions_Enter_Aux_Endpoint()
       lcd.empty();
       EEPROM_STORED.motor_steps_pt[0][2] = 0;//this sets the end point
       EEPROM_STORED.motor_steps_pt[1][2] = 0;//this sets the end point
-      EEPROM_STORED.motor_steps_pt[2][2] = aux_dist * STEPS_PER_INCH_AUX / 10;  //this sets the end point
+      EEPROM_STORED.motor_steps_pt[2][2] = aux_dist * SETTINGS.STEPS_PER_INCH_AUX / 10;  //this sets the end point
 #if DEBUG
       Serial.println(EEPROM_STORED.motor_steps_pt[2][2]);
 #endif
       lcd.at(1, 2, "Aux End Pt. Set");
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
 

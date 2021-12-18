@@ -87,12 +87,12 @@ void Set_angle_of_view()
 {
   if (FLAGS.redraw)
   {
-    EEPROM_STORED.AUX_ON = false; // turn off Aux as only PT Needed for this step
+    SETTINGS.AUX_ON = false; // turn off Aux as only PT Needed for this step
 
     lcd.empty();
     draw(75, 1, 1); //lcd.at(1,1,"Set Angle o'View");
     draw(76, 2, 2); //lcd.at(2,2,"C-Set, Z-Reset");
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     
     EEPROM_STORED.current_steps.x = 0;
     EEPROM_STORED.current_steps.y = 0;
@@ -125,24 +125,24 @@ void Set_angle_of_view()
 }
 
 
-void Define_Overlap_Percentage()
+void Define_Overlap_percentage()
 {
   if (FLAGS.redraw)
   {
     lcd.empty();
     draw(79, 1, 3); //lcd.at(1,2,"   % Overlap");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    //olpercentage=20;
+    //olGLOBAL.percentage=20;
     Display_olpercentage();
     FLAGS.redraw = false;
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
     NunChuckRequestData(); //  Use this to clear out any button registry from the last step
   }
 
   uint8_t olpercentage_last = olpercentage;
   NunChuckRequestData();
   NunChuckProcessData();
-  if (olpercentage < 20) joy_y_lock_count = 0;
+  if (olpercentage < 20) GLOBAL.joy_y_lock_count = 0;
   olpercentage += joy_capture3();
   if (!olpercentage || olpercentage > 250) {
     olpercentage = 1;
@@ -156,7 +156,7 @@ void Define_Overlap_Percentage()
     Display_olpercentage();
   }
   button_actions_olpercentage();  //read buttons, look for c button press to set interval
-  delay (prompt_delay);
+  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -171,7 +171,7 @@ void Display_olpercentage()
   {
     lcd.at(1, 3, olpercentage);
   }
-  // if (olpercentage<100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
+  // if (olGLOBAL.percentage<100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
 }
 
 
@@ -180,7 +180,7 @@ void button_actions_olpercentage()
   switch (HandleButtons())
   {
     case C_Pressed: // looking for c button press
-      //perform all calcs based on Angle of view and percentage overlap
+      //perform all calcs based on Angle of view and GLOBAL.percentage overlap
       Pan_AOV_steps  = abs(EEPROM_STORED.current_steps.x); //Serial.println(Pan_AOV_steps);
       Tilt_AOV_steps = abs(EEPROM_STORED.current_steps.y); //Serial.println(Tilt_AOV_steps);
   
@@ -194,7 +194,7 @@ void button_actions_olpercentage()
       
       lcd.empty();
       draw(80, 1, 3); //lcd.at(1,3,"Overlap Set");
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
 
@@ -228,13 +228,13 @@ void Set_PanoArrayType()
       case PANO_7X5TopThird:  lcd.at(2, 4, "7x5 Top1/3");     break;     
     }	
     FLAGS.redraw = false;
-    delay(prompt_time);
+    delay(GLOBAL.prompt_time);
   }
 
-  if ((millis() - NClastread) > 50)
+  if ((millis() - GLOBAL.NClastread) > 50)
   {
-    NClastread = millis();
-    //Serial.print("Read");Serial.println(NClastread);
+    GLOBAL.NClastread = millis();
+    //Serial.print("Read");Serial.println(GLOBAL.NClastread);
     NunChuckRequestData();
     NunChuckProcessData();
   }
@@ -325,25 +325,25 @@ void Pano_Review_Confirm()
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
-    delay(prompt_time*2);
+    delay(GLOBAL.prompt_time*2);
     
     reviewprog = 1;
     EEPROM_STORED.camera_fired = 0;
     
-    local_total_pano_move_time = total_shots_x * total_shots_y * sqrt(steps_per_shot_max_x / (PAN_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
-    local_total_pano_move_time += total_shots_y * sqrt(steps_per_shot_max_y / (TILT_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
-    total_pano_move_time = local_total_pano_move_time;
+    local_total_pano_move_time = total_shots_x * total_shots_y * sqrt(steps_per_shot_max_x / (SETTINGS.PAN_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
+    local_total_pano_move_time += total_shots_y * sqrt(steps_per_shot_max_y / (SETTINGS.TILT_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
+    GLOBAL.total_pano_move_time = local_total_pano_move_time;
     
     lcd.empty();
     Pano_DisplayReviewProg();
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
     FLAGS.redraw = false;
   }
 
-  if ((millis() - diplay_last_tm) > 1000)
+  if ((millis() - GLOBAL.display_last_tm) > 1000)
   { //test for display update
     reviewprog ++;
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
     if (reviewprog > 4) reviewprog = 1;
     Pano_DisplayReviewProg();
   } //end test for display update
@@ -351,11 +351,11 @@ void Pano_Review_Confirm()
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (abs(joy_y_axis) > 20)
+  if (abs(GLOBAL.joy_y_axis) > 20)
   { //do read time updates to delay program
     reviewprog = 4;
     Pano_DisplayReviewProg();
-    diplay_last_tm = millis();
+    GLOBAL.display_last_tm = millis();
   }
 
   pano_button_actions_review();
@@ -370,23 +370,23 @@ void pano_button_actions_review()
     case C_Pressed:
       lcd.empty();
   
-      if (start_delay_sec)
+      if (GLOBAL.start_delay_sec)
       {
         lcd.at(1, 2, "Delaying Start");
-        //delay (start_delay_sec*60L*1000L);
+        //delay (GLOBAL.start_delay_sec*60L*1000L);
         lcd.empty();
       }
   
       disable_AUX();  //
   
       draw(49, 1, 1); //lcd.at(1,1,"Program Running");
-      delay(prompt_time / 3);
+      delay(GLOBAL.prompt_time / 3);
   
       //EEPROM_STORED.static_tm = 1; //use a tenth of a second
       EEPROM_STORED.intval = EEPROM_STORED.static_tm + 3; // calc interval based on static time only
       //intval = EEPROM_STORED.static_tm; // calc interval based on static time only
       EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //tenths of a second to ms
-      interval_tm = 0; //set this to 0 to immediately trigger the first shot
+      GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
   
       if (EEPROM_STORED.intval > 3)
       { //SMS Mode
@@ -397,7 +397,6 @@ void pano_button_actions_review()
       EEPROM_STORED.camera_fired = 0; //reset the counter
       EEPROM_STORED.Program_Engaged = true; //leave this for pano
       FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
-      lcd_backlight_cur = 100;
       FLAGS.redraw = false;
       lcd.bright(20);
       if (move_with_acceleration)
@@ -449,15 +448,15 @@ void Pano_DisplayReviewProg()
       //lcd.empty();
       lcd.at(1, 1, "StartDly:	min");
       lcd.at(2, 2, "Press C Button");
-      if (start_delay_sec < 20) joy_y_lock_count = 0;
-      start_delay_sec += joy_capture3();
-      if (start_delay_sec > 500) {
-        start_delay_sec = 500;
+      if (GLOBAL.start_delay_sec < 20) GLOBAL.joy_y_lock_count = 0;
+      GLOBAL.start_delay_sec += joy_capture3();
+      if (GLOBAL.start_delay_sec > 500) {
+        GLOBAL.start_delay_sec = 500;
       }
-      if (start_delay_sec > 600) {
-        start_delay_sec = 0;
+      if (GLOBAL.start_delay_sec > 600) {
+        GLOBAL.start_delay_sec = 0;
       }
-      lcd.at(1, 11, start_delay_sec);
+      lcd.at(1, 11, GLOBAL.start_delay_sec);
       // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
       // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
       break;
@@ -549,8 +548,8 @@ void move_motors_pano_accel()
 
   //set_target(fp.x,fp.y,0.0); //we are in incremental mode to start abs is false
   //dda_move(100);
-  setPulsesPerSecond(0, PAN_MAX_JOG_STEPS_PER_SEC); //this is now pusing through d
-  setPulsesPerSecond(1, TILT_MAX_JOG_STEPS_PER_SEC);
+  setPulsesPerSecond(0, SETTINGS.PAN_MAX_JOG_STEPS_PER_SEC); //this is now pusing through d
+  setPulsesPerSecond(1, SETTINGS.TILT_MAX_JOG_STEPS_PER_SEC);
   setupMotorMove(0, x);
   setupMotorMove(1, y);
 
@@ -666,8 +665,8 @@ void button_actions290()
   switch (HandleButtons())
   {
     case C_Pressed:
-      if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
-      if (EEPROM_STORED.POWERSAVE_AUX > 2)  disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > 2)  disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       EEPROM_STORED.current_steps.x = motors[0].position; //get our motor position variable synced
@@ -677,7 +676,7 @@ void button_actions290()
       if      (EEPROM_STORED.progtype == PANOGIGA)     EEPROM_STORED.progstep = 206; //  move to the main program at the interval setting - UD050715
       else if (EEPROM_STORED.progtype == PORTRAITPANO) EEPROM_STORED.progstep = 306; //  move to the main program at the interval setting UD050715
       FLAGS.redraw = false;
-      delay(prompt_time);
+      delay(GLOBAL.prompt_time);
       break;
   }
 }
