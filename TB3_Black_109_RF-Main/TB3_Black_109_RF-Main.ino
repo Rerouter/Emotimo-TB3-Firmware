@@ -76,20 +76,20 @@
 
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
-//Global Parameters
+//Debug Parameters
 #define DEBUG 1
 #define DEBUG_MOTOR 0
 #define DEBUG_NC 0
 #define DEBUG_PANO 1
 #define DEBUG_GOTO 0
 
+// Defines
 #define POWERDOWN_LV false //set this to cause the TB3 to power down below 10 volts
 #define MAX_MOVE_POINTS 3
 #define VIDEO_FEEDRATE_NUMERATOR 375L // Set this for 42000L, or 375L for faster calc moves
 #define PAN_MAX_JOG_STEPS_PER_SEC 10000
 #define TILT_MAX_JOG_STEPS_PER_SEC 10000
 //#define AUX_MAX_JOG_STEPS_PER_SEC 15000.0 //this is defined in the setup menu now.
-
 
 //Interval Options
 #define VIDEO_INTVAL  2
@@ -133,13 +133,22 @@ struct LONG {
   int32_t z;
 };
 
+
+struct Flags {  //Program Status Flags
+    boolean progstep_forward_dir   = true;  // boolean to define direction of menu travel to allow for easy skipping of menus
+    boolean Move_Engauged          = false;
+    boolean Interrupt_Fire_Engaged = false;
+    boolean redraw                = 1;      // variable to help with LCD dispay variable that need to show one time
+} FLAGS;
+
+
 struct Global {
   // Moving all the EEPROM Stored Globals into a single struct to clean up needing to keep track of addresses, 
   // EEPROM.put() uses the update function which reads to see if there is a difference before writing, so this method apart from taking longer will be safer over all
   // 512 Bytes for Uno
   // 4096 Bytes for 2560
   uint32_t build_version        = 10953;  //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
-  boolean  redraw               = 1;      //variable to help with LCD dispay variable that need to show one time
+
   uint16_t progtype             = 0;      //updownmenu selection
   uint32_t intval               = 2;      //seconds x10  - used for the interval prompt and display
   uint32_t interval             = 2000;   //calculated and is in ms
@@ -161,26 +170,42 @@ struct Global {
   uint8_t  LCD_BRIGHTNESS_DURING_RUN;     // 0 is off 8 is max
   uint16_t AUX_MAX_JOG_STEPS_PER_SEC;     // value x 1000  20 is the top or 20000 steps per second.
   boolean  AUX_REV;                       // 1=Aux Enabled, 0=Aux disabled
+  boolean  REVERSE_PROG_ORDER;            // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
+  boolean  MOVE_REVERSED_FOR_RUN = 0;
   LONG     current_steps;
   int32_t  motor_steps_pt[MAX_MOVE_POINTS][MOTORS]; // 3 total points.   Start point is always 0
   uint16_t keyframe[2][6];                          // this is basically the keyframes {start, end of rampup, start or rampdown, end}   - doesn't vary by motor at this point
   int32_t  linear_steps_per_shot [MOTORS];          // This is for the calculated or estimated steps per shot in a segment for each motor
   int32_t  ramp_params_steps [MOTORS];
-} Global;
+} EEPROM_STORED;
 
 
-//uint32_t      build_version = 10953; //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
-uint32_t      intval = 2; //seconds x10  - used for the interval prompt and display
-uint32_t      interval = 2000; //calculated and is in ms
-uint32_t      camera_fired     = 0; //number of shots fired
-uint32_t      camera_moving_shots = 200; //frames for new duration/frames prompt
-uint32_t      camera_total_shots = 0; //used at the end target for camera fired to compare against
-unsigned int  overaldur = 20; //seconds now for video only
-unsigned int  prefire_time = 1; //currently hardcoded here to .1 second - this powers up motor early for the shot
-unsigned int  rampval = 50;
-uint16_t      static_tm = 1; //new variable
-uint16_t      lead_in = 1;
-uint16_t      lead_out = 1;
+int PanStepCount;
+int TiltStepCount;
+
+
+uint32_t start_delay_tm = 0;  //ms timestamp to help with delay comparison
+uint32_t goto_shot = 0;
+
+int8_t   sequence_repeat_type = 1; //1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
+uint16_t sequence_repeat_count = 0; //counter to hold variable for how many time we have repeated
+
+uint32_t     interval_tm      = 0;  //mc time to help with interval comparison
+uint32_t     interval_tm_last = 0; //mc time to help with interval comparison
+
+uint8_t lcd_dim_tm     = 10;
+unsigned long diplay_last_tm = 0;
+uint8_t  lcd_backlight_cur = 100;
+unsigned int  prompt_time = 500; // in ms for delays of instructions
+//unsigned int  prompt_time=350; // for faster debugging
+int  prompt_delay = 0; //to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
+//int prompt_val;
+
+boolean   reset_prog  = 1; //used to handle program reset or used stored
+boolean   first_time2 = 1;
+uint32_t     max_shutter; // Maximum shutter time in 0.1 second increments
+//unsigned int max_prefire;
+
 uint16_t      start_delay_sec = 0;
 float         total_pano_move_time = 0;
 
@@ -192,16 +217,10 @@ uint8_t   ext_shutter_count = 0;
 uint8_t   ext_hdr_shots = 1; //this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external
 
 //3 Point motor routine values
-int32_t   motor_steps_pt[MAX_MOVE_POINTS][MOTORS];  // 3 total points.   Start point is always 0
 uint32_t  percent; //% through a leg
-uint16_t   keyframe[2][6] = {{0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0}}; //this is basically the keyframes {start, end of rampup, start or rampdown, end}   - doesn't vary by motor at this point
-int32_t   linear_steps_per_shot [MOTORS] = {0, 0, 0}; //{This is for the calculated or estimated steps per shot in a segment for each motor
-int32_t   ramp_params_steps [MOTORS] = {0, 0, 0}; //This is to calc the steps at the end of rampup for each motor.  Each array value is for a motor
 
-//Program Status Flags
-boolean Program_Engaged =        false;
-boolean Move_Engaged =           false;
-boolean Interrupt_Fire_Engaged = false;
+
+
 
 //New Powersave flags
 /*Power Save explanation
@@ -214,23 +233,6 @@ boolean Interrupt_Fire_Engaged = false;
     We do lose microstep resolution for this, but it usually is not visible.   We could be off by as much as 8/16 mircosetps for a shot or 0.018 degrees - Really small stuff!  Try this mode out!
 */
 
-//CVariables that are set during the Setup Menu store these in EEPROM
-uint8_t  POWERSAVE_PT;  //1=None - always on  2 - low   3=standard    4=High
-uint8_t  POWERSAVE_AUX;  //1=None - always on  2 - low   3=standard    4=High
-boolean  AUX_ON;  //1=Aux Enabled, 0=Aux disabled
-boolean  PAUSE_ENABLED;  //1=Pause Enabled, 0=Pause disabled
-boolean  REVERSE_PROG_ORDER; //Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
-boolean  MOVE_REVERSED_FOR_RUN = 0;
-uint8_t  LCD_BRIGHTNESS_DURING_RUN;  //0 is off 8 is max
-uint16_t AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 steps per second.
-boolean  AUX_REV;  //1=Aux Enabled, 0=Aux disabled
-
-
-//control variable, no need to store in EEPROM - default and setup during shot
-uint16_t  progstep = 0; //used to define case for main loop
-boolean   progstep_forward_dir = true; //boolean to define direction of menu travel to allow for easy skipping of menus
-
-uint16_t  progtype = 0; //updownmenu selection
 //Main Menu Ordering
 
 #define MENU_ITEMS  8
@@ -260,13 +262,6 @@ enum inprogtype : uint8_t {
   INPROG_STOPMOTION = 99,
 };
 
-boolean   reset_prog  = 1; //used to handle program reset or used stored
-boolean   first_time  = 1; //variable to help with LCD dispay variable that need to show one time
-boolean   first_time2 = 1;
-
-uint32_t     max_shutter; // Maximum shutter time in 0.1 second increments
-//unsigned int max_prefire;
-
 uint8_t      Move_State_2PT = 1;
 enum Move_State_2PT : uint8_t {
   LeadIn2PT   = 1,
@@ -287,17 +282,6 @@ enum Move_State_3PT : uint8_t {
   Finished3PT  = 109
 };
 
-uint32_t     interval_tm      = 0;  //mc time to help with interval comparison
-uint32_t     interval_tm_last = 0; //mc time to help with interval comparison
-
-uint8_t lcd_dim_tm     = 10;
-unsigned long diplay_last_tm = 0;
-uint8_t  lcd_backlight_cur = 100;
-unsigned int  prompt_time = 500; // in ms for delays of instructions
-//unsigned int  prompt_time=350; // for faster debugging
-int  prompt_delay = 0; //to help with joystick reads and delays for inputs - this value is set during joystick read and executed later in the loop
-//int prompt_val;
-
 uint8_t reviewprog = 1;
 enum reviewprog : uint8_t {
   RowsColumns  = 0,
@@ -306,21 +290,17 @@ enum reviewprog : uint8_t {
   StartDelay   = 3
 };
 
-uint32_t start_delay_tm = 0;  //ms timestamp to help with delay comparison
-uint32_t goto_shot = 0;
-
-int8_t   sequence_repeat_type = 1; //1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
-uint16_t sequence_repeat_count = 0; //counter to hold variable for how many time we have repeated
 
 //remote and interface variables
 
 int8_t joy_x_axis, joy_y_axis, acc_x_axis, accel_y_axis;
 
-int PanStepCount;
-int TiltStepCount;
-
 unsigned int joy_y_lock_count = 0;
 unsigned int joy_x_lock_count = 0;
+
+int CZ_Button_Read_Count = 0;
+int C_Button_Read_Count = 0;
+int Z_Button_Read_Count = 0;
 
 uint8_t ButtonState = 4;
 enum ButtonState : uint8_t {
@@ -332,19 +312,12 @@ enum ButtonState : uint8_t {
 };
 
 
-
-int CZ_Button_Read_Count = 0;
-int C_Button_Read_Count = 0;
-int Z_Button_Read_Count = 0;
-
-
 unsigned int NCReadMillis = 42; //frequency at which we read the nunchuck for moves  1000/24 = 42  1000/30 = 33
 long NClastread = 1000; //control variable for NC reads cycles
 
 //Stepper Setup
 unsigned long  feedrate_micros = 0;
 
-LONG current_steps;
 LONG target_steps;
 LONG delta_steps;
 
@@ -485,7 +458,7 @@ void setup()
 
   // Handle EEPROM Interaction and upgrades
   //Check to see if our hardcoded build version set in progam is different than what was last put in EEPROM - detect upgrade.
-  if (Global.build_version != check_version())
+  if (EEPROM_STORED.build_version != check_version())
   { //4 byte string that now holds the build version.
 #if DEBUG
     Serial.println(check_version());
@@ -538,12 +511,12 @@ void setup()
 
 void loop2()
 {
-  if (!(progstep % 100)) {
+  if (!(EEPROM_STORED.progstep % 100)) {
     Choose_Program();
   }
   else
   {
-    switch (progstep / 100)
+    switch (EEPROM_STORED.progstep / 100)
     {
       case 0: // 2 Point Move Forward
         Move2PointMenu();
@@ -574,7 +547,7 @@ void loop2()
 
 void Move2PointMenu() // 0
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     case 1:   // Move to Start Point
       Move_to_Startpoint();
@@ -593,8 +566,8 @@ void Move2PointMenu() // 0
       break;
 
     case 5: //        Static Time
-      if (intval == VIDEO_INTVAL) { //don't show this for video
-        if (progstep_forward_dir) progstep_forward(); //skip the menu, go forward
+      if (EEPROM_STORED.intval == VIDEO_INTVAL) { //don't show this for video
+        if (FLAGS.progstep_forward_dir) progstep_forward(); //skip the menu, go forward
         else progstep_backward();  //skip the menu, go backward
       }
       else  Set_Static_Time(); //not needed for video
@@ -605,8 +578,8 @@ void Move2PointMenu() // 0
       break;
 
     case 7: //  Lead in and lead out
-      if (intval == VIDEO_INTVAL) { //don't show this for video
-        if (progstep_forward_dir) {
+      if (EEPROM_STORED.intval == VIDEO_INTVAL) { //don't show this for video
+        if (FLAGS.progstep_forward_dir) {
           Calculate_Shot(); //
           progstep_forward();
         } //skip the menu, go forward
@@ -616,8 +589,8 @@ void Move2PointMenu() // 0
       break;
 
     case 8: //  Set Shot Type
-      if (intval != VIDEO_INTVAL) { //skip for non video
-        if (progstep_forward_dir) {
+      if (EEPROM_STORED.intval != VIDEO_INTVAL) { //skip for non video
+        if (FLAGS.progstep_forward_dir) {
           progstep_forward();  //skip the menu, go forward
         }
         else progstep_backward();  //skip the menu, go backward
@@ -634,7 +607,7 @@ void Move2PointMenu() // 0
 
 void Move3PointMenu() // 100
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     case 101:   // Move Point 0
       Move_to_Point_X(0);
@@ -677,7 +650,7 @@ void Move3PointMenu() // 100
 
 void PanoGigaMenu() // 200
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     //start of pano Mode
 
@@ -720,7 +693,7 @@ void PanoGigaMenu() // 200
 
 void PanoSimpleMenu() // 300
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     //start of Portrait Pano Method
 
@@ -763,7 +736,7 @@ void PanoSimpleMenu() // 300
 
 void AuxDistanceMenu()  // 400
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     //start of entered distance on aux mode
     case 401:   // Move to Start Point
@@ -804,7 +777,7 @@ void AuxDistanceMenu()  // 400
 
 void SetupMenu() // 900
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     //start of setup
 
@@ -846,7 +819,7 @@ void SetupMenu() // 900
 
 void MenuMess()
 {
-  switch (progstep)
+  switch (EEPROM_STORED.progstep)
   {
     //start of in program menu options
 
@@ -888,8 +861,8 @@ void MenuMess()
 void loop()
 { //Main Loop
   while (1)
-  { //use debugging WHEN HIT here for monitoring - {sequence_repeat_type},{progstep},{progtype},{camera_fired}
-    switch (progstep)
+  { //use debugging WHEN HIT here for monitoring - {sequence_repeat_type},{EEPROM_STORED.progstep},{EEPROM_STORED.progtype},{EEPROM_STORED.camera_fired}
+    switch (EEPROM_STORED.progstep)
     {
       //start of 2 point SMS/Video routine
       case REG2POINTMOVE:   //
@@ -913,8 +886,8 @@ void loop()
         break;
 
       case 5: //  	    Static Time
-        if (intval == VIDEO_INTVAL) { //don't show this for video
-          if (progstep_forward_dir) progstep_forward(); //skip the menu, go forward
+        if (EEPROM_STORED.intval == VIDEO_INTVAL) { //don't show this for video
+          if (FLAGS.progstep_forward_dir) progstep_forward(); //skip the menu, go forward
           else progstep_backward();  //skip the menu, go backward
         }
         else  Set_Static_Time(); //not needed for video
@@ -925,8 +898,8 @@ void loop()
         break;
 
       case 7: //  Lead in and lead out
-        if (intval == VIDEO_INTVAL) { //don't show this for video
-          if (progstep_forward_dir) {
+        if (EEPROM_STORED.intval == VIDEO_INTVAL) { //don't show this for video
+          if (FLAGS.progstep_forward_dir) {
             Calculate_Shot(); //
             progstep_forward();
           } //skip the menu, go forward
@@ -936,8 +909,8 @@ void loop()
         break;
 
       case 8: //  Set Shot Type
-        if (intval != VIDEO_INTVAL) { //skip for non video
-          if (progstep_forward_dir) {
+        if (EEPROM_STORED.intval != VIDEO_INTVAL) { //skip for non video
+          if (FLAGS.progstep_forward_dir) {
             progstep_forward();  //skip the menu, go forward
           }
           else progstep_backward();  //skip the menu, go backward

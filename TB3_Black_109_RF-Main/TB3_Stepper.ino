@@ -75,7 +75,7 @@ void init_steppers()
 void dda_move(long micro_delay)
 {
   //enable our steppers
-  if (AUX_ON) enable_AUX();
+  if (EEPROM_STORED.AUX_ON) enable_AUX();
   enable_PanTilt();
 
   //figure out our deltas
@@ -98,9 +98,9 @@ void dda_move(long micro_delay)
   //do our DDA line!
   do
   {
-    x_can_step = can_step(current_steps.x, target_steps.x);
-    y_can_step = can_step(current_steps.y, target_steps.y);
-    z_can_step = can_step(current_steps.z, target_steps.z);
+    x_can_step = can_step(EEPROM_STORED.current_steps.x, target_steps.x);
+    y_can_step = can_step(EEPROM_STORED.current_steps.y, target_steps.y);
+    z_can_step = can_step(EEPROM_STORED.current_steps.z, target_steps.z);
 
     if (x_can_step)
     {
@@ -112,8 +112,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR0_STEP_PORT, MOTOR0_STEP_PIN);
         x_counter -= max_delta;
 
-        if (x_direction)	current_steps.x++;
-        else				current_steps.x--;
+        if (x_direction)	EEPROM_STORED.current_steps.x++;
+        else				EEPROM_STORED.current_steps.x--;
       }
     }
 
@@ -126,8 +126,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR1_STEP_PORT, MOTOR1_STEP_PIN);
         y_counter -= max_delta;
 
-        if (y_direction)	current_steps.y++;
-        else				current_steps.y--;
+        if (y_direction)	EEPROM_STORED.current_steps.y++;
+        else				EEPROM_STORED.current_steps.y--;
       }
     }
 
@@ -140,8 +140,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR2_STEP_PORT, MOTOR2_STEP_PIN);
         z_counter -= max_delta;
 
-        if (z_direction)	current_steps.z++;
-        else				current_steps.z--;
+        if (z_direction)	EEPROM_STORED.current_steps.z++;
+        else				EEPROM_STORED.current_steps.z--;
       }
     }
 
@@ -157,9 +157,9 @@ void dda_move(long micro_delay)
   while (x_can_step || y_can_step || z_can_step);
 
   //set our points to be the same
-  current_steps.x = target_steps.x;
-  current_steps.y = target_steps.y;
-  current_steps.z = target_steps.z;
+  EEPROM_STORED.current_steps.x = target_steps.x;
+  EEPROM_STORED.current_steps.y = target_steps.y;
+  EEPROM_STORED.current_steps.z = target_steps.z;
   calculate_deltas();
 }
 
@@ -190,9 +190,9 @@ void set_target(int32_t x, int32_t y, int32_t z)
 
 void set_position(int32_t x, int32_t y, int32_t z)
 {
-  current_steps.x = x;
-  current_steps.y = y;
-  current_steps.z = z;
+  EEPROM_STORED.current_steps.x = x;
+  EEPROM_STORED.current_steps.y = y;
+  EEPROM_STORED.current_steps.z = z;
 
   motors[0].position = x;
   motors[1].position = y;
@@ -204,14 +204,14 @@ void set_position(int32_t x, int32_t y, int32_t z)
 
 void calculate_deltas()
 {
-  delta_steps.x = abs(target_steps.x - current_steps.x);
-  delta_steps.y = abs(target_steps.y - current_steps.y);
-  delta_steps.z = abs(target_steps.z - current_steps.z);
+  delta_steps.x = abs(target_steps.x - EEPROM_STORED.current_steps.x);
+  delta_steps.y = abs(target_steps.y - EEPROM_STORED.current_steps.y);
+  delta_steps.z = abs(target_steps.z - EEPROM_STORED.current_steps.z);
 
   //what is our direction
-  x_direction = (target_steps.x >= current_steps.x);
-  y_direction = (target_steps.y >= current_steps.y);
-  z_direction = (target_steps.z >= current_steps.z);
+  x_direction = (target_steps.x >= EEPROM_STORED.current_steps.x);
+  y_direction = (target_steps.y >= EEPROM_STORED.current_steps.y);
+  z_direction = (target_steps.z >= EEPROM_STORED.current_steps.z);
 
   //set our direction pins as well
   digitalWrite(MOTOR0_DIR, x_direction);
@@ -241,21 +241,21 @@ long calculate_feedrate_delay_1()
   Serial.print(master_steps);
   Serial.print(";");
 #endif
-  if (intval == VIDEO_INTVAL)
+  if (EEPROM_STORED.intval == VIDEO_INTVAL)
   {
-    //return ((interval*(1000L))/master_steps); //   Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds
+    //return ((EEPROM_STORED.interval*(1000L))/master_steps); //   Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds
 #if DEBUG_MOTOR
     Serial.print("feedratedelay_1_vid= ");
-    Serial.print((interval * (1000L)) / master_steps);
+    Serial.print((EEPROM_STORED.interval * (1000L)) / master_steps);
     Serial.print(";");
 #endif
-    return ((interval * (1000L)) / master_steps); //  This is the issue - intervla
+    return ((EEPROM_STORED.interval * (1000L)) / master_steps); //  This is the issue - intervla
   }
-  else if (intval == EXTTRIG_INTVAL)
+  else if (EEPROM_STORED.intval == EXTTRIG_INTVAL)
   {
 #if DEBUG_MOTOR
     Serial.print("feedratedelay_1_StopMo= ");
-    Serial.print((((intval - static_tm) * 100000) / master_steps) * 0.5);
+    Serial.print((((EEPROM_STORED.intval - EEPROM_STORED.static_tm) * 100000) / master_steps) * 0.5);
     Serial.print(";");
 #endif
     return ((((10L) * 100000L) / master_steps) * 0.5); //  Use half available time to move for stills
@@ -264,10 +264,10 @@ long calculate_feedrate_delay_1()
   {
 #if DEBUG_MOTOR
     Serial.print("feedratedelay_1_SMS=");
-    Serial.print((((intval - static_tm - prefire_time) * 100000L) / master_steps) * 0.5);
+    Serial.print((((EEPROM_STORED.intval - EEPROM_STORED.static_tm - EEPROM_STORED.prefire_time) * 100000L) / master_steps) * 0.5);
     Serial.print(";");
 #endif
-    return (abs((((intval - static_tm - prefire_time) * 100000L) / master_steps) * 0.5)); //  Use half available time to move for stills
+    return (abs((((EEPROM_STORED.intval - EEPROM_STORED.static_tm - EEPROM_STORED.prefire_time) * 100000L) / master_steps) * 0.5)); //  Use half available time to move for stills
   }
 }
 
@@ -294,10 +294,10 @@ long calculate_feedrate_delay_video()
   Serial.print(";");
 #endif
 
-  //return ((interval*(1000L))/master_steps); //
+  //return ((EEPROM_STORED.interval*(1000L))/master_steps); //
 
-  if (Move_State_2PT == Linear2PT)  current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR) * long(keyframe[0][3] - keyframe[0][2])) / master_steps); //  total move for all linear
-  else							current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
+  if (Move_State_2PT == Linear2PT)  current_feedrate = ((EEPROM_STORED.interval * (VIDEO_FEEDRATE_NUMERATOR) * long(EEPROM_STORED.keyframe[0][3] - EEPROM_STORED.keyframe[0][2])) / master_steps); //  total move for all linear
+  else							current_feedrate = ((EEPROM_STORED.interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
 
 #if DEBUG_MOTOR
   Serial.print("feedratedelay_1_vid= ");

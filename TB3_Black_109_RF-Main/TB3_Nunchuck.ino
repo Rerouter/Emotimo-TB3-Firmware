@@ -77,7 +77,7 @@ void NunChuckProcessData()
   joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
   joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
   acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (AUX_REV) acc_x_axis *= -1;
+  if (EEPROM_STORED.AUX_REV) acc_x_axis *= -1;
   joy_y_axis *= -1;
 
   //create a deadband
@@ -152,10 +152,10 @@ void applyjoymovebuffer_exponential()  //exponential stuff
   prev_joy_y_reading = int_joy_y_axis;
   prev_acc_x_reading = int_acc_x_axis;
 
-  int32_t x = int_joy_x_axis   + current_steps.x;
-  int32_t y = int_joy_y_axis   + current_steps.y;
-  int32_t z = int_acc_x_axis + current_steps.z;
-  if (AUX_ON) set_target(x, y, z);
+  int32_t x = int_joy_x_axis   + EEPROM_STORED.current_steps.x;
+  int32_t y = int_joy_y_axis   + EEPROM_STORED.current_steps.y;
+  int32_t z = int_acc_x_axis + EEPROM_STORED.current_steps.z;
+  if (EEPROM_STORED.AUX_ON) set_target(x, y, z);
   else		set_target(x, y, 0);
   feedrate_micros = calculate_feedrate_delay_2();
 }
@@ -185,9 +185,9 @@ void applyjoymovebuffer_linear()
   prev_joy_y_reading   = joy_y_axis;
   prev_acc_x_reading = acc_x_axis;
 
-  int32_t x = joy_x_axis   + current_steps.x;
-  int32_t y = joy_y_axis   + current_steps.y;
-  int32_t z = acc_x_axis + current_steps.z;
+  int32_t x = joy_x_axis   + EEPROM_STORED.current_steps.x;
+  int32_t y = joy_y_axis   + EEPROM_STORED.current_steps.y;
+  int32_t z = acc_x_axis + EEPROM_STORED.current_steps.z;
 
   set_target(x, y, z);
   feedrate_micros = calculate_feedrate_delay_2();
@@ -206,7 +206,7 @@ void axis_button_deadzone()
   joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
   joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
   acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (AUX_REV)    acc_x_axis *= -1;
+  if (EEPROM_STORED.AUX_REV)    acc_x_axis *= -1;
   if (joy_x_axis) joy_x_axis *= -1; // Invert the direction to make the joystick directly point the camera
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
@@ -332,7 +332,7 @@ void updateMotorVelocities2()   //Happens  20 times a second
   //limit speeds
   //uint32_t motormax0 = PAN_MAX_JOG_STEPS_PER_SEC;
   //uint32_t motormax1 = TILT_MAX_JOG_STEPS_PER_SEC;
-  //uint32_t motormax2 = AUX_MAX_JOG_STEPS_PER_SEC;
+  //uint32_t motormax2 = EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC;
   //if (motormax2 > 0.75) motormax2 = .75; //limits max speed during jog to reduce vibration
 
   //accelerations - accumulator limit is is 65553. Loop is 20Hz.   If we want zero to max to be 1 sec, we choose

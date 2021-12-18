@@ -70,15 +70,15 @@ uint8_t HandleButtons()
 
 void Choose_Program()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     // Clean Up any previous states
-    if (POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
-    if (POWERSAVE_AUX > 2)   disable_AUX(); //
+    if (EEPROM_STORED.POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
+    if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX(); //
     lcd.empty();                            //  Clear the LCD
 
     // Select what menu item we want.
-    switch (progtype)
+    switch (EEPROM_STORED.progtype)
     {
       case REG2POINTMOVE:
         draw(66, 1, 1);  //lcd.at(1,1,"New   Point Move");
@@ -127,7 +127,7 @@ void Choose_Program()
 
     draw(65, 2, 1);  //lcd.at(2,1,"UpDown  C-Select");
     delay(prompt_time/2);
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
 
   if ((millis() - NClastread) > 50) {
@@ -139,16 +139,16 @@ void Choose_Program()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        Global.redraw = true;
-        if (progtype)  { progtype--;               }
-        else           { progtype = (MENU_ITEMS - 1);  // accomodating rollover
+        FLAGS.redraw = true;
+        if (EEPROM_STORED.progtype)  { EEPROM_STORED.progtype--;               }
+        else                  { EEPROM_STORED.progtype = (MENU_ITEMS - 1);  // accomodating rollover
         }
         break;
 
       case 1: // Down
-        Global.redraw = false;
-        if (progtype == (MENU_ITEMS - 1)) { progtype = 0; }
-        else                              { progtype++;   }
+        FLAGS.redraw = false;
+        if (EEPROM_STORED.progtype == (MENU_ITEMS - 1)) { EEPROM_STORED.progtype = 0; }
+        else                                     { EEPROM_STORED.progtype++;   }
     }
   }
 
@@ -157,10 +157,10 @@ void Choose_Program()
     case C_Pressed:
       lcd.empty();
 
-      switch (progtype)
+      switch (EEPROM_STORED.progtype)
       {
         case REG2POINTMOVE: //new 2 point move
-          REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -170,7 +170,7 @@ void Choose_Program()
           break;
 
         case REV2POINTMOVE:   //reverse beta 2Pt
-          REVERSE_PROG_ORDER = true;
+          EEPROM_STORED.REVERSE_PROG_ORDER = true;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -180,7 +180,7 @@ void Choose_Program()
           break;
 
         case REG3POINTMOVE: //new 3 point move
-          REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -190,7 +190,7 @@ void Choose_Program()
           break;
 
         case REV3POINTMOVE: //new 3 point move reverse
-          REVERSE_PROG_ORDER = true;
+          EEPROM_STORED.REVERSE_PROG_ORDER = true;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -209,14 +209,14 @@ void Choose_Program()
           break;
 
         case PANOGIGA:   //Pano Beta
-          REVERSE_PROG_ORDER = false;
-          intval = 5;//default this for static time selection
-          interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.intval = 5;//default this for static time selection
+          EEPROM_STORED.interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
           progstep_goto(201);
           break;
 
         case PORTRAITPANO:  //Pano Beta
-          REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic parameters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -230,7 +230,7 @@ void Choose_Program()
           break;
 
         case AUXDISTANCE:   //
-          REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
           reset_prog = 1;
           set_defaults_in_ram(); //put all basic paramters in RAM
           draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
@@ -247,11 +247,11 @@ void Choose_Program()
 //Move to Start Point
 void Move_to_Startpoint()
 {
-  if (Global.redraw) {
+  if (FLAGS.redraw) {
     lcd.empty();
     lcd.bright(6);
     
-    if (!REVERSE_PROG_ORDER) //normal programing, start first
+    if (!EEPROM_STORED.REVERSE_PROG_ORDER) //normal programing, start first
     {
       draw(8, 1, 1); //lcd.at(1,1,"Move to Start Pt");
       draw(14, 2, 6); //lcd.at(2,6,"C-Next");
@@ -262,7 +262,7 @@ void Move_to_Startpoint()
       draw(3, 2, 1); //lcd.at(2,1,CZ1);
     }
 
-    Global.redraw = false;
+    FLAGS.redraw = false;
     delay(prompt_time);
 
     //   Velocity Engine update
@@ -302,11 +302,11 @@ void button_actions_move_start()
       lcd.empty();
       set_position(0, 0, 0); //sets current steps to 0
 #if DEBUG
-      Serial.print("current_steps_start.x: "); Serial.println(current_steps.x);
-      Serial.print("current_steps_start.y: "); Serial.println(current_steps.y);
-      Serial.print("current_steps_start.z: "); Serial.println(current_steps.z);
+      Serial.print("current_steps_start.x: "); Serial.println(EEPROM_STORED.current_steps.x);
+      Serial.print("current_steps_start.y: "); Serial.println(EEPROM_STORED.current_steps.y);
+      Serial.print("current_steps_start.z: "); Serial.println(EEPROM_STORED.current_steps.z);
 #endif
-      if (!REVERSE_PROG_ORDER) draw(9, 1, 3);  //lcd.at(1,3,"Start Pt. Set");
+      if (!EEPROM_STORED.REVERSE_PROG_ORDER) draw(9, 1, 3);  //lcd.at(1,3,"Start Pt. Set");
       else					           draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
       delay(prompt_time);
       progstep_forward();
@@ -320,11 +320,11 @@ void button_actions_move_start()
 
 void Move_to_Endpoint()
 {
-  if (Global.redraw) {
+  if (FLAGS.redraw) {
 
     lcd.empty();
 
-    if (!REVERSE_PROG_ORDER) //mormal programming, end point last
+    if (!EEPROM_STORED.REVERSE_PROG_ORDER) //mormal programming, end point last
     {
       draw(15, 1, 1); //lcd.at(1,1,"Move to End Pt.");
       draw(3, 2, 1); //lcd.at(2,1,CZ1);
@@ -335,11 +335,11 @@ void Move_to_Endpoint()
       draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     }
 
-    Global.redraw = false;
+    FLAGS.redraw = false;
     startISR1 ();
     delay(prompt_time);
     enable_PanTilt();
-    if (AUX_ON) enable_AUX();  //
+    if (EEPROM_STORED.AUX_ON) enable_AUX();  //
   }
   /*
     NunChuckRequestData();
@@ -381,9 +381,9 @@ void button_actions_move_end()
 
       //end stop the motors
 
-      motors[0].position = current_steps.x;
-      motors[1].position = current_steps.y;
-      motors[2].position = current_steps.z;
+      motors[0].position = EEPROM_STORED.current_steps.x;
+      motors[1].position = EEPROM_STORED.current_steps.y;
+      motors[2].position = EEPROM_STORED.current_steps.z;
 
 #if DEBUG
       Serial.print("motors[0].position:"); Serial.println( motors[0].position);
@@ -391,20 +391,20 @@ void button_actions_move_end()
       Serial.print("motors[2].position:"); Serial.println( motors[2].position);
 #endif
 
-      motor_steps_pt[2][0] = current_steps.x; //now signed storage
-      motor_steps_pt[2][1] = current_steps.y;
-      motor_steps_pt[2][2] = current_steps.z;
+      EEPROM_STORED.motor_steps_pt[2][0] = EEPROM_STORED.current_steps.x; //now signed storage
+      EEPROM_STORED.motor_steps_pt[2][1] = EEPROM_STORED.current_steps.y;
+      EEPROM_STORED.motor_steps_pt[2][2] = EEPROM_STORED.current_steps.z;
 
 #if DEBUG_MOTOR
       Serial.println("motor_steps_end");
-      Serial.print(motor_steps_pt[2][0]); Serial.print(",");
-      Serial.print(motor_steps_pt[2][1]); Serial.print(",");
-      Serial.print(motor_steps_pt[2][2]); Serial.println();
+      Serial.print(EEPROM_STORED.motor_steps_pt[2][0]); Serial.print(",");
+      Serial.print(EEPROM_STORED.motor_steps_pt[2][1]); Serial.print(",");
+      Serial.print(EEPROM_STORED.motor_steps_pt[2][2]); Serial.println();
 #endif
 
       lcd.empty();
 
-      if (!REVERSE_PROG_ORDER) draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
+      if (!EEPROM_STORED.REVERSE_PROG_ORDER) draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
       else					             draw(9, 1, 3); //lcd.at(1,3,"Start Pt. Set");
 
       delay(prompt_time);
@@ -419,23 +419,23 @@ void button_actions_move_end()
 
 void Move_to_Point_X(uint8_t Point)
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
-    if (progstep == 201 || progstep == 301)
+    if (EEPROM_STORED.progstep == 201 || EEPROM_STORED.progstep == 301)
     {
       // Programming center for PANOGIGA AND PORTRAITPANO UD010715
       lcd.at(1, 2, "Set AOV Corner");
       set_position(0, 0, 0);
     }
-    else if (progstep == 304)
+    else if (EEPROM_STORED.progstep == 304)
     {
       lcd.at(1, 1, "Move to Subject ");
     }
     else
     {
       draw(10, 1, 1); //lcd.at(1,1,"Move to Point");
-      if (!REVERSE_PROG_ORDER)
+      if (!EEPROM_STORED.REVERSE_PROG_ORDER)
       { //normal programming
         lcd.at(1, 15, (Point + 1));
       }
@@ -449,7 +449,7 @@ void Move_to_Point_X(uint8_t Point)
 
     if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     else draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    Global.redraw = false;
+    FLAGS.redraw = false;
     delay(prompt_time);
     
 
@@ -492,22 +492,22 @@ void button_actions_move_x(uint8_t Point)
   
         if (Point == 0) set_position(0, 0, 0);		 //reset for home position
   
-        motor_steps_pt[Point][0] = current_steps.x; //now signed storage
-        motor_steps_pt[Point][1] = current_steps.y;
-        motor_steps_pt[Point][2] = current_steps.z;
+        EEPROM_STORED.motor_steps_pt[Point][0] = EEPROM_STORED.current_steps.x; //now signed storage
+        EEPROM_STORED.motor_steps_pt[Point][1] = EEPROM_STORED.current_steps.y;
+        EEPROM_STORED.motor_steps_pt[Point][2] = EEPROM_STORED.current_steps.z;
   #if DEBUG_MOTOR
         Serial.print("motor_steps_point ");
         Serial.print(Point); Serial.print(";");
-        Serial.print(motor_steps_pt[Point][0]); Serial.print(",");
-        Serial.print(motor_steps_pt[Point][1]); Serial.print(",");
-        Serial.print(motor_steps_pt[Point][2]); Serial.println();
+        Serial.print(EEPROM_STORED.motor_steps_pt[Point][0]); Serial.print(",");
+        Serial.print(EEPROM_STORED.motor_steps_pt[Point][1]); Serial.print(",");
+        Serial.print(EEPROM_STORED.motor_steps_pt[Point][2]); Serial.println();
   #endif
   
-        if (progstep != 201 && progstep != 301)
+        if (EEPROM_STORED.progstep != 201 && EEPROM_STORED.progstep != 301)
         {
           lcd.empty();
           draw(63, 1, 3); //lcd.at(1,3,"Point X Set";);
-          if (!REVERSE_PROG_ORDER)  lcd.at(1, 9, (Point + 1)); //Normal
+          if (!EEPROM_STORED.REVERSE_PROG_ORDER)  lcd.at(1, 9, (Point + 1)); //Normal
           else //reverse programming
           {
             if (Point == 0) lcd.at(1, 9, "3");
@@ -516,18 +516,18 @@ void button_actions_move_x(uint8_t Point)
           }
         }
   
-        if (progstep == 202 || progstep == 302) //set angle of view UD050715
+        if (EEPROM_STORED.progstep == 202 || EEPROM_STORED.progstep == 302) //set angle of view UD050715
         {
-          Pan_AOV_steps  = current_steps.x; //Serial.println(Pan_AOV_steps);
-          Tilt_AOV_steps = current_steps.y; //Serial.println(Tilt_AOV_steps);
+          Pan_AOV_steps  = EEPROM_STORED.current_steps.x; //Serial.println(Pan_AOV_steps);
+          Tilt_AOV_steps = EEPROM_STORED.current_steps.y; //Serial.println(Tilt_AOV_steps);
           lcd.empty();
           lcd.at (1, 5, "AOV Set");
         }
-        if (progstep == 205) //pano - calculate other values UD050715
+        if (EEPROM_STORED.progstep == 205) //pano - calculate other values UD050715
         {
           calc_pano_move();
         }
-        if (progstep == 304) // PORTRAITPANO Method UD050715
+        if (EEPROM_STORED.progstep == 304) // PORTRAITPANO Method UD050715
         {
           lcd.empty();
           lcd.at (1, 4, "Center Set");
@@ -560,7 +560,7 @@ void button_actions_move_x(uint8_t Point)
 //Set Camera Interval
 void Set_Cam_Interval()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     draw(17, 1, 1); //lcd.at(1,1,"Set Sht Interval");
@@ -569,20 +569,20 @@ void Set_Cam_Interval()
     draw(18, 1, 1); //lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayInterval();
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
 
-  uint16_t intval_last = intval;
+  uint16_t intval_last = EEPROM_STORED.intval;
   NunChuckRequestData();
   NunChuckProcessData();
-  if (intval < 20) joy_y_lock_count = 0;
-  intval += joy_capture3();
-  intval  = constrain(intval, 2, 6000); //remove the option for Ext Trigger right now
-  if (intval_last != intval) {
+  if (EEPROM_STORED.intval < 20) joy_y_lock_count = 0;
+  EEPROM_STORED.intval += joy_capture3();
+  EEPROM_STORED.intval  = constrain(EEPROM_STORED.intval, 2, 6000); //remove the option for Ext Trigger right now
+  if (intval_last != EEPROM_STORED.intval) {
     DisplayInterval();
   }
 
-  button_actions_intval(intval);  //read buttons, look for c button press to set interval
+  button_actions_intval(EEPROM_STORED.intval);  //read buttons, look for c button press to set interval
   delay (70);
   //delay (prompt_delay);
 }
@@ -590,37 +590,37 @@ void Set_Cam_Interval()
 
 void DisplayInterval()
 {
-  if (intval == EXTTRIG_INTVAL) //run the Ext
+  if (EEPROM_STORED.intval == EXTTRIG_INTVAL) //run the Ext
   {
     draw(19, 1, 8); //lcd.at(1,8," Ext.Trig");
   }
-  else if (intval == VIDEO_INTVAL) //run the video routine
+  else if (EEPROM_STORED.intval == VIDEO_INTVAL) //run the video routine
   {
     draw(20, 1, 8); //lcd.at(1,8," Video   ");
   }
-  else if (intval < 10)
+  else if (EEPROM_STORED.intval < 10)
   {
     lcd.at(1, 13, " sec");
     lcd.at(1, 8, "  0.");
-    lcd.at(1, 10, intval / 10);
-    lcd.at(1, 12, intval % 10);
+    lcd.at(1, 10, EEPROM_STORED.intval / 10);
+    lcd.at(1, 12, EEPROM_STORED.intval % 10);
   }
-  else if (intval < 100)
+  else if (EEPROM_STORED.intval < 100)
   {
     lcd.at(1, 8, "  ");
-    lcd.at(1, 10, intval / 10);
-    lcd.at(1, 12, intval % 10);
+    lcd.at(1, 10, EEPROM_STORED.intval / 10);
+    lcd.at(1, 12, EEPROM_STORED.intval % 10);
   }
-  else if (intval < 1000)
+  else if (EEPROM_STORED.intval < 1000)
   {
     lcd.at(1, 8, " ");
-    lcd.at(1, 9, intval / 10);
-    lcd.at(1, 12, intval % 10);
+    lcd.at(1, 9, EEPROM_STORED.intval / 10);
+    lcd.at(1, 12, EEPROM_STORED.intval % 10);
   }
   else
   {
-    lcd.at(1, 8, intval / 10);
-    lcd.at(1, 12, intval % 10);
+    lcd.at(1, 8, EEPROM_STORED.intval / 10);
+    lcd.at(1, 12, EEPROM_STORED.intval % 10);
   }
 }
 
@@ -632,16 +632,16 @@ void button_actions_intval(uint16_t intval)
     case C_Pressed:
     {
       uint16_t video_sample_ms = 100; //
-      interval = intval * 100; //tenths of a second to ms
+      EEPROM_STORED.interval = intval * 100; //tenths of a second to ms
       //camera_exp_tm=100;
       if (intval == EXTTRIG_INTVAL) //means ext trigger
       {
-        interval = 6000; //Hardcode this to 6.0 seconds are 10 shots per minute to allow for max shot selection
+        EEPROM_STORED.interval = 6000; //Hardcode this to 6.0 seconds are 10 shots per minute to allow for max shot selection
       }
       else if (intval == VIDEO_INTVAL) //means video, set very small exposure time
       {
         //camera_exp_tm=5; //doesn't matter, we never call the shutter
-        interval = video_sample_ms; //we overwrite this later based on move length currently 100
+        EEPROM_STORED.interval = video_sample_ms; //we overwrite this later based on move length currently 100
       }
 
       lcd.empty();
@@ -660,7 +660,7 @@ void button_actions_intval(uint16_t intval)
 
 void Set_Duration() //This is really setting frames
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     //			1234567890123456
@@ -669,55 +669,55 @@ void Set_Duration() //This is really setting frames
     delay(prompt_time * 1.5);
     lcd.empty();
     draw(34, 1, 10); //lcd.at(1,9,"H:MM:SS");
-    if ((intval > 3) || (intval == EXTTRIG_INTVAL))
+    if ((EEPROM_STORED.intval > 3) || (EEPROM_STORED.intval == EXTTRIG_INTVAL))
     {
       lcd.at(2, 11, "Frames"); //SMS
-      camera_total_shots = camera_moving_shots;
+      EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots;
       Display_Duration();
     }
     else
     {
       draw(3, 2, 1); //lcd.at(2,1,CZ1); //Video
-      calc_time_remain_dur_sec (overaldur);
+      calc_time_remain_dur_sec (EEPROM_STORED.overaldur);
       display_time(1, 1);
     }
-    camera_total_shots = camera_moving_shots;
-    camera_fired = 0;
+    EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots;
+    EEPROM_STORED.camera_fired = 0;
     //Display_Duration();
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (intval == VIDEO_INTVAL)
+  if (EEPROM_STORED.intval == VIDEO_INTVAL)
   { //video
-    uint16_t overaldur_last = overaldur;
-    overaldur += joy_capture3();
-    if (overaldur <= 0) {
-      overaldur = 10000;
+    uint16_t overaldur_last = EEPROM_STORED.overaldur;
+    EEPROM_STORED.overaldur += joy_capture3();
+    if (EEPROM_STORED.overaldur <= 0) {
+      EEPROM_STORED.overaldur = 10000;
     }
-    if (overaldur > 10000) {
-      overaldur = 1;
+    if (EEPROM_STORED.overaldur > 10000) {
+      EEPROM_STORED.overaldur = 1;
     }
-    if (overaldur_last != overaldur)
+    if (overaldur_last != EEPROM_STORED.overaldur)
     {
-      calc_time_remain_dur_sec (overaldur);
+      calc_time_remain_dur_sec (EEPROM_STORED.overaldur);
       display_time(1, 1);
     }
   }
   else
   { //sms
-    uint32_t camera_moving_shots_last = camera_moving_shots;
-    camera_moving_shots += joy_capture3();
-    if (camera_moving_shots <= 9) {
-      camera_moving_shots = 10000;
+    uint32_t camera_moving_shots_last = EEPROM_STORED.camera_moving_shots;
+    EEPROM_STORED.camera_moving_shots += joy_capture3();
+    if (EEPROM_STORED.camera_moving_shots <= 9) {
+      EEPROM_STORED.camera_moving_shots = 10000;
     }
-    if (camera_moving_shots > 10000) {
-      camera_moving_shots = 10;
+    if (EEPROM_STORED.camera_moving_shots > 10000) {
+      EEPROM_STORED.camera_moving_shots = 10;
     }
-    //camera_moving_shots=constrain(camera_moving_shots,10,10000);
-    camera_total_shots = camera_moving_shots; //we add in lead in lead out later
-    if (camera_moving_shots_last != camera_moving_shots) {
+    //EEPROM_STORED.camera_moving_shots=constrain(EEPROM_STORED.camera_moving_shots,10,10000);
+    EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots; //we add in lead in lead out later
+    if (camera_moving_shots_last != EEPROM_STORED.camera_moving_shots) {
       Display_Duration();
     } //end update time and shots
   } //end sms
@@ -731,26 +731,26 @@ void Display_Duration()
   calc_time_remain(total_pano_move_time);
   display_time(1, 1);
 
-  if ((intval > 3) || (intval == EXTTRIG_INTVAL))
+  if ((EEPROM_STORED.intval > 3) || (EEPROM_STORED.intval == EXTTRIG_INTVAL))
   {
-    if (camera_total_shots < 100)
+    if (EEPROM_STORED.camera_total_shots < 100)
     {
-      lcd.at(2, 7, camera_total_shots);
+      lcd.at(2, 7, EEPROM_STORED.camera_total_shots);
       lcd.at(2, 4, "   ");
     }
-    else if (camera_total_shots < 1000)
+    else if (EEPROM_STORED.camera_total_shots < 1000)
     {
-      lcd.at(2, 6, camera_total_shots);
+      lcd.at(2, 6, EEPROM_STORED.camera_total_shots);
       lcd.at(2, 4, "  ");
     }
-    else if (camera_total_shots < 10000)
+    else if (EEPROM_STORED.camera_total_shots < 10000)
     {
-      lcd.at(2, 5, camera_total_shots);
+      lcd.at(2, 5, EEPROM_STORED.camera_total_shots);
       lcd.at(2, 4, " ");
     }
     else
     {
-      lcd.at(2, 4, camera_total_shots);
+      lcd.at(2, 4, EEPROM_STORED.camera_total_shots);
     }
   }
 }
@@ -776,7 +776,7 @@ void button_actions_overaldur()
 
 void Set_Static_Time()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     draw(22, 1, 1); //lcd.at(1,1,"Set Static Time");
@@ -784,23 +784,23 @@ void Set_Static_Time()
     lcd.empty();
     draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    max_shutter = intval - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
-    if (intval == EXTTRIG_INTVAL) max_shutter = 600; //external trigger
-    if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano mode - allows
+    max_shutter = EEPROM_STORED.intval - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
+    if (EEPROM_STORED.intval == EXTTRIG_INTVAL) max_shutter = 600; //external trigger
+    if (EEPROM_STORED.progtype == PANOGIGA || EEPROM_STORED.progtype == PORTRAITPANO) max_shutter = 36000; //pano mode - allows
     DisplayStatic_tm();
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
 
-  uint16_t static_tm_last = static_tm;
+  uint16_t static_tm_last = EEPROM_STORED.static_tm;
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (static_tm < 20) joy_y_lock_count = 0;
-  static_tm += joy_capture3();
-  if (static_tm > 60000) static_tm = max_shutter;
-  static_tm = constrain(static_tm, 1, max_shutter);
+  if (EEPROM_STORED.static_tm < 20) joy_y_lock_count = 0;
+  EEPROM_STORED.static_tm += joy_capture3();
+  if (EEPROM_STORED.static_tm > 60000) EEPROM_STORED.static_tm = max_shutter;
+  EEPROM_STORED.static_tm = constrain(EEPROM_STORED.static_tm, 1, max_shutter);
 
-  if (static_tm_last != static_tm) DisplayStatic_tm();
+  if (static_tm_last != EEPROM_STORED.static_tm) DisplayStatic_tm();
   button_actions_stat_time();  //read buttons, look for c button press to set interval
   delay (prompt_delay);
 }
@@ -808,31 +808,31 @@ void Set_Static_Time()
 
 void DisplayStatic_tm()
 {
-  if (intval == VIDEO_INTVAL)	draw(24, 1, 8); //lcd.at(1,8," Video   ");
+  if (EEPROM_STORED.intval == VIDEO_INTVAL)	draw(24, 1, 8); //lcd.at(1,8," Video   ");
 
-  else if (static_tm < 10)
+  else if (EEPROM_STORED.static_tm < 10)
   {
     lcd.at(1, 8, "  0.");
-    lcd.at(1, 10, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 10, EEPROM_STORED.static_tm / 10);
+    lcd.at(1, 12, EEPROM_STORED.static_tm % 10);
   }
-  else if (static_tm < 100)
+  else if (EEPROM_STORED.static_tm < 100)
   {
     lcd.at(1, 8, "   .");
-    lcd.at(1, 10, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 10, EEPROM_STORED.static_tm / 10);
+    lcd.at(1, 12, EEPROM_STORED.static_tm % 10);
   }
-  else if (static_tm < 1000)
+  else if (EEPROM_STORED.static_tm < 1000)
   {
     lcd.at(1, 8, "   .");
-    lcd.at(1, 9, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 9, EEPROM_STORED.static_tm / 10);
+    lcd.at(1, 12, EEPROM_STORED.static_tm % 10);
   }
-  else if (static_tm < 10000)
+  else if (EEPROM_STORED.static_tm < 10000)
   {
     lcd.at(1, 8, "   .  ");
-    lcd.at(1, 8, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 8, EEPROM_STORED.static_tm / 10);
+    lcd.at(1, 12, EEPROM_STORED.static_tm % 10);
   }
 }
 
@@ -842,7 +842,7 @@ void button_actions_stat_time()
   switch (HandleButtons())
   {
     case C_Pressed:
-      //if (intval!=3)  camera_exp_tm=(long)static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
+      //if (EEPROM_STORED.intval!=3)  camera_exp_tm=(long)EEPROM_STORED.static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
       lcd.empty();
       draw(25, 1, 1); //lcd.at(1,1,"Static Time Set"); // try this to push correct character
       delay(prompt_time);
@@ -858,41 +858,41 @@ void button_actions_stat_time()
 
 void Set_Ramp()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     draw(29, 1, 1); //lcd.at(1,1,"	Set Ramp");
     delay(prompt_time);
     lcd.empty();
     draw(30, 1, 1); //lcd.at(1,1,"Ramp:	 Frames");
-    if (intval == VIDEO_INTVAL) {
-      camera_moving_shots = 147; //allow for up to 49 % ramp
+    if (EEPROM_STORED.intval == VIDEO_INTVAL) {
+      EEPROM_STORED.camera_moving_shots = 147; //allow for up to 49 % ramp
       lcd.at(1, 10, "Percent");
     }
 
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayRampval();
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
 
-  uint16_t rampval_last = rampval;
+  uint16_t rampval_last = EEPROM_STORED.rampval;
   NunChuckRequestData();
   NunChuckProcessData();
-  if (rampval < 20) joy_y_lock_count = 0;
-  rampval += joy_capture3();
-  if (rampval < 1) {
-    rampval = 1;
+  if (EEPROM_STORED.rampval < 20) joy_y_lock_count = 0;
+  EEPROM_STORED.rampval += joy_capture3();
+  if (EEPROM_STORED.rampval < 1) {
+    EEPROM_STORED.rampval = 1;
     delay(prompt_time / 2);
   }
-  //if (rampval>500) {rampval=2;}
+  //if (EEPROM_STORED.rampval>500) {EEPROM_STORED.rampval=2;}
 
-  if ( rampval * 3 > camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-    rampval = camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
+  if ( EEPROM_STORED.rampval * 3 > EEPROM_STORED.camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
+    EEPROM_STORED.rampval = EEPROM_STORED.camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
     delay(prompt_time / 2);
   }
 
-  //rampval=constrain(rampval,1,500); //
-  if (rampval_last != rampval) {
+  //EEPROM_STORED.rampval=constrain(EEPROM_STORED.rampval,1,500); //
+  if (rampval_last != EEPROM_STORED.rampval) {
     DisplayRampval();
   }
   //delay(50);
@@ -903,9 +903,9 @@ void Set_Ramp()
 
 void DisplayRampval()
 {
-  lcd.at(1, 7, rampval);
-  if		  (rampval < 10)  lcd.at(1, 8, "  "); //clear extra if goes from 3 to 2 or 2 to  1
-  else if (rampval < 100)  lcd.at(1, 9, " "); //clear extra if goes from 3 to 2 or 2 to  1
+  lcd.at(1, 7, EEPROM_STORED.rampval);
+  if		  (EEPROM_STORED.rampval < 10)  lcd.at(1, 8, "  "); //clear extra if goes from 3 to 2 or 2 to  1
+  else if (EEPROM_STORED.rampval < 100)  lcd.at(1, 9, " "); //clear extra if goes from 3 to 2 or 2 to  1
 }
 
 
@@ -916,7 +916,7 @@ void button_actions_rampval()
     case C_Pressed:
       //we actually don't store anything here - wait for final confirmation to set everything
 
-      if (intval == VIDEO_INTVAL) {
+      if (EEPROM_STORED.intval == VIDEO_INTVAL) {
         delay(1);
       }
 
@@ -936,7 +936,7 @@ void button_actions_rampval()
 void Set_LeadIn_LeadOut()
 {
 
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     draw(36, 1, 1); //lcd.at(1,1,"Set Static Lead");
@@ -945,8 +945,8 @@ void Set_LeadIn_LeadOut()
     lcd.empty();
     draw(38, 1, 6); //lcd.at(1,1,"IN -	Out");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    Global.redraw = false;
-    lcd.at(1, 9, lead_out);
+    FLAGS.redraw = false;
+    lcd.at(1, 9, EEPROM_STORED.lead_out);
     cursorpos = cursorleft;
     DisplayLeadIn_LeadOut();
   }
@@ -973,22 +973,22 @@ void DisplayLeadIn_LeadOut()
   if (cursorpos == cursorleft)
   { //update lead in
     lcd.cursorOff();
-    lead_in += joy_capture3();
-    if (lead_in < 1)    {
-      lead_in = 5000;
+    EEPROM_STORED.lead_in += joy_capture3();
+    if (EEPROM_STORED.lead_in < 1)    {
+      EEPROM_STORED.lead_in = 5000;
     }
-    if (lead_in > 5000) {
-      lead_in = 1;
+    if (EEPROM_STORED.lead_in > 5000) {
+      EEPROM_STORED.lead_in = 1;
     }
-    lcd.at(1, 1, lead_in);
+    lcd.at(1, 1, EEPROM_STORED.lead_in);
 
-    if (lead_in < 10)   {
+    if (EEPROM_STORED.lead_in < 10)   {
       lcd.at(1, 2, "   ");
     }
-    if (lead_in < 100)  {
+    if (EEPROM_STORED.lead_in < 100)  {
       lcd.at(1, 3, "  ");
     }
-    if (lead_in < 1000) {
+    if (EEPROM_STORED.lead_in < 1000) {
       lcd.at(1, 4, " ");
     }
     lcd.cursorBlock();
@@ -996,22 +996,22 @@ void DisplayLeadIn_LeadOut()
   else
   { //update leadout
     lcd.cursorOff();
-    lead_out += joy_capture3();
-    if (lead_out < 1)    {
-      lead_out = 5000;
+    EEPROM_STORED.lead_out += joy_capture3();
+    if (EEPROM_STORED.lead_out < 1)    {
+      EEPROM_STORED.lead_out = 5000;
     }
-    if (lead_out > 5000) {
-      lead_out = 1;
+    if (EEPROM_STORED.lead_out > 5000) {
+      EEPROM_STORED.lead_out = 1;
     }
-    lcd.at(1, 9, lead_out);
+    lcd.at(1, 9, EEPROM_STORED.lead_out);
 
-    if (lead_out < 10)   {
+    if (EEPROM_STORED.lead_out < 10)   {
       lcd.at(1, 10, "   ");
     }
-    if (lead_out < 100)  {
+    if (EEPROM_STORED.lead_out < 100)  {
       lcd.at(1, 11, "  ");
     }
-    if (lead_out < 1000) {
+    if (EEPROM_STORED.lead_out < 1000) {
       lcd.at(1, 12, " ");
     }
     lcd.cursorBlock();
@@ -1030,33 +1030,33 @@ void button_actions_lead_in_out()
       Calculate_Shot();
 
       /*		//start  of code block to be moved from LeadinLeadOut.  Replaced with Calculate_Shot()
-        camera_total_shots=camera_moving_shots+lead_in+lead_out;
+        EEPROM_STORED.camera_total_shots=EEPROM_STORED.camera_moving_shots+EEPROM_STORED.lead_in+EEPROM_STORED.lead_out;
 
-        if (intval==VIDEO_INTVAL) {
-      	//if (intval==VIDEO_INTVAL) camera_moving_shots=(overaldur*1000L)/interval; //figure out moving shots based on duration for video only
-      	//camera_moving_shots=video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
-      	//camera_moving_shots=100; //new method to allow for easy ramp %
-      	//interval=overaldur*1000L/camera_moving_shots;   //This gives us ms
-      	camera_total_shots=camera_moving_shots+lead_in+lead_out; //good temp variable for display
+        if (EEPROM_STORED.intval==VIDEO_INTVAL) {
+      	//if (EEPROM_STORED.intval==VIDEO_INTVAL) EEPROM_STORED.camera_moving_shots=(EEPROM_STORED.overaldur*1000L)/EEPROM_STORED.interval; //figure out moving shots based on duration for video only
+      	//EEPROM_STORED.camera_moving_shots=video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
+      	//EEPROM_STORED.camera_moving_shots=100; //new method to allow for easy ramp %
+      	//EEPROM_STORED.interval=EEPROM_STORED.overaldur*1000L/EEPROM_STORED.camera_moving_shots;   //This gives us ms
+      	EEPROM_STORED.camera_total_shots=EEPROM_STORED.camera_moving_shots+EEPROM_STORED.lead_in+EEPROM_STORED.lead_out; //good temp variable for display
         }
 
         //fix issues with ramp that is too big
-        if( rampval*3 > camera_moving_shots )
+        if( EEPROM_STORED.rampval*3 > EEPROM_STORED.camera_moving_shots )
         {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-        rampval=camera_moving_shots/3; //set to 1/3 up and 1/3 down (2/3) of total move)
+        EEPROM_STORED.rampval=EEPROM_STORED.camera_moving_shots/3; //set to 1/3 up and 1/3 down (2/3) of total move)
         }
 
         //Set keyframe points for program to help with runtime calcs
-        keyframe[0][0]=0; //start frame
-        keyframe[0][1]=lead_in; //beginning of ramp
-        keyframe[0][2]=lead_in+rampval; //end of ramp, beginning of linear
-        keyframe[0][3]=lead_in+camera_moving_shots-rampval;  //end or linear, beginning of rampdown
-        keyframe[0][4]=lead_in+camera_moving_shots; //end of rampdown, beginning of leadout
-        keyframe[0][5]=lead_in+camera_moving_shots+lead_out; //end of leadout, end of program
+        EEPROM_STORED.keyframe[0][0]=0; //start frame
+        EEPROM_STORED.keyframe[0][1]=EEPROM_STORED.lead_in; //beginning of ramp
+        EEPROM_STORED.keyframe[0][2]=EEPROM_STORED.lead_in+EEPROM_STORED.rampval; //end of ramp, beginning of linear
+        EEPROM_STORED.keyframe[0][3]=EEPROM_STORED.lead_in+EEPROM_STORED.camera_moving_shots-EEPROM_STORED.rampval;  //end or linear, beginning of rampdown
+        EEPROM_STORED.keyframe[0][4]=EEPROM_STORED.lead_in+EEPROM_STORED.camera_moving_shots; //end of rampdown, beginning of leadout
+        EEPROM_STORED.keyframe[0][5]=EEPROM_STORED.lead_in+EEPROM_STORED.camera_moving_shots+EEPROM_STORED.lead_out; //end of leadout, end of program
 
         if (DEBUG_MOTOR) {
       	for (int i=0; i < 6; i++){
-      		Serial.print("Keyframe");Serial.print(i);Serial.print("_");Serial.println(keyframe[0][i]);
+      		Serial.print("Keyframe");Serial.print(i);Serial.print("_");Serial.println(EEPROM_STORED.keyframe[0][i]);
       	}
         }
 
@@ -1068,8 +1068,8 @@ void button_actions_lead_in_out()
         if (DEBUG) review_RAM_Contents();
 
         //delay(prompt_time);
-        if (POWERSAVE_PT>2)   disable_PT();
-        if (POWERSAVE_AUX>2)   disable_AUX();
+        if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
+        if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
       */  //end of code block to be moved from LeadinLeadOut
 
       progstep_forward();
@@ -1086,35 +1086,35 @@ void button_actions_lead_in_out()
 void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
 { //start  of code block to be moved from LeadinLeadOut
   unsigned int video_segments = 150; //arbitrary
-  camera_total_shots = camera_moving_shots + lead_in + lead_out;
+  EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots + EEPROM_STORED.lead_in + EEPROM_STORED.lead_out;
 
-  if (intval == VIDEO_INTVAL)
+  if (EEPROM_STORED.intval == VIDEO_INTVAL)
   {
     //really only need this for 3 point moves now - this could screw up 2 points, be careful
-    camera_moving_shots = video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
-    interval = overaldur * 1000L / camera_moving_shots;   //This gives us ms for our delays
-    camera_total_shots = camera_moving_shots + lead_in + lead_out; //good temp variable for display
+    EEPROM_STORED.camera_moving_shots = video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
+    EEPROM_STORED.interval = EEPROM_STORED.overaldur * 1000L / EEPROM_STORED.camera_moving_shots;   //This gives us ms for our delays
+    EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots + EEPROM_STORED.lead_in + EEPROM_STORED.lead_out; //good temp variable for display
   }
 
   //fix issues with ramp that is too big
-  if ( rampval * 3 > camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-    rampval = camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
+  if ( EEPROM_STORED.rampval * 3 > EEPROM_STORED.camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
+    EEPROM_STORED.rampval = EEPROM_STORED.camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
   }
 
   //Set keyframe points for program to help with runtime calcs
-  keyframe[0][0] = 0; //start frame
-  keyframe[0][1] = lead_in; //beginning of ramp
-  keyframe[0][2] = lead_in + rampval; //end of ramp, beginning of linear
-  keyframe[0][3] = lead_in + camera_moving_shots - rampval; //end or linear, beginning of rampdown
-  keyframe[0][4] = lead_in + camera_moving_shots; //end of rampdown, beginning of leadout
-  keyframe[0][5] = lead_in + camera_moving_shots + lead_out; //end of leadout, end of program
+  EEPROM_STORED.keyframe[0][0] = 0; //start frame
+  EEPROM_STORED.keyframe[0][1] = EEPROM_STORED.lead_in; //beginning of ramp
+  EEPROM_STORED.keyframe[0][2] = EEPROM_STORED.lead_in + EEPROM_STORED.rampval; //end of ramp, beginning of linear
+  EEPROM_STORED.keyframe[0][3] = EEPROM_STORED.lead_in + EEPROM_STORED.camera_moving_shots - EEPROM_STORED.rampval; //end or linear, beginning of rampdown
+  EEPROM_STORED.keyframe[0][4] = EEPROM_STORED.lead_in + EEPROM_STORED.camera_moving_shots; //end of rampdown, beginning of leadout
+  EEPROM_STORED.keyframe[0][5] = EEPROM_STORED.lead_in + EEPROM_STORED.camera_moving_shots + EEPROM_STORED.lead_out; //end of leadout, end of program
 
 #if DEBUG_MOTOR
   for (uint8_t i = 0; i < 6; i++) {
     Serial.print("Keyframe");
     Serial.print(i);
     Serial.print("_");
-    Serial.println(keyframe[0][i]);
+    Serial.println(EEPROM_STORED.keyframe[0][i]);
   }
 #endif
 
@@ -1128,15 +1128,15 @@ void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
 #endif
 
   //delay(prompt_time);
-  if (POWERSAVE_PT > 2)   disable_PT();
-  if (POWERSAVE_AUX > 2)   disable_AUX();
+  if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
+  if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
   //end of code block pulled from LeadinLeadOut
 }
 
 
 void Review_Confirm()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
@@ -1145,7 +1145,7 @@ void Review_Confirm()
     delay(prompt_time);
     //delay(100);
     lcd.empty();
-    Global.redraw = false;
+    FLAGS.redraw = false;
     diplay_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 2;
@@ -1187,15 +1187,15 @@ void DisplayReviewProg()
       draw(43, 1, 1); //lcd.at(1,1,"Pan Steps:");
       draw(44, 2, 1); //lcd.at(2,1,"Tilt Steps:");
       //lcd.at(1,12,motor_steps[0]);
-      lcd.at(1, 12, (int)linear_steps_per_shot[0]);
-      lcd.at(2, 12, (int)linear_steps_per_shot[1]);
+      lcd.at(1, 12, (int)EEPROM_STORED.linear_steps_per_shot[0]);
+      lcd.at(2, 12, (int)EEPROM_STORED.linear_steps_per_shot[1]);
       break;
 
     case 2:   //
       lcd.empty();
       draw(45, 1, 1); //lcd.at(1,1,"Cam Shots:");
       draw(46, 2, 1); //lcd.at(2,1,"Time:");
-      lcd.at(1, 12, camera_total_shots);
+      lcd.at(1, 12, EEPROM_STORED.camera_total_shots);
       calc_time_remain();
       display_time(2, 6);
       break;
@@ -1238,7 +1238,7 @@ void button_actions_review()
   {
     case C_Pressed:
       lcd.empty();
-      MOVE_REVERSED_FOR_RUN = false; //Reset This
+      EEPROM_STORED.MOVE_REVERSED_FOR_RUN = false; //Reset This
       start_delay_tm = ((millis() / 1000L) + start_delay_sec); //system seconds in the future - use this as big value to compare against
       draw(34, 2, 10); //lcd.at(2,10,"H:MM:SS");
       lcd.at(1, 2, "Delaying Start");
@@ -1252,7 +1252,7 @@ void button_actions_review()
         NunChuckRequestData();
         NunChuckProcessData();
         Check_Prog(); //look for long button press
-        if (CZ_Button_Read_Count > 20 && !Program_Engaged)
+        if (CZ_Button_Read_Count > 20 && !EEPROM_STORED.Program_Engaged)
         {
           start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
           CZ_Button_Read_Count = 0; //reset this to zero to start
@@ -1260,37 +1260,37 @@ void button_actions_review()
       }
 
       enable_PanTilt();
-      if (AUX_ON) enable_AUX();  //
+      if (EEPROM_STORED.AUX_ON) enable_AUX();  //
 
       //draw(49,1,1);//lcd.at(1,1,"Program Running");
       //delay(prompt_time/3);
 
-      if (intval == EXTTRIG_INTVAL)  lcd.at(2, 1, "Waiting for Man.");
+      if (EEPROM_STORED.intval == EXTTRIG_INTVAL)  lcd.at(2, 1, "Waiting for Man.");
 
-      Program_Engaged = true;
-      Interrupt_Fire_Engaged = true; //just to start off first shot immediately
+      EEPROM_STORED.Program_Engaged = true;
+      FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
       interval_tm = 0; //set this to 0 to immediately trigger the first shot
       sequence_repeat_count = 0; //this is zeroed out every time we start a new shot
 
-      if (intval > 3) { //SMS Mode
+      if (EEPROM_STORED.intval > 3) { //SMS Mode
         lcd.empty(); //clear for non video
-        progstep = 50; //  move to the main programcamera_real_fire
+        EEPROM_STORED.progstep = 50; //  move to the main programcamera_real_fire
       }
-      else if (intval == VIDEO_INTVAL)
+      else if (EEPROM_STORED.intval == VIDEO_INTVAL)
       {
         lcd.empty();
         draw(49, 1, 1); //lcd.at(1,1,"Program Running");
-        progstep = 51;
+        EEPROM_STORED.progstep = 51;
       }
-      else if (intval == EXTTRIG_INTVAL)  { //manual trigger/ext trigger
+      else if (EEPROM_STORED.intval == EXTTRIG_INTVAL)  { //manual trigger/ext trigger
         lcd.empty(); //clear for non video
-        progstep = 52; //  move to the external interrupt loop
+        EEPROM_STORED.progstep = 52; //  move to the external interrupt loop
         ext_shutter_count = 0; //set this to avoid any prefire shots or cable insertions.
         lcd.at(1, 1, "Waiting for Trig");
       }
       //lcd_backlight_cur= 100;
-      Global.redraw = true;
-      lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
+      FLAGS.redraw = true;
+      lcd.bright(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
       break;
 
     case Z_Pressed:
@@ -1303,9 +1303,9 @@ void button_actions_review()
 void progstep_forward()
 {
   lcd.empty();
-  Global.redraw = true;
-  progstep_forward_dir = true;
-  if (progstep < 65535) progstep++;
+  FLAGS.redraw = true;
+  FLAGS.progstep_forward_dir = true;
+  if (EEPROM_STORED.progstep) EEPROM_STORED.progstep++;
   delay(100);
   NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
@@ -1314,9 +1314,9 @@ void progstep_forward()
 void progstep_backward()
 {
   lcd.empty();
-  Global.redraw = true;
-  progstep_forward_dir = false;
-  if (progstep) progstep--;
+  FLAGS.redraw = true;
+  FLAGS.progstep_forward_dir = false;
+  if (EEPROM_STORED.progstep) EEPROM_STORED.progstep--;
   delay(100);
   NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
@@ -1325,8 +1325,8 @@ void progstep_backward()
 void progstep_goto(uint16_t prgstp)
 {
   lcd.empty();
-  Global.redraw = true;
-  progstep = prgstp;
+  FLAGS.redraw = true;
+  EEPROM_STORED.progstep = prgstp;
   delay(100);
   NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
@@ -1338,42 +1338,42 @@ void button_actions_end_of_program()
   {
     case C_Pressed:
       // Normal
-      REVERSE_PROG_ORDER = false;
-      if (POWERSAVE_PT > 2)   disable_PT();
-      if (POWERSAVE_AUX > 2)   disable_AUX();
-      //Program_Engaged=true;
-      camera_fired = 0;
+      EEPROM_STORED.REVERSE_PROG_ORDER = false;
+      if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
+      if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+      //EEPROM_STORED.Program_Engaged=true;
+      EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
-      if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
+      if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
         go_to_start_new();
         progstep_goto(8);
       }
-      else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE) {
+      else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
         go_to_start_new();
         progstep_goto(109);
       }
-      else if (progtype == AUXDISTANCE) {
+      else if (EEPROM_STORED.progtype == AUXDISTANCE) {
         go_to_start_new();
         progstep_goto(8);
       }
       break;
 
     case Z_Pressed:
-      REVERSE_PROG_ORDER = true;
-      if (POWERSAVE_PT > 2)   disable_PT();
-      if (POWERSAVE_AUX > 2)   disable_AUX();
-      //Program_Engaged=true;
-      camera_fired = 0;
+      EEPROM_STORED.REVERSE_PROG_ORDER = true;
+      if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
+      if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
+      //EEPROM_STORED.Program_Engaged=true;
+      EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
-      if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
+      if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
         go_to_start_new();
         progstep_goto(8);
       }
-      else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE) {
+      else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
         go_to_start_new();
         progstep_goto(109);
       }
-      else if (progtype == AUXDISTANCE) {
+      else if (EEPROM_STORED.progtype == AUXDISTANCE) {
         go_to_start_new();
         progstep_goto(8);
       }
@@ -1385,16 +1385,16 @@ void button_actions_end_of_program()
 void Auto_Repeat_Video()
 { //Auto Reverse
   sequence_repeat_count++;
-  REVERSE_PROG_ORDER = true;
-  camera_fired = 0;
+  EEPROM_STORED.REVERSE_PROG_ORDER = true;
+  EEPROM_STORED.camera_fired = 0;
   lcd.bright(8);
-  if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
+  if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
     go_to_start_new();
     //progstep_goto(8);
   }
 
   lcd.empty();
-  MOVE_REVERSED_FOR_RUN = false; //Reset This
+  EEPROM_STORED.MOVE_REVERSED_FOR_RUN = false; //Reset This
   //start_delay_tm=((millis()/1000L)+start_delay_sec); //system seconds in the future - use this as big value to compare against
   //draw(34,2,10);//lcd.at(2,10,"H:MM:SS");
   //lcd.at(1,2,"Delaying Start");
@@ -1408,7 +1408,7 @@ void Auto_Repeat_Video()
   	NunChuckRequestData();
   	NunChuckProcessData();
   	Check_Prog(); //look for long button press
-  	if (CZ_Button_Read_Count>20 && !Program_Engaged) {
+  	if (CZ_Button_Read_Count>20 && !EEPROM_STORED.Program_Engaged) {
   		start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
   		CZ_Button_Read_Count=0; //reset this to zero to start
   	}
@@ -1420,39 +1420,39 @@ void Auto_Repeat_Video()
   draw(49, 1, 1); //lcd.at(1,1,"Program Running");
   //delay(prompt_time/3);
 
-  Program_Engaged = true;
-  Interrupt_Fire_Engaged = true; //just to start off first shot immediately
+  EEPROM_STORED.Program_Engaged = true;
+  FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
 
   interval_tm = 0; //set this to 0 to immediately trigger the first shot
 
-  if (intval > 3) { //SMS Mode
+  if (EEPROM_STORED.intval > 3) { //SMS Mode
     lcd.empty(); //clear for non video
-    progstep = 50; //  move to the main programcamera_real_fire
+    EEPROM_STORED.progstep = 50; //  move to the main programcamera_real_fire
   }
 
-  else if (intval == VIDEO_INTVAL)  {
+  else if (EEPROM_STORED.intval == VIDEO_INTVAL)  {
     //lcd.empty(); //leave "program running up for video
-    progstep = 51;
+    EEPROM_STORED.progstep = 51;
   }
   /*
-    else if (intval==EXTTRIG_INTVAL)  { //manual trigger/ext trigge
+    else if (EEPROM_STORED.intval==EXTTRIG_INTVAL)  { //manual trigger/ext trigge
   	lcd.empty(); //clear for non video
-  	progstep=52; //  move to the external interrup loop
+  	EEPROM_STORED.progstep=52; //  move to the external interrup loop
   	ext_shutter_count=0; //set this to avoid any prefire shots or cable insertions.
   	lcd.at(1,1,"Waiting for Trig");
     }
   */
   //lcd_backlight_cur= 100;
-  Global.redraw = true;
-  lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
+  FLAGS.redraw = true;
+  lcd.bright(EEPROM_STORED.LCD_BRIGHTNESS_DURING_RUN);
 }//end of 91
 
 
 void Pause_Prog()
 {
   CZ_Button_Read_Count = 0;
-  Program_Engaged = !Program_Engaged; //turn off the loop
-  if (!Program_Engaged) {  //program turned off
+  EEPROM_STORED.Program_Engaged = !EEPROM_STORED.Program_Engaged; //turn off the loop
+  if (!EEPROM_STORED.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!
     lcd.at(1, 11, " Pause");
     delay(2000);
@@ -1473,27 +1473,27 @@ void display_status()
   //1234567890123456
   //XXXX/XXXX LeadIn		LeadOT Rampup RampDn, Pause
   //HH:MM:SS  XX.XXV
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     lcd.at(1, 6, "/"); //Add to one time display update
     lcd.at(2, 13, ".");
     lcd.at(2, 16, "v");
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
   //update upper left camera fired/total shots
-  unsigned int camera_fired_display = camera_fired + 1;
+  unsigned int camera_fired_display = EEPROM_STORED.camera_fired + 1;
   if		  (camera_fired_display < 10)    lcd.at(1, 5, camera_fired_display);
   else if (camera_fired_display < 100)   lcd.at(1, 4, camera_fired_display);
   else if (camera_fired_display < 1000)  lcd.at(1, 3, camera_fired_display);
   else if (camera_fired_display < 10000) lcd.at(1, 2, camera_fired_display);
   else								                   lcd.at(1, 1, camera_fired_display);
 
-  lcd.at(1, 7, camera_total_shots);
+  lcd.at(1, 7, EEPROM_STORED.camera_total_shots);
 
   //Update program progress secion - upper right
 
-  if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE || progtype == AUXDISTANCE) {
+  if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE || EEPROM_STORED.progtype == AUXDISTANCE) {
     switch (Move_State_2PT)
     {
       case LeadIn2PT:
@@ -1517,7 +1517,7 @@ void display_status()
     }
   }
 
-  if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
+  if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE)
   {
     switch (Move_State_3PT)
     {
@@ -1539,7 +1539,7 @@ void display_status()
     }
   }
 
-  if (progtype == PANOGIGA || progtype == PORTRAITPANO) {
+  if (EEPROM_STORED.progtype == PANOGIGA || EEPROM_STORED.progtype == PORTRAITPANO) {
     lcd.at(1, 11, "  Pano");
   }
 
@@ -1578,12 +1578,12 @@ void display_status()
         //Stop the program and go to low power state
         disable_PT();
         disable_AUX();
-        Program_Engaged = false;
+        EEPROM_STORED.Program_Engaged = false;
         lcd.empty();
         draw(60, 1, 1); //lcd.at(1,1,"Battery too low");
         draw(61, 2, 1); //lcd.at(2,1,"  to continue");
       }
-      Global.redraw = true;
+      FLAGS.redraw = true;
     }
     else batt_low_cnt = 0;
   }//end of powerdown if
@@ -1597,7 +1597,7 @@ uint8_t time_s;
 
 void calc_time_remain()
 {
-  unsigned long timetotal = ((camera_total_shots - camera_fired) * interval) / 1000;
+  unsigned long timetotal = ((EEPROM_STORED.camera_total_shots - EEPROM_STORED.camera_fired) * EEPROM_STORED.interval) / 1000;
 
   timeh =  timetotal / 3600;	// hours
   timem =  timetotal / 60 % 60; // minutes
@@ -1606,7 +1606,7 @@ void calc_time_remain()
 
 void calc_time_remain(float totalmovetime)
 {
-  unsigned long timetotal = ((camera_total_shots - camera_fired) * static_tm * 100) / 1000 + totalmovetime * (camera_total_shots - camera_fired) / camera_total_shots;
+  unsigned long timetotal = ((EEPROM_STORED.camera_total_shots - EEPROM_STORED.camera_fired) * EEPROM_STORED.static_tm * 100) / 1000 + totalmovetime * (EEPROM_STORED.camera_total_shots - EEPROM_STORED.camera_fired) / EEPROM_STORED.camera_total_shots;
   timeh =  timetotal / 3600;  // hours
   timem =  timetotal / 60 % 60; // minutes
   time_s = timetotal % 60;    // seconds
@@ -1665,7 +1665,7 @@ void draw(uint8_t array_num, uint8_t col, uint8_t row)
 
 void Enter_Aux_Endpoint()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     //routine for just moving to end point if nothing was stored.
     lcd.empty();
@@ -1679,17 +1679,17 @@ void Enter_Aux_Endpoint()
 
     dda_move(20);
 
-    //Serial.println(current_steps.z);
-    // Serial.println(int(current_steps.z/STEPS_PER_INCH_AUX));
+    //Serial.println(EEPROM_STORED.current_steps.z);
+    // Serial.println(int(EEPROM_STORED.current_steps.z/STEPS_PER_INCH_AUX));
 
     NunChuckRequestData(); //  Use this to clear out any button registry from the last step
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     //delay(prompt_time)
-    aux_dist = current_steps.z * 10 / STEPS_PER_INCH_AUX; //t
+    aux_dist = EEPROM_STORED.current_steps.z * 10 / STEPS_PER_INCH_AUX; //t
     DisplayAUX_Dist();
-    Global.redraw = false;
+    FLAGS.redraw = false;
   }
 
   int32_t aux_dist_last = aux_dist;
@@ -1708,8 +1708,8 @@ void Enter_Aux_Endpoint()
 
   //lcd.at(1,1,aux_dist/10);
   //lcd.at(1,7,aux_dist%10);
-  //motor_steps_pt[2][2]=(aux_dist*47812L)/10;
-  //lcd.at(2,1,(long)motor_steps_pt[2][2]);
+  //EEPROM_STORED.motor_steps_pt[2][2]=(aux_dist*47812L)/10;
+  //lcd.at(2,1,(long)EEPROM_STORED.motor_steps_pt[2][2]);
   button_actions_Enter_Aux_Endpoint();  //read buttons, look for c button press to set interval
   delay (prompt_delay);
 
@@ -1751,11 +1751,11 @@ void button_actions_Enter_Aux_Endpoint()
       //calculate_deltas();
 
       lcd.empty();
-      motor_steps_pt[0][2] = 0;//this sets the end point
-      motor_steps_pt[1][2] = 0;//this sets the end point
-      motor_steps_pt[2][2] = aux_dist * STEPS_PER_INCH_AUX / 10;  //this sets the end point
+      EEPROM_STORED.motor_steps_pt[0][2] = 0;//this sets the end point
+      EEPROM_STORED.motor_steps_pt[1][2] = 0;//this sets the end point
+      EEPROM_STORED.motor_steps_pt[2][2] = aux_dist * STEPS_PER_INCH_AUX / 10;  //this sets the end point
 #if DEBUG
-      Serial.println(motor_steps_pt[2][2]);
+      Serial.println(EEPROM_STORED.motor_steps_pt[2][2]);
 #endif
       lcd.at(1, 2, "Aux End Pt. Set");
       delay(prompt_time);

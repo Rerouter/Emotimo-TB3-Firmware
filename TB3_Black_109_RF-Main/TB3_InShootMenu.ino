@@ -56,7 +56,7 @@ void Check_Prog()  //this is a routine for the button presses in the program
   void Program_Engaged_Toggle()	{  //used for pausing
 	  CZ_Button_Read_Count=0;
 	  ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
-	  Program_Engaged=!Program_Engaged; //toggle off the loop
+	  EEPROM_STORED.Program_Engaged=!EEPROM_STORED.Program_Engaged; //toggle off the loop
   }
 */
 
@@ -64,9 +64,9 @@ void Check_Prog()  //this is a routine for the button presses in the program
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
   CZ_Button_Read_Count = 0;
-  Program_Engaged = false; //toggle off the loop
-  if (POWERSAVE_PT > 2)   disable_PT();
-  if (POWERSAVE_AUX > 2)   disable_AUX();
+  EEPROM_STORED.Program_Engaged = false; //toggle off the loop
+  if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
+  if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
   inprogtype = 0; //default this to the first option, Resume
   progstep_goto(1001); //send us to a loop where we can select options
 }
@@ -75,7 +75,7 @@ void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 void SMS_Resume() //this runs once and is quick - not persistent
 {
   CZ_Button_Read_Count = 0;
-  Program_Engaged = true; //toggle off the loop
+  EEPROM_STORED.Program_Engaged = true; //toggle off the loop
   lcd.empty();
   lcd.at(1, 1, "Resuming");
   delay (1000);
@@ -85,7 +85,7 @@ void SMS_Resume() //this runs once and is quick - not persistent
 
 void InProg_Select_Option()
 {
-  if (Global.redraw)
+  if (FLAGS.redraw)
   {
     lcd.empty();
     switch(inprogtype)
@@ -104,13 +104,13 @@ void InProg_Select_Option()
 
       case INPROG_GOTO_FRAME:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
-        goto_shot = camera_fired;
+        goto_shot = EEPROM_STORED.camera_fired;
         DisplayGoToShot();
         break;
 
       case INPROG_INTERVAL:
         //draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
-        intval = interval / 100;  // Convert from milliseconds to 0.1 second increments
+        EEPROM_STORED.intval = EEPROM_STORED.interval / 100;  // Convert from milliseconds to 0.1 second increments
         lcd.at(1, 1, "Intval:   .  sec");
         DisplayInterval();
         break;
@@ -122,9 +122,9 @@ void InProg_Select_Option()
     }
 
     lcd.at(2, 1, "UpDown  C-Select");
-    Global.redraw = false;
-    if (POWERSAVE_PT > 2)   disable_PT();
-    if (POWERSAVE_AUX > 2)   disable_AUX();
+    FLAGS.redraw = false;
+    if (EEPROM_STORED.POWERSAVE_PT > 2)   disable_PT();
+    if (EEPROM_STORED.POWERSAVE_AUX > 2)   disable_AUX();
     delay(prompt_time);
 
   } //end first time
@@ -149,8 +149,8 @@ void InProg_Select_Option()
         goto_shot = 1;
         delay(prompt_time / 2);
       }
-      else if (goto_shot > camera_total_shots) {
-        goto_shot = camera_total_shots;
+      else if (goto_shot > EEPROM_STORED.camera_total_shots) {
+        goto_shot = EEPROM_STORED.camera_total_shots;
         delay(prompt_time / 2);
       }
       if (goto_shot_last != goto_shot) {
@@ -161,12 +161,12 @@ void InProg_Select_Option()
 
     case INPROG_INTERVAL:
       //read leftright values for the goto frames
-      uint32_t intval_last = intval;
+      uint32_t intval_last = EEPROM_STORED.intval;
   
-      if (intval < 20) joy_x_lock_count = 0;
-      intval += joy_capture_x3();
-      intval = constrain(intval, 5, 6000); //no limits, you can crunch static time
-      if (intval_last != intval) {
+      if (EEPROM_STORED.intval < 20) joy_x_lock_count = 0;
+      EEPROM_STORED.intval += joy_capture_x3();
+      EEPROM_STORED.intval = constrain(EEPROM_STORED.intval, 5, 6000); //no limits, you can crunch static time
+      if (intval_last != EEPROM_STORED.intval) {
         DisplayInterval();
       }
       break;
@@ -180,7 +180,7 @@ void InProg_Select_Option()
       if (inprogtype > (INPROG_OPTIONS - 1)) 	inprogtype = (INPROG_OPTIONS - 1);
       else
       {
-        Global.redraw = true;
+        FLAGS.redraw = true;
       }
       break;
 
@@ -189,7 +189,7 @@ void InProg_Select_Option()
       if (inprogtype > (INPROG_OPTIONS - 1))	inprogtype = 0;
       else
       {
-        Global.redraw = true;
+        FLAGS.redraw = true;
       }
       break;
   }
@@ -208,51 +208,51 @@ void button_actions_InProg_Select_Option()
         SMS_Resume();
       }
       else if (inprogtype == INPROG_RTS) { //Return to restart the shot  - send to review screen of relative move
-        REVERSE_PROG_ORDER = false;
-        //if (POWERSAVE_PT>2)   disable_PT();
-        //if (POWERSAVE_AUX>2)   disable_AUX();
-        //Program_Engaged=true;
-        camera_fired = 0;
+        EEPROM_STORED.REVERSE_PROG_ORDER = false;
+        //if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
+        //if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
+        //EEPROM_STORED.Program_Engaged=true;
+        EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
         lcd.at(1, 2, "Going to Start");
 
-        if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
+        if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
           go_to_start_new();
           progstep_goto(8);
         }
-        else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE) {
+        else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
           go_to_start_new();
           progstep_goto(109);
         }
-        else if (progtype == AUXDISTANCE) {
+        else if (EEPROM_STORED.progtype == AUXDISTANCE) {
           go_to_start_new();
           progstep_goto(8);
         }
       }
       else if  (inprogtype == INPROG_GOTO_END) { //Go to end point - basically a reverse move setup from wherever we are.
-        REVERSE_PROG_ORDER = true;
-        //if (POWERSAVE_PT>2)   disable_PT();
-        //if (POWERSAVE_AUX>2)   disable_AUX();
-        //Program_Engaged=true;
-        camera_fired = 0;
+        EEPROM_STORED.REVERSE_PROG_ORDER = true;
+        //if (EEPROM_STORED.POWERSAVE_PT>2)   disable_PT();
+        //if (EEPROM_STORED.POWERSAVE_AUX>2)   disable_AUX();
+        //EEPROM_STORED.Program_Engaged=true;
+        EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
         lcd.at(1, 3, "Going to End");
 
-        if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
+        if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
           go_to_start_new();
           progstep_goto(8);
         }
-        else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE) {
+        else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
           go_to_start_new();
           progstep_goto(109);
         }
-        else if (progtype == AUXDISTANCE) {
+        else if (EEPROM_STORED.progtype == AUXDISTANCE) {
           go_to_start_new();
           progstep_goto(8);
         }
       }
       else if  (inprogtype == INPROG_GOTO_FRAME) { //Go to specific frame
-        Global.redraw = true;
+        FLAGS.redraw = true;
         lcd.at(1, 4, "Going to");
         lcd.at(2, 4, "Frame:");
         lcd.at(2, 11, goto_shot);
@@ -260,21 +260,21 @@ void button_actions_InProg_Select_Option()
         inprogtype = INPROG_RESUME;
       }
       else if  (inprogtype == INPROG_INTERVAL) { //Change Interval and static time
-        Global.redraw = true;
+        FLAGS.redraw = true;
         //look at current gap between interval and static time = available move time.
-        uint32_t available_move_time = interval / 100 - static_tm; //this is the gap we keep interval isn't live
+        uint32_t available_move_time = EEPROM_STORED.interval / 100 - EEPROM_STORED.static_tm; //this is the gap we keep interval isn't live
         //Serial.print("AMT:");Serial.println(available_move_time);
         if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-        interval = intval * 100; //set the new ms timer for SMS
-        if (intval > available_move_time)
+        EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //set the new ms timer for SMS
+        if (EEPROM_STORED.intval > available_move_time)
         { //we can apply the gap
-          //Serial.print("intval-available_move_time pos: ");Serial.println(intval-available_move_time);
-          static_tm = intval - available_move_time;
-          //Serial.print("static_tm= ");Serial.println(static_tm);
+          //Serial.print("intval-available_move_time pos: ");Serial.println(EEPROM_STORED.intval-available_move_time);
+          EEPROM_STORED.static_tm = EEPROM_STORED.intval - available_move_time;
+          //Serial.print("static_tm= ");Serial.println(EEPROM_STORED.static_tm);
         }
         else  //squished it too much, go with minimum static time
         {
-          static_tm = 1;
+          EEPROM_STORED.static_tm = 1;
         }
         inprogtype = INPROG_RESUME;
       }

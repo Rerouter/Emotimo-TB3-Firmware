@@ -307,8 +307,8 @@ void DFSetup()
 	motors[1].jogMaxVelocity=TILT_MAX_JOG_STEPS_PER_SEC;
 	motors[1].jogMaxAcceleration=TILT_MAX_JOG_STEPS_PER_SEC/2;
 
-	motors[2].jogMaxVelocity=AUX_MAX_JOG_STEPS_PER_SEC;
-	motors[2].jogMaxAcceleration=AUX_MAX_JOG_STEPS_PER_SEC/2;
+	motors[2].jogMaxVelocity=EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC;
+	motors[2].jogMaxAcceleration=EEPROM_STORED.AUX_MAX_JOG_STEPS_PER_SEC/2;
 
 	//TB3  Specific Setup Pins (Same for Orange and Black
 	motors[0].stepPin = MOTOR0_STEP;
@@ -442,8 +442,8 @@ ISR(TIMER1_OVF_vect) //timer interrupt
 				motorMoveSteps0--;
 
 				PIN_ON(MOTOR0_STEP_PORT, MOTOR0_STEP_PIN);
-				if (motors[0].dir) current_steps.x++;
-				else current_steps.x--;
+				if (motors[0].dir) EEPROM_STORED.current_steps.x++;
+				else EEPROM_STORED.current_steps.x--;
 			}
 		}
 
@@ -456,8 +456,8 @@ ISR(TIMER1_OVF_vect) //timer interrupt
 			{
 				motorMoveSteps1--;
 				PIN_ON(MOTOR1_STEP_PORT, MOTOR1_STEP_PIN);
-				if (motors[1].dir) current_steps.y++;
-				else current_steps.y--;
+				if (motors[1].dir) EEPROM_STORED.current_steps.y++;
+				else EEPROM_STORED.current_steps.y--;
 			}
 		}
 
@@ -470,8 +470,8 @@ ISR(TIMER1_OVF_vect) //timer interrupt
 			{
 				motorMoveSteps2--;
 				PIN_ON(MOTOR2_STEP_PORT, MOTOR2_STEP_PIN);
-				if (motors[2].dir) current_steps.z++;
-				else current_steps.z--;
+				if (motors[2].dir) EEPROM_STORED.current_steps.z++;
+				else EEPROM_STORED.current_steps.z--;
 			}
 		}
 
@@ -1547,9 +1547,9 @@ void calculateVelocityMotorold(uint8_t motorIndex, float local_time, float local
 void synched3PtMove_max(int32_t xtarget, int32_t ytarget, int32_t ztarget) //
 {
 	//Clean up positions so we don't drift
-	motors[0].position = current_steps.x;
-	motors[1].position = current_steps.y;
-	motors[2].position = current_steps.z;
+	motors[0].position = EEPROM_STORED.current_steps.x;
+	motors[1].position = EEPROM_STORED.current_steps.y;
+	motors[2].position = EEPROM_STORED.current_steps.z;
 
 	motors[0].destination = xtarget;
 	motors[1].destination = ytarget;
@@ -1628,9 +1628,9 @@ void synched3PtMove_max(int32_t xtarget, int32_t ytarget, int32_t ztarget) //
 void synched3AxisMove_timed(int32_t xtarget, int32_t ytarget, int32_t ztarget, float local_time, float local_ramp) //
 {
 	//Clean up positions so we don't drift
-	motors[0].position = current_steps.x;
-	motors[1].position = current_steps.y;
-	motors[2].position = current_steps.z;
+	motors[0].position = EEPROM_STORED.current_steps.x;
+	motors[1].position = EEPROM_STORED.current_steps.y;
+	motors[2].position = EEPROM_STORED.current_steps.z;
 
 	motors[0].destination = xtarget;
 	motors[1].destination = ytarget;
