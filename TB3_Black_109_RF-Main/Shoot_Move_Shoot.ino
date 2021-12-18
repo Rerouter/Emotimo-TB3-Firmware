@@ -431,7 +431,7 @@ void PanoLoop ()
   //if (Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
   Serial.println("loop");
   
-  if (Shot_Sequence_Started && Flag_Shot_Timer_Active && CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
+  if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
     Flag_Camera_Triggers_In_Use = false; //IO Engaged is off
     //digitalWrite(IO_2, LOW); //Use this as the iterrupt
