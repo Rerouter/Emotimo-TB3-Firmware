@@ -17,43 +17,9 @@
 	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-void Check_Prog()  //this is a routine for the button presses in the program
-{
-  static uint32_t input_last_tm = 0;
-  switch (HandleButtons())
-  {
-    case C_Pressed:
-      if (GLOBAL.C_Button_Read_Count < 250) GLOBAL.C_Button_Read_Count++; // C Held Counter
-      if ((millis() - input_last_tm) > 2000)
-      {
-        GLOBAL.C_Button_Read_Count = 0;
-        input_last_tm = millis();
-      }
-      break;
-
-    case CZ_Pressed:
-      if (GLOBAL.CZ_Button_Read_Count < 250) GLOBAL.CZ_Button_Read_Count++; // CZ Held Counter
-      if ((millis() - input_last_tm) > 2000)
-      {
-        GLOBAL.CZ_Button_Read_Count = 0;
-        input_last_tm = millis();
-      }
-      break;
-
-    case Z_Pressed:
-      if (GLOBAL.Z_Button_Read_Count < 250) GLOBAL.Z_Button_Read_Count++; // Z Held Counter
-      if ((millis() - input_last_tm) > 2000)
-      {
-        GLOBAL.Z_Button_Read_Count = 0;
-        input_last_tm = millis();
-      }
-      break;
-  }
-}
 
 /*
   void Program_Engaged_Toggle()	{  //used for pausing
-	  GLOBAL.CZ_Button_Read_Count=0;
 	  ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
 	  EEPROM_STORED.Program_Engaged=!EEPROM_STORED.Program_Engaged; //toggle off the loop
   }
@@ -62,7 +28,6 @@ void Check_Prog()  //this is a routine for the button presses in the program
 
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
-  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = false; //toggle off the loop
   if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
   if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
@@ -73,7 +38,6 @@ void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 
 void SMS_Resume() //this runs once and is quick - not persistent
 {
-  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = true; //toggle off the loop
   lcd.empty();
   lcd.at(1, 1, "Resuming");
@@ -208,9 +172,6 @@ void button_actions_InProg_Select_Option()
       }
       else if (inprogtype == INPROG_RTS) { //Return to restart the shot  - send to review screen of relative move
         EEPROM_STORED.REVERSE_PROG_ORDER = false;
-        //if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
-        //if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
-        //EEPROM_STORED.Program_Engaged=true;
         EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
         lcd.at(1, 2, "Going to Start");
@@ -230,9 +191,6 @@ void button_actions_InProg_Select_Option()
       }
       else if  (inprogtype == INPROG_GOTO_END) { //Go to end point - basically a reverse move setup from wherever we are.
         EEPROM_STORED.REVERSE_PROG_ORDER = true;
-        //if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
-        //if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
-        //EEPROM_STORED.Program_Engaged=true;
         EEPROM_STORED.camera_fired = 0;
         lcd.bright(8);
         lcd.at(1, 3, "Going to End");

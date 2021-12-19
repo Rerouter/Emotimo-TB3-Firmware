@@ -24,8 +24,8 @@ void Setup_AUX_ON()
   {
     lcd.empty();
     draw(74, 1, 1); //lcd.at(1,1,"Aux Motor:");
-    if (!SETTINGS.AUX_ON )     lcd.at(1, 12, "OFF");
-    else                            lcd.at(1, 12, "ON");
+    if (!SETTINGS.AUX_ON )  lcd.at(1, 12, "OFF");
+    else                    lcd.at(1, 12, "ON");
     draw(65, 2, 1); //lcd.at(2,1,"UpDown  C-Select");
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
@@ -35,38 +35,38 @@ void Setup_AUX_ON()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      if (!SETTINGS.AUX_ON)
-      {
-        SETTINGS.AUX_ON = 1;
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      if (SETTINGS.AUX_ON)
-      {
-        SETTINGS.AUX_ON = 0;
-        FLAGS.redraw = true;
-      }
-      break;
-  }
-  
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(100, SETTINGS.AUX_ON);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(100, SETTINGS.AUX_ON);
-      progstep_goto(0);
-      break;
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        if (!SETTINGS.AUX_ON)
+        {
+          SETTINGS.AUX_ON = true;
+          FLAGS.redraw = true;
+        }
+        break;
+    
+      case 1: // Down
+        if (SETTINGS.AUX_ON)
+        {
+          SETTINGS.AUX_ON = false;
+          FLAGS.redraw = true;
+        }
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(100, SETTINGS.AUX_ON);
+        progstep_forward();
+        break;
+    
+      case Z_Pressed:
+        eeprom_write(100, SETTINGS.AUX_ON);
+        ReturnToMenu();
+        break;
+    }
   }
 }
 
@@ -89,36 +89,36 @@ void Setup_PAUSE_ENABLED()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      if (!SETTINGS.PAUSE_ENABLED) {
-        SETTINGS.PAUSE_ENABLED = 1;
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      if (SETTINGS.PAUSE_ENABLED) {
-        SETTINGS.PAUSE_ENABLED = 0;
-        FLAGS.redraw = true;
-      }
-      break;
-  }
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        if (!SETTINGS.PAUSE_ENABLED) {
+          SETTINGS.PAUSE_ENABLED = true;
+          FLAGS.redraw = true;
+        }
+        break;
   
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(101, SETTINGS.PAUSE_ENABLED);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(101, SETTINGS.PAUSE_ENABLED);
-      progstep_backward();
-      break;
+      case 1: // Down
+        if (SETTINGS.PAUSE_ENABLED) {
+          SETTINGS.PAUSE_ENABLED = false;
+          FLAGS.redraw = true;
+        }
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(101, SETTINGS.PAUSE_ENABLED);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(101, SETTINGS.PAUSE_ENABLED);
+        progstep_backward();
+        break;
+    }
   }
 }
 
@@ -140,42 +140,34 @@ void Setup_POWERSAVE_PT()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      SETTINGS.POWERSAVE_PT++;
-      if (SETTINGS.POWERSAVE_PT > 4) {
-        SETTINGS.POWERSAVE_PT = 4;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      SETTINGS.POWERSAVE_PT--;
-      if (SETTINGS.POWERSAVE_PT < 1) {
-        SETTINGS.POWERSAVE_PT = 1;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-  }
-
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(96, SETTINGS.POWERSAVE_PT);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(96, SETTINGS.POWERSAVE_PT);
-      progstep_backward();
-      break;
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        SETTINGS.POWERSAVE_PT++;
+        if (SETTINGS.POWERSAVE_PT > 4) { SETTINGS.POWERSAVE_PT = 4; }
+        else  { FLAGS.redraw = true; }
+        break;
+  
+      case 1: // Down
+        SETTINGS.POWERSAVE_PT--;
+        if (SETTINGS.POWERSAVE_PT < 1) { SETTINGS.POWERSAVE_PT = 1; }
+        else  { FLAGS.redraw = true;  }
+        break;
+    }
+  
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(96, SETTINGS.POWERSAVE_PT);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(96, SETTINGS.POWERSAVE_PT);
+        progstep_backward();
+        break;
+    }
   }
 }
 
@@ -197,42 +189,42 @@ void Setup_POWERSAVE_AUX()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
-
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      SETTINGS.POWERSAVE_AUX++;
-      if (SETTINGS.POWERSAVE_AUX > 4) {
-        SETTINGS.POWERSAVE_AUX = 4;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      SETTINGS.POWERSAVE_AUX--;
-      if (!SETTINGS.POWERSAVE_AUX) {
-        SETTINGS.POWERSAVE_AUX = 1;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-  }
-
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(98, SETTINGS.POWERSAVE_AUX);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(98, SETTINGS.POWERSAVE_AUX);
-      progstep_backward();
-      break;
+    
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        SETTINGS.POWERSAVE_AUX++;
+        if (SETTINGS.POWERSAVE_AUX > 4) {
+          SETTINGS.POWERSAVE_AUX = 4;
+        }
+        else  {
+          FLAGS.redraw = true;
+        }
+        break;
+  
+      case 1: // Down
+        SETTINGS.POWERSAVE_AUX--;
+        if (!SETTINGS.POWERSAVE_AUX) {
+          SETTINGS.POWERSAVE_AUX = 1;
+        }
+        else  {
+          FLAGS.redraw = true;
+        }
+        break;
+    }
+  
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(98, SETTINGS.POWERSAVE_AUX);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(98, SETTINGS.POWERSAVE_AUX);
+        progstep_backward();
+        break;
+    }
   }
 }
 
@@ -253,38 +245,38 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      SETTINGS.LCD_BRIGHTNESS_DURING_RUN++;
-      if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN > 8) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 8;
-      lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
-      FLAGS.redraw = true;
-      break;
-
-    case 1: // Down
-      SETTINGS.LCD_BRIGHTNESS_DURING_RUN--;
-      if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN < 1) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 1;
-      lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
-      FLAGS.redraw = true;
-      break;
-  }
-
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
-      lcd.bright(4);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
-      lcd.bright(4);
-      progstep_backward();
-      break;
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        SETTINGS.LCD_BRIGHTNESS_DURING_RUN++;
+        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN > 8) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 8;
+        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
+        FLAGS.redraw = true;
+        break;
+  
+      case 1: // Down
+        SETTINGS.LCD_BRIGHTNESS_DURING_RUN--;
+        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN < 1) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 1;
+        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+        FLAGS.redraw = true;
+        break;
+    }
+  
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+        lcd.bright(4);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(102, SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+        lcd.bright(4);
+        progstep_backward();
+        break;
+    }
   }
 }
 
@@ -305,34 +297,34 @@ void Setup_Max_AUX_Motor_Speed()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1:  // Up
-      SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC += 500;
-      if (SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC > 20000) SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC = 20000;
-      FLAGS.redraw = true;
-      break;
-
-    case 1:  // Down
-      SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC -= 500;
-      if (SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC < 2000) SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC = 2000;
-      FLAGS.redraw = true;
-      break;
-  }
+    switch(joy_capture_y_map())
+    {
+      case -1:  // Up
+        SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC += 500;
+        if (SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC > 20000) SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC = 20000;
+        FLAGS.redraw = true;
+        break;
   
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
-      progstep_backward();
-      break;
+      case 1:  // Down
+        SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC -= 500;
+        if (SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC < 2000) SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC = 2000;
+        FLAGS.redraw = true;
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(104, SETTINGS.AUX_MAX_JOG_STEPS_PER_SEC);
+        progstep_backward();
+        break;
+    }
   }
 }
 
@@ -343,7 +335,7 @@ void Setup_AUX_Motor_DIR()
     lcd.empty();
     lcd.at(1, 1, "Aux Reversed:");
     if (!SETTINGS.AUX_REV)  lcd.at(1, 14, "OFF");
-    else           lcd.at(1, 14, "ON");
+    else                    lcd.at(1, 14, "ON");
     draw(65, 2, 1); //lcd.at(2,1,"UpDown  C-Select");
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
@@ -353,39 +345,36 @@ void Setup_AUX_Motor_DIR()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      if (!SETTINGS.AUX_REV) {
-        SETTINGS.AUX_REV = 1;
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      if (SETTINGS.AUX_REV) {
-        SETTINGS.AUX_REV = 0;
-        FLAGS.redraw = true;
-      }
-      break;
-  }
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        if (!SETTINGS.AUX_REV) {
+          SETTINGS.AUX_REV = 1;
+          FLAGS.redraw = true;
+        }
+        break;
   
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      eeprom_write(106, SETTINGS.AUX_REV);
-      EEPROM_STORED.progtype = 0;
-      progstep_goto(0);
-      lcd.empty();
-      lcd.at(1, 1, "Return Main Menu");
-      break;
-
-    case Z_Pressed:
-      eeprom_write(106, SETTINGS.AUX_REV);
-      progstep_backward();
-      break;	  
+      case 1: // Down
+        if (SETTINGS.AUX_REV) {
+          SETTINGS.AUX_REV = 0;
+          FLAGS.redraw = true;
+        }
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        eeprom_write(106, SETTINGS.AUX_REV);
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        eeprom_write(106, SETTINGS.AUX_REV);
+        progstep_backward();
+        break;	  
+    }
   }
 }
 
@@ -397,7 +386,7 @@ void Set_Shot_Repeat()
     lcd.at(1, 1, "Select Shot Type");
     if (SETTINGS.sequence_repeat_type == 1)			 lcd.at(2, 1, "Run Once");
     if (SETTINGS.sequence_repeat_type == 0)			 lcd.at(2, 1, "Continuous Loop");
-    if (SETTINGS.sequence_repeat_type == -1)		   lcd.at(2, 1, "Repeat Forward"); //not currently supported
+    if (SETTINGS.sequence_repeat_type == -1)		 lcd.at(2, 1, "Repeat Forward"); //not currently supported
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -406,39 +395,39 @@ void Set_Shot_Repeat()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      SETTINGS.sequence_repeat_type++;
-      if (SETTINGS.sequence_repeat_type > 1) {
-        SETTINGS.sequence_repeat_type = 1;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-
-    case 1: // Down
-      SETTINGS.sequence_repeat_type--;
-      if (SETTINGS.sequence_repeat_type < 0) {
-        SETTINGS.sequence_repeat_type = 0;
-      }
-      else  {
-        FLAGS.redraw = true;
-      }
-      break;
-  }
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        SETTINGS.sequence_repeat_type++;
+        if (SETTINGS.sequence_repeat_type > 1) {
+          SETTINGS.sequence_repeat_type = 1;
+        }
+        else  {
+          FLAGS.redraw = true;
+        }
+        break;
   
-  switch(HandleButtons())
-  {
-    case C_Pressed:
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      progstep_backward();
-      break;
+      case 1: // Down
+        SETTINGS.sequence_repeat_type--;
+        if (SETTINGS.sequence_repeat_type < 0) {
+          SETTINGS.sequence_repeat_type = 0;
+        }
+        else  {
+          FLAGS.redraw = true;
+        }
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        progstep_backward();
+        break;
+    }
   }
 }

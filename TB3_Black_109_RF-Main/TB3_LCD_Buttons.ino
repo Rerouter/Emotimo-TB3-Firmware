@@ -24,6 +24,15 @@
 
 */
 
+void ReturnToMenu()
+{
+  EEPROM_STORED.progtype = 0;
+  progstep_goto(0);
+  lcd.empty();
+  lcd.at(1, 1, "Return Main Menu");
+  delay(GLOBAL.prompt_time);
+}
+
 int32_t	aux_dist;
 
 // Should belong in Pano, need to shift out
@@ -39,27 +48,70 @@ enum cursorpos : bool {
 
 uint8_t HandleButtons()
 {
-  static bool armed = false;
+  static uint8_t last = Read_Again;
+  static uint8_t held = 0;
   switch (ButtonState)
   {
     case Released:
-      armed = true;
+      held = 0;
       return 0;
       break;
       
     case C_Pressed:
-      if (armed) { armed = false;  return C_Pressed;  }
-      else       {                 return Read_Again; }
+      switch(last)
+      {
+        case Released:
+          return C_Pressed;
+          break;
+
+        case C_Pressed:
+          if (held < 250) held++;
+          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return C_Held; }
+          else                                     { return Read_Again;       }
+          break;
+        default:
+          held = 0;
+          return Read_Again;
+      }
+      last = C_Pressed;
       break;
 
     case Z_Pressed:
-      if (armed) { armed = false;  return Z_Pressed;  }
-      else       {                 return Read_Again; }
+      switch(last)
+      {
+        case Released:
+          return Z_Pressed;
+          break;
+
+        case Z_Pressed:
+          if (held < 250) held++;
+          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return Z_Held; }
+          else                                     { return Read_Again;       }
+          break;
+        default:
+          held = 0;
+          return Read_Again;
+      }
+      last = Z_Pressed;
       break;
 
     case CZ_Pressed:
-      if (armed) { armed = false;  return CZ_Pressed; }
-      else       {                 return Read_Again; }
+      switch(last)
+      {
+        case Released:
+          return CZ_Pressed;
+          break;
+
+        case CZ_Pressed:
+          if (held < 250) held++;
+          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return CZ_Held; }
+          else                                     { return Read_Again;        }
+          break;
+        default:
+          held = 0;
+          return Read_Again;
+      }
+      last = CZ_Pressed;
       break;
 
     default:
@@ -150,96 +202,96 @@ void Choose_Program()
         if (EEPROM_STORED.progtype == (MENU_ITEMS - 1)) { EEPROM_STORED.progtype = 0; }
         else                                     { EEPROM_STORED.progtype++;   }
     }
-  }
 
-  switch (HandleButtons())
-  {
-    case C_Pressed:
-      lcd.empty();
-
-      switch (EEPROM_STORED.progtype)
-      {
-        case REG2POINTMOVE: //new 2 point move
-          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic parameters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(1);
-          break;
-
-        case REV2POINTMOVE:   //reverse beta 2Pt
-          EEPROM_STORED.REVERSE_PROG_ORDER = true;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic paramters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(1);
-          break;
-
-        case REG3POINTMOVE: //new 3 point move
-          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic parameters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(101); //three point move
-          break;
-
-        case REV3POINTMOVE: //new 3 point move reverse
-          EEPROM_STORED.REVERSE_PROG_ORDER = true;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic paramters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(101); //three point move
-          break;
-
-        case DFSLAVE:  //DFMode
-          lcd.empty();
-          if (PINOUT_VERSION == 4)  lcd.at(1, 1, "eMotimo TB3Black");
-          if (PINOUT_VERSION == 3)  lcd.at(1, 1, "eMotimoTB3Orange");
-          lcd.at(2, 1, "Dragonframe 1.26");
-          DFSetup();
-          DFloop();
-          break;
-
-        case PANOGIGA:   //Pano Beta
-          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          EEPROM_STORED.intval = 5;//default this for static time selection
-          EEPROM_STORED.interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
-          progstep_goto(201);
-          break;
-
-        case PORTRAITPANO:  //Pano Beta
-          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic parameters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(301);
-          break;
-
-        case SETUPMENU:   //setup menu
-          progstep_goto(901);
-          break;
-
-        case AUXDISTANCE:   //
-          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-          GLOBAL.reset_prog = 1;
-          set_defaults_in_ram(); //put all basic paramters in RAM
-          draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
-          delay(GLOBAL.prompt_time);
-          lcd.empty();
-          progstep_goto(401);
-          break;
-      }
-      break;
+    switch (HandleButtons())
+    {
+      case C_Pressed:
+        lcd.empty();
+  
+        switch (EEPROM_STORED.progtype)
+        {
+          case REG2POINTMOVE: //new 2 point move
+            EEPROM_STORED.REVERSE_PROG_ORDER = false;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic parameters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(1);
+            break;
+  
+          case REV2POINTMOVE:   //reverse beta 2Pt
+            EEPROM_STORED.REVERSE_PROG_ORDER = true;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic paramters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(1);
+            break;
+  
+          case REG3POINTMOVE: //new 3 point move
+            EEPROM_STORED.REVERSE_PROG_ORDER = false;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic parameters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(101); //three point move
+            break;
+  
+          case REV3POINTMOVE: //new 3 point move reverse
+            EEPROM_STORED.REVERSE_PROG_ORDER = true;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic paramters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(101); //three point move
+            break;
+  
+          case DFSLAVE:  //DFMode
+            lcd.empty();
+            if (PINOUT_VERSION == 4)  lcd.at(1, 1, "eMotimo TB3Black");
+            if (PINOUT_VERSION == 3)  lcd.at(1, 1, "eMotimoTB3Orange");
+            lcd.at(2, 1, "Dragonframe 1.26");
+            DFSetup();
+            DFloop();
+            break;
+  
+          case PANOGIGA:   //Pano Beta
+            EEPROM_STORED.REVERSE_PROG_ORDER = false;
+            EEPROM_STORED.intval = 5;//default this for static time selection
+            EEPROM_STORED.interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
+            progstep_goto(201);
+            break;
+  
+          case PORTRAITPANO:  //Pano Beta
+            EEPROM_STORED.REVERSE_PROG_ORDER = false;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic parameters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(301);
+            break;
+  
+          case SETUPMENU:   //setup menu
+            progstep_goto(901);
+            break;
+  
+          case AUXDISTANCE:   //
+            EEPROM_STORED.REVERSE_PROG_ORDER = false;
+            GLOBAL.reset_prog = 1;
+            set_defaults_in_ram(); //put all basic paramters in RAM
+            draw(6, 1, 3); //lcd.at(1,3,"Params Reset");
+            delay(GLOBAL.prompt_time);
+            lcd.empty();
+            progstep_goto(401);
+            break;
+        }
+        break;
+    }
   }
 }
 
@@ -313,7 +365,7 @@ void button_actions_move_start()
       break;
 
     case Z_Pressed:
-      progstep_goto(0);
+      ReturnToMenu();
       break;
   }
 }
@@ -341,15 +393,7 @@ void Move_to_Endpoint()
     enable_PanTilt();
     if (SETTINGS.AUX_ON) enable_AUX();  //
   }
-  /*
-    NunChuckRequestData();
-    NunChuckProcessData();
-    applyjoymovebuffer_exponential();
-    dda_move(GLOBAL.feedrate_micros);
-    button_actions_move_end();  //read buttons, look for home set on c
-    delayMicroseconds(200);
-    //delay(1);
-  */
+  
   //Velocity Engine update
   if (!nextMoveLoaded)
   {
@@ -1241,7 +1285,6 @@ void button_actions_review()
       GLOBAL.start_delay_tm = ((millis() / 1000L) + GLOBAL.start_delay_sec); //system seconds in the future - use this as big value to compare against
       draw(34, 2, 10); //lcd.at(2,10,"H:MM:SS");
       lcd.at(1, 2, "Delaying Start");
-      GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
 
       while (GLOBAL.start_delay_tm > millis() / 1000L)
       {
@@ -1250,11 +1293,9 @@ void button_actions_review()
         if ((millis() - GLOBAL.display_last_tm) > 1000) display_time(2, 1);
         NunChuckRequestData();
         NunChuckProcessData();
-        Check_Prog(); //look for long button press
-        if (GLOBAL.CZ_Button_Read_Count > 20 && !EEPROM_STORED.Program_Engaged)
+        if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged)
         {
           GLOBAL.start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
-          GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
         }
       }
 
@@ -1396,7 +1437,6 @@ void Auto_Repeat_Video()
   //GLOBAL.start_delay_tm=((millis()/1000L)+GLOBAL.start_delay_sec); //system seconds in the future - use this as big value to compare against
   //draw(34,2,10);//lcd.at(2,10,"H:MM:SS");
   //lcd.at(1,2,"Delaying Start");
-  GLOBAL.CZ_Button_Read_Count = 0; //reset this to zero to start
 
   /*
     while (GLOBAL.start_delay_tm>millis()/1000L) {
@@ -1406,9 +1446,8 @@ void Auto_Repeat_Video()
   	NunChuckRequestData();
   	NunChuckProcessData();
   	Check_Prog(); //look for long button press
-  	if (GLOBAL.CZ_Button_Read_Count>20 && !EEPROM_STORED.Program_Engaged) {
+  	if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged) {
   		GLOBAL.start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
-  		GLOBAL.CZ_Button_Read_Count=0; //reset this to zero to start
   	}
     }
   */
@@ -1447,7 +1486,6 @@ void Auto_Repeat_Video()
 
 void Pause_Prog()
 {
-  GLOBAL.CZ_Button_Read_Count = 0;
   EEPROM_STORED.Program_Engaged = !EEPROM_STORED.Program_Engaged; //turn off the loop
   if (!EEPROM_STORED.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!

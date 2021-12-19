@@ -212,10 +212,7 @@ struct Global2 { // Non Stored Globals
 
   uint8_t  joy_y_lock_count      = 0;
   uint8_t  joy_x_lock_count      = 0;
-
-  uint8_t  CZ_Button_Read_Count  = 0;
-  uint8_t  C_Button_Read_Count   = 0;
-  uint8_t  Z_Button_Read_Count   = 0;
+  uint8_t  Button_Hold_Threshold = 25;
 
   int8_t joy_x_axis, joy_y_axis, acc_x_axis, acc_y_axis;
 
@@ -310,7 +307,10 @@ enum ButtonState : uint8_t {
   C_Pressed  = 1,
   Z_Pressed  = 2,
   CZ_Pressed = 3,
-  Read_Again = 4
+  C_Held     = 4,
+  Z_Held     = 5,
+  CZ_Held    = 6,
+  Read_Again = 7
 };
 
 
@@ -319,7 +319,7 @@ enum ButtonState : uint8_t {
 #define DFMOCO_VERSION_STRING "1.2.6"
 
 // supported boards
-#define ARDUINO			1
+#define ARDUINO			  1
 #define ARDUINOMEGA		2
 
 //eMotimo TB3 - Set this PINOUT_VERSION 3 for TB3 Orange (Uno)
@@ -459,7 +459,7 @@ void setup()
   }
   //End Setup of EEPROM
 
-  //begin  Setup for Nunchuck
+  //Setup Nunchucks and Calibrate
   Nunchuck.init(0);
   for (uint8_t reads = 1; reads < 17; reads++)
   {
@@ -475,9 +475,9 @@ void setup()
     delay(10);
   }
   calibrate_joystick(Nunchuck.joyx(), Nunchuck.joyy());
-
-  //end  Setup for Nunchuk
   lcd.empty();
+  //end  Setup for Nunchuk
+
 
   //Setup Motors
   init_steppers();
@@ -791,7 +791,7 @@ void SetupMenu() // 900
       break;
 
     case 908: //  Exit
-      delay(100);
+      ReturnToMenu();
       break;
 
       //end of setup
@@ -1108,7 +1108,7 @@ void loop()
         break;
 
       case 908: //  Exit
-        delay(100);
+        ReturnToMenu();
         break;
 
       //end of setup

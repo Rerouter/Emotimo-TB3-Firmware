@@ -108,7 +108,6 @@ void ShootMoveShoot()
 
     Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
     FLAGS.Interrupt_Fire_Engaged = false;
-    //GLOBAL.CZ_Button_Read_Count=0;
     //InterruptAction_Reset(); //enable the external interrupts to start a new shot
 #if DEBUG
     Serial.println("EOL");
@@ -131,10 +130,9 @@ void ShootMoveShoot()
 
   NunChuckRequestData();
   NunChuckProcessData();
-  Check_Prog(); //look for button presses
-  //if (GLOBAL.CZ_Button_Read_Count>10 && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
-  //if (SETTINGS.PAUSE_ENABLED && GLOBAL.CZ_Button_Read_Count>10 && EEPROM_STORED.intval>3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-  if (SETTINGS.PAUSE_ENABLED && GLOBAL.CZ_Button_Read_Count > 25 && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started && HandleButtons() == Released ) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
+  //if (HandleButtons() == CZ_Held && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
+  //if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval>3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started && HandleButtons() == Released ) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
 }
 
 void VideoLoop ()
@@ -173,8 +171,7 @@ void VideoLoop ()
       for (uint8_t i = 0; i < 30; i++) {
         NunChuckRequestData();
         NunChuckProcessData();
-        Check_Prog(); //look for button presses
-        if (SETTINGS.PAUSE_ENABLED && GLOBAL.CZ_Button_Read_Count > 25 ) {
+        if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held ) {
           break_continuous = true;
           lcd.empty();
           lcd.at(1, 1, "Stopping Run");
@@ -196,10 +193,8 @@ void VideoLoop ()
         if ((millis() - GLOBAL.display_last_tm) > 1000) display_time(2, 1);
         NunChuckRequestData();
         NunChuckProcessData();
-        Check_Prog(); //look for long button press
-        //if (GLOBAL.CZ_Button_Read_Count>20 && !EEPROM_STORED.Program_Engaged) {
+        //if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged) {
         //  GLOBAL.start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
-        //  GLOBAL.CZ_Button_Read_Count=0; //reset this to zero to start
         //}
       }
       //end start delay
@@ -356,7 +351,6 @@ void ExternalTriggerLoop ()
       display_status();  //update after shot complete to avoid issues with pausing
 
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
-      GLOBAL.CZ_Button_Read_Count = 0;
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
 #if DEBUG
       Serial.println("EOL");
@@ -375,9 +369,8 @@ void ExternalTriggerLoop ()
   }
   NunChuckRequestData();
   NunChuckProcessData();
-  Check_Prog(); //look for button presses
-  //if (GLOBAL.CZ_Button_Read_Count > 10 && EEPROM_STORED.intval == EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged = true; // manual trigger
-  if (SETTINGS.PAUSE_ENABLED && GLOBAL.CZ_Button_Read_Count > 20 && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+  //if (HandleButtons() == CZ_Held && EEPROM_STORED.intval == EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged = true; // manual trigger
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
 }
 
 void EndOfProgramLoop ()
@@ -395,9 +388,8 @@ void EndOfProgramLoop ()
 
   NunChuckRequestData();
   NunChuckProcessData();
-  Check_Prog(); //look for button presses
   //add error handling here to prevent accidental starts
-  //if (GLOBAL.CZ_Button_Read_Count>25  && HandleButtons() = CZ_Released ) button_actions_end_of_program();  //Repeat or Reverses
+  //if (HandleButtons() == CZ_Held  && HandleButtons() = CZ_Released ) button_actions_end_of_program();  //Repeat or Reverses
   button_actions_end_of_program();
   //delay(1); //don't just hammer on this - query at regular interval
 }
@@ -504,7 +496,6 @@ void PanoLoop ()
       FLAGS.Move_Engauged = false;
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
       FLAGS.Interrupt_Fire_Engaged = false;
-      GLOBAL.CZ_Button_Read_Count = 0;
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
 #if DEBUG
       Serial.println("EOL");
@@ -530,7 +521,6 @@ void PanoLoop ()
       FLAGS.Move_Engauged = false;
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
       FLAGS.Interrupt_Fire_Engaged = false;
-      //GLOBAL.CZ_Button_Read_Count = 0;
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
 #if DEBUG
       Serial.println("EOL");
@@ -550,9 +540,8 @@ void PanoLoop ()
   //updateMotorVelocities();  //uncomment this for DF Loop
   NunChuckRequestData();
   NunChuckProcessData();
-  Check_Prog(); //look for button presses
-  // if (GLOBAL.CZ_Button_Read_Count>10 && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
-  if (SETTINGS.PAUSE_ENABLED && GLOBAL.CZ_Button_Read_Count > 20 && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+  // if (HandleButtons() == CZ_Held && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
 }
 
 void PanoEnd ()

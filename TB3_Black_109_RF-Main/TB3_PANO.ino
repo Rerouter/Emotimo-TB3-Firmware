@@ -219,14 +219,18 @@ void Set_PanoArrayType()
     lcd.at(1, 2, "Set Array Type");
     switch(PanoArrayType)
     {
-      case PANO_9ShotCenter:  lcd.at(2, 3, "9-Shot Center");  break;
-      case PANO_25ShotCenter: lcd.at(2, 2, "25-Shot Center"); break;
-      case PANO_7X3:          lcd.at(2, 4, "7x3 Matrix");     break;
-      case PANO_9X5Type1:     lcd.at(2, 4, "9x5 Type 1");     break;
-      case PANO_9X5Type2:     lcd.at(2, 4, "9x5 Type 2");     break;
-      case PANO_5x5TopThird:  lcd.at(2, 4, "5x5 Top1/3");     break;
-      case PANO_7X5TopThird:  lcd.at(2, 4, "7x5 Top1/3");     break;     
+      case PANO_9ShotCenter:  lcd.at(2, 3, "9-Shot Center");  total_shots_x = 3;  total_shots_y = 3;  break;
+      case PANO_25ShotCenter: lcd.at(2, 2, "25-Shot Center"); total_shots_x = 5;  total_shots_y = 5;  break;
+      case PANO_7X3:          lcd.at(2, 4, "7x3 Matrix");     total_shots_x = 7;  total_shots_y = 3;  break;
+      case PANO_9X5Type1:     lcd.at(2, 4, "9x5 Type 1");     total_shots_x = 9;  total_shots_y = 5;  break;
+      case PANO_9X5Type2:     lcd.at(2, 4, "9x5 Type 2");     total_shots_x = 9;  total_shots_y = 5;  break;
+      case PANO_5x5TopThird:  lcd.at(2, 4, "5x5 Top1/3");     total_shots_x = 5;  total_shots_y = 5;  break;
+      case PANO_7X5TopThird:  lcd.at(2, 4, "7x5 Top1/3");     total_shots_x = 7;  total_shots_y = 5;  break;
     }	
+
+    total_pano_shots = total_shots_x * total_shots_y;
+    EEPROM_STORED.camera_total_shots = total_pano_shots + 1; //set this to allow us to compare in main loops
+    
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -234,61 +238,34 @@ void Set_PanoArrayType()
   if ((millis() - GLOBAL.NClastread) > 50)
   {
     GLOBAL.NClastread = millis();
-    //Serial.print("Read");Serial.println(GLOBAL.NClastread);
     NunChuckRequestData();
     NunChuckProcessData();
-  }
 
-  switch(joy_capture_y_map())
-  {
-    case -1: // Up
-      PanoArrayType++;
-      if (PanoArrayType > PanoArrayTypeOptions)
-      {
-        PanoArrayType = PanoArrayTypeOptions;
-      }
-      else
-      {
-        FLAGS.redraw = true;
-      }
-      break;
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        PanoArrayType++;
+        if (PanoArrayType > PanoArrayTypeOptions)  { PanoArrayType = PanoArrayTypeOptions; }
+        else                                       { FLAGS.redraw = true; }
+        break;
+  
+      case 1: // Down
+        PanoArrayType--;
+        if (PanoArrayType < 1) { PanoArrayType = 1; }
+        else                   { FLAGS.redraw = true; }
+        break;
+    }
 
-    case 1: // Down
-      PanoArrayType--;
-      if (PanoArrayType < 1)
-      {
-        PanoArrayType = 1;
-      }
-      else
-      {
-        FLAGS.redraw = true;
-      }
-      break;
-  }
-
-  switch(PanoArrayType)
-  {
-    case PANO_9ShotCenter:  total_shots_x = 3;  total_shots_y = 3;  break;
-    case PANO_25ShotCenter: total_shots_x = 5;  total_shots_y = 5;  break;
-    case PANO_7X3:          total_shots_x = 7;  total_shots_y = 3;  break;
-    case PANO_9X5Type1:     total_shots_x = 9;  total_shots_y = 5;  break;
-    case PANO_9X5Type2:     total_shots_x = 9;  total_shots_y = 5;  break;
-    case PANO_5x5TopThird:  total_shots_x = 5;  total_shots_y = 5;  break;
-    case PANO_7X5TopThird:  total_shots_x = 7;  total_shots_y = 5;  break;
-  }
-
-  total_pano_shots = total_shots_x * total_shots_y; //Serial.print("total_pano_shots = ");Serial.println(total_pano_shots);
-  EEPROM_STORED.camera_total_shots = total_pano_shots + 1; //set this to allow us to compare in main loops
-
-  switch (HandleButtons())
-  {
-    case C_Pressed:
-      progstep_forward();
-      break;
-
-    case Z_Pressed:
-      progstep_backward();
-      break;
+    switch (HandleButtons())
+    {
+      case C_Pressed:
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        progstep_backward();
+        break;
+    }
   }
 }
 
