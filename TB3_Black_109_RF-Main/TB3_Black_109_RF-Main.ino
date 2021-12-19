@@ -997,6 +997,14 @@ void loop()
         break;
       //end of Pano Mode
 
+      case 250:  // loop for Pano
+        PanoLoop();
+        break; //break 250
+
+      case 290: //  finished up pano
+        PanoEnd();
+        break;  // break 90
+
       case 299: // Pano Pause Menu - To stop or edit a panorama in progress
         Pano_Paused_Menu();
         break;
@@ -1149,15 +1157,6 @@ void loop()
 
       case 90: // end of program - offer repeat and reverse options - check the nuncuck
         EndOfProgramLoop();
-        break;  // break 90
-
-      case 250:  // loop for Pano
-        PanoLoop();
-        break; //break 250
-
-
-      case 290: //  finished up pano
-        PanoEnd();
         break;  // break 90
 
       default:

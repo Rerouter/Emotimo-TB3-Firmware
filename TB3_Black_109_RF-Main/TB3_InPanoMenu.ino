@@ -25,10 +25,11 @@
   }
 */
 uint16_t panoprogtype = 0;
+uint16_t restore_progstep = 0;
 
 //In Program Menu Ordering
 
-#define PANO_OPTIONS  8    //up this when code for gotoframe
+#define PANO_OPTIONS  11
 enum panoprogtype : uint8_t {
   PANO_RESUME       = 0,
   PANO_GOTO_START   = 1,
@@ -37,16 +38,24 @@ enum panoprogtype : uint8_t {
   PANO_INTERVAL     = 4,
   PANO_FOCUS_INT    = 5,
   PANO_EXT_TRIGGER  = 6,
-  PANO_DETOUR       = 7   
+  PANO_DETOUR       = 7,
+  PANO_AOV          = 8,
+  PANO_OVERLAP      = 9,
+  PANO_START_POINT  = 10,
+  PANO_END_POINT    = 11
 };
 
 void Pano_Pause() //this runs once and is quick - not persistent
 {
+  lcd.empty();
+  lcd.at(1, 1, "Pausing");
+  delay(GLOBAL.prompt_time);
   FLAGS.Program_Engaged = false; //toggle off the loop
   if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
   if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-  panoprogtype = 0; //default this to the first option, Resume
-  progstep_goto(1001); //send us to a loop where we can select options
+  panoprogtype = 0;   //default this to the first option
+  restore_progstep = EEPROM_STORED.progstep; // Grab the progstep so we can mess with enums without needing to worry
+  progstep_goto(299); //go to the Pano_Paused_Menu item and loop
 }
 
 
@@ -56,7 +65,7 @@ void Pano_Resume() //this runs once and is quick - not persistent
   lcd.empty();
   lcd.at(1, 1, "Resuming");
   delay(GLOBAL.prompt_time);
-  progstep_goto(50); //send us back to the main SMS Loop
+  progstep_goto(restore_progstep); //send us back to the main Panorama Loop
 }
 
 
@@ -65,37 +74,63 @@ void Pano_Paused_Menu()
   if (FLAGS.redraw)
   {
     lcd.empty();
-    switch(inprogtype)
+    switch(panoprogtype)
     {
-      case INPROG_RESUME:
+      case PANO_RESUME:
         draw(86, 1, 6); //lcd.at(1,6,"Resume");
         break;
 
-      case INPROG_RTS:
+      case PANO_GOTO_START:
         draw(87, 1, 6); //lcd.at(1,6,"Restart");
         break;
 
-      case INPROG_GOTO_END:
+      case PANO_GOTO_END:
         draw(89, 1, 5); //lcd.at(1,5,"Go to End");
         break;
 
-      case INPROG_GOTO_FRAME:
+      case PANO_GOTO_FRAME:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
         GLOBAL.goto_shot = EEPROM_STORED.camera_fired;
         DisplayGoToShot();
         break;
 
-      case INPROG_INTERVAL:
+      case PANO_INTERVAL:
         //draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
         EEPROM_STORED.intval = EEPROM_STORED.interval / 100;  // Convert from milliseconds to 0.1 second increments
         lcd.at(1, 1, "Intval:   .  sec");
         DisplayInterval();
         break;
 
-      case INPROG_STOPMOTION:
-        //Hold Right, then C to advance a frame with static time, left C goes back
-        lcd.at(1, 1, "StopMo R+C / L+C");
+      case PANO_FOCUS_INT:
+        lcd.at(1,1,"Change FocusTime");
         break;
+
+      case PANO_EXT_TRIGGER:
+        lcd.at(1,1,"Change Ext_Trig");
+        break;
+
+      case PANO_DETOUR:
+        lcd.at(1,1,"Detour Mid Shot");
+        break;
+
+      case PANO_AOV:
+        lcd.at(1,1,"Change AOV");
+        break;
+
+      case PANO_OVERLAP:
+        lcd.at(1,1,"Change Overlap");
+        break;
+
+      case PANO_START_POINT:
+        lcd.at(1,1,"Change Start Pos");
+        break;
+
+      case PANO_END_POINT:
+        lcd.at(1,1,"Change End Pos");
+        break;
+
+      default:
+        panoprogtype = 0;
     }
 
     lcd.at(2, 1, "UpDown  C-Select");
@@ -106,9 +141,9 @@ void Pano_Paused_Menu()
 
   } //end first time
     
-  switch(inprogtype)
+  switch(panoprogtype)
   {
-    case INPROG_GOTO_FRAME:
+    case PANO_GOTO_FRAME:
     {
       //read leftright values for the goto frames
       uint32_t goto_shot_last = GLOBAL.goto_shot;
@@ -129,7 +164,7 @@ void Pano_Paused_Menu()
       break;
     }
 
-    case INPROG_INTERVAL:
+    case PANO_INTERVAL:
       //read leftright values for the goto frames
       uint32_t intval_last = EEPROM_STORED.intval;
   
@@ -151,8 +186,8 @@ void Pano_Paused_Menu()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        inprogtype++;
-        if (inprogtype > (INPROG_OPTIONS - 1))  inprogtype = (INPROG_OPTIONS - 1);
+        panoprogtype++;
+        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = (PANO_OPTIONS - 1);
         else
         {
           FLAGS.redraw = true;
@@ -160,8 +195,8 @@ void Pano_Paused_Menu()
         break;
   
       case 1: // Down
-        inprogtype--;
-        if (inprogtype > (INPROG_OPTIONS - 1))  inprogtype = 0;
+        panoprogtype--;
+        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = 0;
         else
         {
           FLAGS.redraw = true;
@@ -179,75 +214,83 @@ void button_actions_Pano_Paused_Menu()
   switch (HandleButtons())
   {
     case C_Pressed:
-
       lcd.empty();
-      if (inprogtype == INPROG_RESUME) { // Resume (unpause)
-        SMS_Resume();
-      }
-      else if (inprogtype == INPROG_RTS) { //Return to restart the shot  - send to review screen of relative move
-        EEPROM_STORED.REVERSE_PROG_ORDER = false;
-        EEPROM_STORED.camera_fired = 0;
-        lcd.bright(8);
-        lcd.at(1, 2, "Going to Start");
+      switch(panoprogtype)
+      {
+        case PANO_RESUME:
+          Pano_Resume();
+          break;
 
-        if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
+        case PANO_GOTO_START: //Return to restart the shot  - send to review screen of relative move
+          EEPROM_STORED.REVERSE_PROG_ORDER = false;
+          EEPROM_STORED.camera_fired = 0;
+          lcd.bright(8);
+          lcd.at(1, 2, "Going to Start");
           go_to_start_new();
-          progstep_goto(8);
-        }
-        else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
-          go_to_start_new();
-          progstep_goto(109);
-        }
-        else if (EEPROM_STORED.progtype == AUXDISTANCE) {
-          go_to_start_new();
-          progstep_goto(8);
-        }
-      }
-      else if  (inprogtype == INPROG_GOTO_END) { //Go to end point - basically a reverse move setup from wherever we are.
-        EEPROM_STORED.REVERSE_PROG_ORDER = true;
-        EEPROM_STORED.camera_fired = 0;
-        lcd.bright(8);
-        lcd.at(1, 3, "Going to End");
+          progstep_goto(207);
+          break;
 
-        if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
+        case PANO_GOTO_END:
+          EEPROM_STORED.REVERSE_PROG_ORDER = true;
+          EEPROM_STORED.camera_fired = 0;
+          lcd.bright(8);
+          lcd.at(1, 3, "Going to End");
           go_to_start_new();
-          progstep_goto(8);
-        }
-        else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE) {
-          go_to_start_new();
-          progstep_goto(109);
-        }
-        else if (EEPROM_STORED.progtype == AUXDISTANCE) {
-          go_to_start_new();
-          progstep_goto(8);
-        }
-      }
-      else if  (inprogtype == INPROG_GOTO_FRAME) { //Go to specific frame
-        FLAGS.redraw = true;
-        lcd.at(1, 4, "Going to");
-        lcd.at(2, 4, "Frame:");
-        lcd.at(2, 11, GLOBAL.goto_shot);
-        goto_position(GLOBAL.goto_shot);
-        inprogtype = INPROG_RESUME;
-      }
-      else if  (inprogtype == INPROG_INTERVAL) { //Change Interval and static time
-        FLAGS.redraw = true;
-        //look at current gap between interval and static time = available move time.
-        uint32_t available_move_time = EEPROM_STORED.interval / 100 - EEPROM_STORED.static_tm; //this is the gap we keep interval isn't live
-        //Serial.print("AMT:");Serial.println(available_move_time);
-        if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-        EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //set the new ms timer for SMS
-        if (EEPROM_STORED.intval > available_move_time)
-        { //we can apply the gap
-          //Serial.print("intval-available_move_time pos: ");Serial.println(EEPROM_STORED.intval-available_move_time);
-          EEPROM_STORED.static_tm = EEPROM_STORED.intval - available_move_time;
-          //Serial.print("static_tm= ");Serial.println(EEPROM_STORED.static_tm);
-        }
-        else  //squished it too much, go with minimum static time
-        {
-          EEPROM_STORED.static_tm = 1;
-        }
-        inprogtype = INPROG_RESUME;
+          progstep_goto(207);
+          break;
+
+        case PANO_GOTO_FRAME:
+          FLAGS.redraw = true;
+          lcd.at(1, 4, "Going to");
+          lcd.at(2, 4, "Frame:");
+          lcd.at(2, 11, GLOBAL.goto_shot);
+          goto_position(GLOBAL.goto_shot);
+          panoprogtype = PANO_RESUME;
+          break;
+
+        case PANO_FOCUS_INT:
+          FLAGS.redraw = true;
+          //look at current gap between interval and static time = available move time.
+          uint32_t available_move_time = EEPROM_STORED.interval / 100 - EEPROM_STORED.static_tm; //this is the gap we keep interval isn't live
+          //Serial.print("AMT:");Serial.println(available_move_time);
+          if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
+          EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //set the new ms timer for SMS
+          if (EEPROM_STORED.intval > available_move_time)
+          { //we can apply the gap
+            //Serial.print("intval-available_move_time pos: ");Serial.println(EEPROM_STORED.intval-available_move_time);
+            EEPROM_STORED.static_tm = EEPROM_STORED.intval - available_move_time;
+            //Serial.print("static_tm= ");Serial.println(EEPROM_STORED.static_tm);
+          }
+          else  //squished it too much, go with minimum static time
+          {
+            EEPROM_STORED.static_tm = 1;
+          }
+          panoprogtype = PANO_RESUME;
+          break;
+  
+        case PANO_EXT_TRIGGER:
+          lcd.at(1,1,"Change Ext_Trig");
+          break;
+  
+        case PANO_DETOUR:
+          lcd.at(1,1,"Detour Mid Shot");
+          break;
+  
+        case PANO_AOV:
+          Set_angle_of_view();
+          break;
+
+        case PANO_OVERLAP:
+          Set_angle_of_view();
+          break;
+  
+        case PANO_START_POINT:
+          lcd.at(1,1,"Change Start Pos");
+          break;
+  
+        case PANO_END_POINT:
+          lcd.at(1,1,"Change End Pos");
+          break;
       }
       break;
     case Z_Pressed:
@@ -262,7 +305,8 @@ void button_actions_Pano_Paused_Menu()
 void DisplayGoToShot()
 {
   lcd.at(1, 13, GLOBAL.goto_shot);
-  if      (GLOBAL.goto_shot < 10)   lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  if      (GLOBAL.goto_shot < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
   else if (GLOBAL.goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
   else if (GLOBAL.goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
+  else if (GLOBAL.goto_shot < 10000) lcd.at(1, 16, "");    //clear extra if goes from 3 to 2 or 2 to 1
 }
