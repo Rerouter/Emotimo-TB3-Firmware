@@ -37,6 +37,7 @@ private:
 	uint8_t _bv[10];
 	uint8_t _ro[5];
 	void command(uint8_t);
+  void command(uint8_t,uint8_t);
   
   enum _bv : uint8_t {
   PINOUT       = 0,
