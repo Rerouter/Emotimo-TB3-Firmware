@@ -90,13 +90,13 @@ void NunChuckProcessData()
 
   //check for joystick y lock for more than one second
   if (abs(GLOBAL.joy_y_axis) > 83)	  GLOBAL.joy_y_lock_count++;
-  else						            GLOBAL.joy_y_lock_count = 0;
-  if (GLOBAL.joy_y_lock_count > 250) GLOBAL.joy_y_lock_count = 250; //prevent overflow
+  else						                    GLOBAL.joy_y_lock_count = 0;
+  if (GLOBAL.joy_y_lock_count > 250)  GLOBAL.joy_y_lock_count = 250; //prevent overflow
 
   //check for joystick x lock for more than one second
   if (abs(GLOBAL.joy_x_axis) > 83)	  GLOBAL.joy_x_lock_count++;
-  else						            GLOBAL.joy_x_lock_count = 0;
-  if (GLOBAL.joy_x_lock_count > 250) GLOBAL.joy_x_lock_count = 250; //prevent overflow
+  else						                    GLOBAL.joy_x_lock_count = 0;
+  if (GLOBAL.joy_x_lock_count > 250)  GLOBAL.joy_x_lock_count = 250; //prevent overflow
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
 }
@@ -197,26 +197,7 @@ void applyjoymovebuffer_linear()
 void nc_sleep()
 {
   if (abs(GLOBAL.joy_x_axis) > 15 || abs(GLOBAL.joy_y_axis) > 15)  digitalWrite(MOTOR_EN, LOW);
-  else																				       digitalWrite(MOTOR_EN, HIGH);
-}
-
-
-void axis_button_deadzone()
-{
-  GLOBAL.joy_x_axis = constrain(int16_t(Nunchuck.joyx() - joy_x_axis_Offset), -100, 100); //gets us to +- 100
-  GLOBAL.joy_y_axis = constrain(int16_t(Nunchuck.joyy() - joy_y_axis_Offset), -100, 100); //gets us to +- 100
-  GLOBAL.acc_x_axis = constrain(int16_t(Nunchuck.accelx() - acc_x_axis_Offset), -100, 100); //gets us to +- 100
-  if (SETTINGS.AUX_REV)    GLOBAL.acc_x_axis *= -1;
-  if (GLOBAL.joy_x_axis) GLOBAL.joy_x_axis *= -1; // Invert the direction to make the joystick directly point the camera
-
-  ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
-
-  uint8_t deadband = 7; // results in 100-7 or +-93 - this is for the joystick
-  uint8_t deadband2 = 100; //  this is for the accelerometer
-
-  GLOBAL.joy_x_axis = NunchuckDeadband(GLOBAL.joy_x_axis, deadband);
-  GLOBAL.joy_y_axis = NunchuckDeadband(GLOBAL.joy_y_axis, deadband);
-  GLOBAL.acc_x_axis = NunchuckDeadband(GLOBAL.acc_x_axis, deadband2);
+  else																				                     digitalWrite(MOTOR_EN, HIGH);
 }
 
 

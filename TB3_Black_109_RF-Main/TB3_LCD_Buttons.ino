@@ -33,6 +33,18 @@ void ReturnToMenu()
   delay(GLOBAL.prompt_time);
 }
 
+uint16_t RolloverConstrain(uint16_t value, uint16_t minimum, uint16_t maximum)
+{
+  value += joy_capture3(); // Most it will send us is +-40
+  if (value > maximum || value < minimum)
+  {
+    if (value > (sizeof(uint16_t) - 100)) { return maximum; }
+    else               { return minimum; }
+  }
+  else return value;
+}
+
+
 int32_t	aux_dist;
 
 // Should belong in Pano, need to shift out
@@ -48,71 +60,68 @@ enum cursorpos : bool {
 
 uint8_t HandleButtons()
 {
-  static uint8_t last = Read_Again;
-  static uint8_t held = 0;
+  static uint8_t last;
+  static uint8_t held;
   switch (ButtonState)
   {
     case Released:
       held = 0;
+      last = Released;
       return 0;
-      break;
       
     case C_Pressed:
       switch(last)
       {
         case Released:
+          last = C_Pressed;
           return C_Pressed;
-          break;
 
         case C_Pressed:
+          last = C_Pressed;
           if (held < 250) held++;
           if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return C_Held; }
           else                                     { return Read_Again;       }
-          break;
+
         default:
           held = 0;
           return Read_Again;
       }
-      last = C_Pressed;
-      break;
 
     case Z_Pressed:
       switch(last)
       {
         case Released:
+          last = Z_Pressed;
           return Z_Pressed;
-          break;
 
         case Z_Pressed:
+          last = Z_Pressed;
           if (held < 250) held++;
           if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return Z_Held; }
           else                                     { return Read_Again;       }
-          break;
+          
         default:
           held = 0;
           return Read_Again;
       }
-      last = Z_Pressed;
-      break;
 
     case CZ_Pressed:
       switch(last)
       {
         case Released:
+          last = CZ_Pressed;
           return CZ_Pressed;
-          break;
 
         case CZ_Pressed:
+          last = CZ_Pressed;
           if (held < 250) held++;
           if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return CZ_Held; }
           else                                     { return Read_Again;        }
-          break;
-        default:
+
+       default:
           held = 0;
           return Read_Again;
       }
-      last = CZ_Pressed;
-      break;
 
     default:
       return Read_Again;
@@ -178,7 +187,7 @@ void Choose_Program()
     }
 
     draw(65, 2, 1);  //lcd.at(2,1,"UpDown  C-Select");
-    delay(GLOBAL.prompt_time/2);
+    delay(GLOBAL.prompt_time);
     FLAGS.redraw = false;
   }
 
@@ -192,15 +201,15 @@ void Choose_Program()
     {
       case -1: // Up
         FLAGS.redraw = true;
-        if (EEPROM_STORED.progtype)  { EEPROM_STORED.progtype--;               }
-        else                  { EEPROM_STORED.progtype = (MENU_ITEMS - 1);  // accomodating rollover
-        }
+        if (EEPROM_STORED.progtype)  { EEPROM_STORED.progtype--;                  }
+        else                         { EEPROM_STORED.progtype = (MENU_ITEMS - 1); } // accomodating rollover
         break;
 
       case 1: // Down
-        FLAGS.redraw = false;
+        FLAGS.redraw = true;
         if (EEPROM_STORED.progtype == (MENU_ITEMS - 1)) { EEPROM_STORED.progtype = 0; }
-        else                                     { EEPROM_STORED.progtype++;   }
+        else                                            { EEPROM_STORED.progtype++;   }
+        break;
     }
 
     switch (HandleButtons())
@@ -313,21 +322,18 @@ void Move_to_Startpoint()
       draw(15, 1, 1); //lcd.at(1,1,"Move to End Pt.");
       draw(3, 2, 1); //lcd.at(2,1,CZ1);
     }
-
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
-    //int32_t *ramValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
-    //int32_t *ramNotValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
   } //end of first time
 
   //Velocity Engine update
   if (!nextMoveLoaded)
   {
     NunChuckRequestData();
-    axis_button_deadzone();
+    NunChuckProcessData();
     updateMotorVelocities2();
     button_actions_move_start(); //check buttons
   }
@@ -359,7 +365,7 @@ void button_actions_move_start()
       Serial.print("current_steps_start.z: "); Serial.println(EEPROM_STORED.current_steps.z);
 #endif
       if (!EEPROM_STORED.REVERSE_PROG_ORDER) draw(9, 1, 3);  //lcd.at(1,3,"Start Pt. Set");
-      else					           draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
+      else					                         draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
       delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
@@ -389,16 +395,16 @@ void Move_to_Endpoint()
 
     FLAGS.redraw = false;
     startISR1 ();
-    delay(GLOBAL.prompt_time);
     enable_PanTilt();
     if (SETTINGS.AUX_ON) enable_AUX();  //
+    delay(GLOBAL.prompt_time);
   }
   
   //Velocity Engine update
   if (!nextMoveLoaded)
   {
     NunChuckRequestData();
-    axis_button_deadzone();
+    NunChuckProcessData();
     updateMotorVelocities2();
     button_actions_move_end(); //check buttons
   }
@@ -454,6 +460,7 @@ void button_actions_move_end()
       delay(GLOBAL.prompt_time);
       progstep_forward();
       break;
+      
     case Z_Pressed:
       progstep_backward();
       break;
@@ -494,20 +501,19 @@ void Move_to_Point_X(uint8_t Point)
     if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
     else draw(3, 2, 1); //lcd.at(2,1,CZ1);
     FLAGS.redraw = false;
-    delay(GLOBAL.prompt_time);
-    
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
     //int32_t *ramValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
     //int32_t *ramNotValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
+    delay(GLOBAL.prompt_time);
   }
 
   //  Velocity Engine update
   if (!nextMoveLoaded)
   {
     NunChuckRequestData();
-    axis_button_deadzone();
+    NunChuckProcessData();
     updateMotorVelocities2();
     button_actions_move_x(Point); //check buttons
   }
@@ -709,7 +715,7 @@ void Set_Duration() //This is really setting frames
     //			1234567890123456
     draw(32, 1, 5); //lcd.at(1,5,	"Set Move");
     draw(33, 2, 5); //lcd.at(2,5,	"Duration");
-    delay(GLOBAL.prompt_time * 1.5);
+    delay(GLOBAL.prompt_time);
     lcd.empty();
     draw(34, 1, 10); //lcd.at(1,9,"H:MM:SS");
     if ((EEPROM_STORED.intval > 3) || (EEPROM_STORED.intval == EXTTRIG_INTVAL))
@@ -726,7 +732,6 @@ void Set_Duration() //This is really setting frames
     }
     EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots;
     EEPROM_STORED.camera_fired = 0;
-    //Display_Duration();
     FLAGS.redraw = false;
   }
   NunChuckRequestData();
@@ -736,11 +741,9 @@ void Set_Duration() //This is really setting frames
   { //video
     uint16_t overaldur_last = EEPROM_STORED.overaldur;
     EEPROM_STORED.overaldur += joy_capture3();
-    if (EEPROM_STORED.overaldur <= 0) {
-      EEPROM_STORED.overaldur = 10000;
-    }
     if (EEPROM_STORED.overaldur > 10000) {
-      EEPROM_STORED.overaldur = 1;
+      if (EEPROM_STORED.overaldur > 60000) { EEPROM_STORED.overaldur = 1;     } // Handling uint overflow
+      else                                 { EEPROM_STORED.overaldur = 10000; }
     }
     if (overaldur_last != EEPROM_STORED.overaldur)
     {
@@ -752,13 +755,12 @@ void Set_Duration() //This is really setting frames
   { //sms
     uint32_t camera_moving_shots_last = EEPROM_STORED.camera_moving_shots;
     EEPROM_STORED.camera_moving_shots += joy_capture3();
-    if (EEPROM_STORED.camera_moving_shots <= 9) {
-      EEPROM_STORED.camera_moving_shots = 10000;
-    }
     if (EEPROM_STORED.camera_moving_shots > 10000) {
-      EEPROM_STORED.camera_moving_shots = 10;
+      if (EEPROM_STORED.camera_moving_shots > 60000 || EEPROM_STORED.camera_moving_shots < 10) // Handling uint overflow
+      { EEPROM_STORED.camera_moving_shots = 10;     } 
+      else                                           { EEPROM_STORED.camera_moving_shots = 10000; }
     }
-    //EEPROM_STORED.camera_moving_shots=constrain(EEPROM_STORED.camera_moving_shots,10,10000);
+    
     EEPROM_STORED.camera_total_shots = EEPROM_STORED.camera_moving_shots; //we add in lead in lead out later
     if (camera_moving_shots_last != EEPROM_STORED.camera_moving_shots) {
       Display_Duration();
@@ -840,12 +842,14 @@ void Set_Static_Time()
 
   if (EEPROM_STORED.static_tm < 20) GLOBAL.joy_y_lock_count = 0;
   EEPROM_STORED.static_tm += joy_capture3();
-  if (EEPROM_STORED.static_tm > 60000) EEPROM_STORED.static_tm = GLOBAL.max_shutter;
-  EEPROM_STORED.static_tm = constrain(EEPROM_STORED.static_tm, 1, GLOBAL.max_shutter);
+  if (EEPROM_STORED.static_tm > GLOBAL.max_shutter || !EEPROM_STORED.static_tm)
+  {
+    if (EEPROM_STORED.static_tm > 60000) { EEPROM_STORED.static_tm = GLOBAL.max_shutter; }
+    else                                 { EEPROM_STORED.static_tm = 1; }
+  }
 
   if (static_tm_last != EEPROM_STORED.static_tm) DisplayStatic_tm();
   button_actions_stat_time();  //read buttons, look for c button press to set interval
-  delay (GLOBAL.prompt_delay);
 }
 
 
@@ -910,12 +914,13 @@ void Set_Ramp()
     draw(30, 1, 1); //lcd.at(1,1,"Ramp:	 Frames");
     if (EEPROM_STORED.intval == VIDEO_INTVAL) {
       EEPROM_STORED.camera_moving_shots = 147; //allow for up to 49 % ramp
-      lcd.at(1, 10, "GLOBAL.percent");
+      lcd.at(1, 10, "percent");
     }
 
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayRampval();
     FLAGS.redraw = false;
+    delay(GLOBAL.prompt_time);
   }
 
   uint16_t rampval_last = EEPROM_STORED.rampval;
@@ -994,13 +999,13 @@ void Set_LeadIn_LeadOut()
     DisplayLeadIn_LeadOut();
   }
 
-  int16_t joyxysum_last = GLOBAL.joy_x_axis + GLOBAL.joy_y_axis; //figure out if changing
+  int8_t joyxysum_last = GLOBAL.joy_x_axis ^ GLOBAL.joy_y_axis; //figure out if changing
 
   NunChuckRequestData();
   NunChuckProcessData();
   cursorpos += joy_capture_x_map();
 
-  if (joyxysum_last != (GLOBAL.joy_x_axis + GLOBAL.joy_y_axis) || abs(GLOBAL.joy_x_axis + GLOBAL.joy_y_axis) > 10) { //check to see if there is an input, otherwise don't update display
+  if (joyxysum_last != (GLOBAL.joy_x_axis ^ GLOBAL.joy_y_axis)) { //check to see if there is an input, otherwise don't update display
     DisplayLeadIn_LeadOut();
   }
 
@@ -1184,7 +1189,6 @@ void Review_Confirm()
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
-    //delay(GLOBAL.prompt_time);
     delay(GLOBAL.prompt_time);
     //delay(100);
     lcd.empty();
@@ -1209,7 +1213,7 @@ void Review_Confirm()
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (abs(GLOBAL.joy_y_axis) > 20)
+  if (GLOBAL.joy_y_axis)
   { //do read time updates to delay program
     reviewprog = 4;
     DisplayReviewProg();
@@ -1229,7 +1233,6 @@ void DisplayReviewProg()
       lcd.empty();
       draw(43, 1, 1); //lcd.at(1,1,"Pan Steps:");
       draw(44, 2, 1); //lcd.at(2,1,"Tilt Steps:");
-      //lcd.at(1,12,motor_steps[0]);
       lcd.at(1, 12, (int)EEPROM_STORED.linear_steps_per_shot[0]);
       lcd.at(2, 12, (int)EEPROM_STORED.linear_steps_per_shot[1]);
       break;
@@ -1345,8 +1348,6 @@ void progstep_forward()
   FLAGS.redraw = true;
   FLAGS.progstep_forward_dir = true;
   if (EEPROM_STORED.progstep) EEPROM_STORED.progstep++;
-  delay(100);
-  NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
 
 
@@ -1356,8 +1357,6 @@ void progstep_backward()
   FLAGS.redraw = true;
   FLAGS.progstep_forward_dir = false;
   if (EEPROM_STORED.progstep) EEPROM_STORED.progstep--;
-  delay(100);
-  NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
 
 
@@ -1366,8 +1365,6 @@ void progstep_goto(uint16_t prgstp)
   lcd.empty();
   FLAGS.redraw = true;
   EEPROM_STORED.progstep = prgstp;
-  delay(100);
-  NunChuckClearData(); //  Use this to clear out any button registry from the last step
 }
 
 
@@ -1490,12 +1487,12 @@ void Pause_Prog()
   if (!EEPROM_STORED.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!
     lcd.at(1, 11, " Pause");
-    delay(2000);
+    delay(GLOBAL.prompt_time);
     NunChuckRequestData();
   }
   else { //turn it on
     lcd.at(1, 11, "Resume");
-    delay(500);
+    delay(GLOBAL.prompt_time);
     NunChuckRequestData();
   }
 }
@@ -1720,7 +1717,6 @@ void Enter_Aux_Endpoint()
     lcd.empty();
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    //delay(GLOBAL.prompt_time)
     aux_dist = EEPROM_STORED.current_steps.z * 10 / SETTINGS.STEPS_PER_INCH_AUX; //t
     DisplayAUX_Dist();
     FLAGS.redraw = false;

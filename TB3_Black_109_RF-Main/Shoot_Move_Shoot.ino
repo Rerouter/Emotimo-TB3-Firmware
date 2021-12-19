@@ -121,7 +121,7 @@ void ShootMoveShoot()
     EEPROM_STORED.Program_Engaged = false;
     if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
     if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
-    delay(GLOBAL.prompt_time * 2);
+    delay(GLOBAL.prompt_time);
     EEPROM_STORED.progstep = 90;
     FLAGS.redraw = true;
   }
@@ -208,10 +208,9 @@ void VideoLoop ()
       EEPROM_STORED.Program_Engaged = false;
       if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
       if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
+      delay(GLOBAL.prompt_time * 2);
       EEPROM_STORED.progstep = 90;
       FLAGS.redraw = true;
-      delay(100);
-      //NunChuckRequestData();
     }
   } // end interrupt routine driven for 2 points
 
@@ -252,8 +251,6 @@ void VideoLoop ()
       delay(GLOBAL.prompt_time * 2);
       EEPROM_STORED.progstep = 90;
       FLAGS.redraw = true;
-      //delay(100);
-      //NunChuckRequestData();
     }
   } // End video loop for 3 Point moves
 }
@@ -381,7 +378,7 @@ void EndOfProgramLoop ()
     lcd.at(2, 4, "Reverse - Z");
     NunChuckRequestData();
     FLAGS.redraw = false;
-    delay(100);
+    delay(GLOBAL.prompt_time);
   }
 
   //This portion always runs in empty space of loop.
@@ -533,7 +530,7 @@ void PanoLoop ()
     EEPROM_STORED.Program_Engaged = false;
     if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
     if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
-    delay(2000);
+    delay(GLOBAL.prompt_time * 2);
     EEPROM_STORED.progstep = 290;
     FLAGS.redraw = true;
   }
@@ -554,7 +551,7 @@ void PanoEnd ()
     draw(59, 2, 1); //lcd.at(2,1," Repeat Press C");
     NunChuckRequestData();
     FLAGS.redraw = false;
-    delay(100);
+    delay(GLOBAL.prompt_time * 2);
   }
   NunChuckRequestData();
   NunChuckProcessData();

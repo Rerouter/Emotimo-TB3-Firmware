@@ -115,7 +115,7 @@ void Set_angle_of_view()
   if (!nextMoveLoaded)
   {
     NunChuckRequestData();
-    axis_button_deadzone();
+    NunChuckProcessData();
     updateMotorVelocities2();
 
     lcd.at(1, 11, steps_to_deg_decimal(abs(EEPROM_STORED.current_steps.x)));
@@ -132,11 +132,10 @@ void Define_Overlap_percentage()
     lcd.empty();
     draw(79, 1, 3); //lcd.at(1,2,"   % Overlap");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    //olGLOBAL.percentage=20;
+    //olpercentage=20;
     Display_olpercentage();
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
-    NunChuckRequestData(); //  Use this to clear out any button registry from the last step
   }
 
   uint8_t olpercentage_last = olpercentage;
@@ -423,17 +422,18 @@ void Pano_DisplayReviewProg()
 
     case 4:   //
       //lcd.empty();
-      lcd.at(1, 1, "StartDly:	min");
+      lcd.at(1, 1, "Delay:        ");
       lcd.at(2, 2, "Press C Button");
       if (GLOBAL.start_delay_sec < 20) GLOBAL.joy_y_lock_count = 0;
+
       GLOBAL.start_delay_sec += joy_capture3();
-      if (GLOBAL.start_delay_sec > 500) {
-        GLOBAL.start_delay_sec = 500;
-      }
-      if (GLOBAL.start_delay_sec > 600) {
+      if (GLOBAL.start_delay_sec > 1800) {
         GLOBAL.start_delay_sec = 0;
       }
-      lcd.at(1, 11, GLOBAL.start_delay_sec);
+      if (GLOBAL.start_delay_sec == 0) {
+        GLOBAL.start_delay_sec = 1800;
+      }
+      lcd.at(1, 7, GLOBAL.start_delay_sec);
       // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
       // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
       break;
@@ -653,7 +653,6 @@ void button_actions290()
       if      (EEPROM_STORED.progtype == PANOGIGA)     EEPROM_STORED.progstep = 206; //  move to the main program at the interval setting - UD050715
       else if (EEPROM_STORED.progtype == PORTRAITPANO) EEPROM_STORED.progstep = 306; //  move to the main program at the interval setting UD050715
       FLAGS.redraw = false;
-      delay(GLOBAL.prompt_time);
       break;
   }
 }
