@@ -226,7 +226,7 @@ volatile bool iostate           = false; // Flag for the state of the trigger in
 volatile bool changehappened    = false; // Flag to record when the trigger has changed state
 boolean       ext_shutter_open  = false; // Flag that the camera shutter is likely open
 uint8_t       ext_shutter_count = 0;
-uint8_t       ext_hdr_shots     = 1; //this is how many shots are needed before moving - leave at one for normal shooting - future functionality with external
+uint8_t       ext_hdr_shots     = 1; //this is how many shots are needed before moving - leave at one for normal shooting
 volatile bool nextMoveLoaded    = false; // Program flag for next move ready
 
 
@@ -283,12 +283,12 @@ enum Move_State_2PT : uint8_t {
 
 uint8_t      Move_State_3PT = 1;
 enum Move_State_3PT : uint8_t {
-  LeadIn3PT    = 101,
-  FirstLeg3PT  = 102,
-  SecondLeg3PT = 103,
-  ThirdLeg3PT  = 104,
-  LeadOut3PT   = 105,
-  Finished3PT  = 109
+  LeadIn3PT    = 1,
+  FirstLeg3PT  = 2,
+  SecondLeg3PT = 3,
+  ThirdLeg3PT  = 4,
+  LeadOut3PT   = 5,
+  Finished3PT  = 9
 };
 
 uint8_t reviewprog = 1;
