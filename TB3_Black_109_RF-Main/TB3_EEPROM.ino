@@ -185,7 +185,7 @@ void eeprom_read( uint16_t pos, byte& val, byte len )
 void set_defaults_in_ram()
 {
 	//non stored variables	
-	SETTINGS.sequence_repeat_type=1;
+	FLAGS.Repeat_Capture = false;
 
 	//EEPROM Variables
 
@@ -222,7 +222,7 @@ void set_defaults_in_ram()
 	EEPROM_STORED.current_steps.y=0;//			Serial.println(EEPROM_STORED.current_steps.y);
 	EEPROM_STORED.current_steps.z=0;//			Serial.println(EEPROM_STORED.current_steps.z);
 	//EEPROM_STORED.progstep=0;//			Serial.println(EEPROM_STORED.progstep);
-	//EEPROM_STORED.Program_Engaged=0;//			Serial.println(EEPROM_STORED.Program_Engaged);
+	//FLAGS.Program_Engaged=0;//			Serial.println(FLAGS.Program_Engaged);
 	//SETTINGS.POWERSAVE_PT=PWR_SHOOTMOVE_ON;//			Serial.println(SETTINGS.POWERSAVE_PT);
 	//SETTINGS.POWERSAVE_AUX=PWR_SHOOTMOVE_ON;//			Serial.println(SETTINGS.POWERSAVE_AUX);
 	//SETTINGS.AUX_ON=3;//			Serial.println(SETTINGS.AUX_ON);
@@ -266,7 +266,7 @@ void write_all_ram_to_eeprom()
 	//eeprom_write(1, EEPROM_STORED.build_version);       // uint32_t
 	//eeprom_write(5, FLAGS.redraw);          // boolean
 	eeprom_write(7, EEPROM_STORED.progtype);              // uint8_t
-	eeprom_write(9, EEPROM_STORED.intval);                // uint32_t ## ISSUE
+	eeprom_write(9, EEPROM_STORED.intval);               
 	eeprom_write(11, EEPROM_STORED.interval);
 	eeprom_write(15, EEPROM_STORED.camera_fired);
 	eeprom_write(17, EEPROM_STORED.camera_moving_shots);
@@ -296,7 +296,7 @@ void write_all_ram_to_eeprom()
 	eeprom_write(85, EEPROM_STORED.current_steps.y);
 	eeprom_write(89, EEPROM_STORED.current_steps.z);
 	eeprom_write(93, EEPROM_STORED.progstep);
-	//eeprom_write(95, EEPROM_STORED.Program_Engaged);
+	//eeprom_write(95, FLAGS.Program_Engaged);
 	//eeprom_write(96, SETTINGS.POWERSAVE_PT);
 	//eeprom_write(98, SETTINGS.POWERSAVE_AUX);
 	//eeprom_write(100, SETTINGS.AUX_ON);
@@ -344,7 +344,7 @@ void restore_from_eeprom_memory()
 	eeprom_read(85, EEPROM_STORED.current_steps.y);
 	eeprom_read(89, EEPROM_STORED.current_steps.z);
 	//eeprom_read(93, EEPROM_STORED.progstep);
-	//eeprom_read(95, EEPROM_STORED.Program_Engaged);
+	//eeprom_read(95, FLAGS.Program_Engaged);
 	eeprom_read(96, SETTINGS.POWERSAVE_PT);
 	eeprom_read(98, SETTINGS.POWERSAVE_AUX);
 	eeprom_read(100, SETTINGS.AUX_ON);
@@ -391,7 +391,7 @@ void review_RAM_Contents()
 	Serial.println(EEPROM_STORED.current_steps.y);
 	Serial.println(EEPROM_STORED.current_steps.z);
 	Serial.println(EEPROM_STORED.progstep);
-	Serial.println(EEPROM_STORED.Program_Engaged);
+	Serial.println(FLAGS.Program_Engaged);
 	Serial.println(SETTINGS.POWERSAVE_PT);
 	Serial.println(SETTINGS.POWERSAVE_AUX);
 	Serial.println(SETTINGS.AUX_ON);

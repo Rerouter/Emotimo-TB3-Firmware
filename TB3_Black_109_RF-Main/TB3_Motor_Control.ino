@@ -120,7 +120,8 @@ void move_motors()
 	if (DEBUG_MOTOR) Serial.print(String(EEPROM_STORED.current_steps.y) + ";"); 
 	if (DEBUG_MOTOR) Serial.print(String(EEPROM_STORED.current_steps.z) + ";");
 	
-	set_target(x,y,z); //we are in incremental mode to start abs is false
+	if (SETTINGS.AUX_ON) set_target(x, y, z);
+  else    set_target(x, y, 0);
 
 	if (DEBUG_MOTOR) Serial.print("D;");
 	if (DEBUG_MOTOR) Serial.print(String(GLOBAL.delta_steps.x) + ";");
@@ -454,7 +455,8 @@ void go_to_start_old()
 		//	x = EEPROM_STORED.motor_steps_pt[2][0];
 		//	y = EEPROM_STORED.motor_steps_pt[2][1];
 		//	z = EEPROM_STORED.motor_steps_pt[2][2];
-		// set_target(x, y, z);
+		// if (SETTINGS.AUX_ON) set_target(x, y, z);
+    // else    set_target(x, y, 0);
 		// lcd.at(1,1,"Going to End Pt.");
 		// dda_move(10);
 		//end of move to end position
@@ -597,7 +599,8 @@ void go_to_start_new() // interrupt routine
 		//  int32_t x = EEPROM_STORED.motor_steps_pt[2][0];
 		//	int32_t y = EEPROM_STORED.motor_steps_pt[2][1];
 		//	int32_t z = EEPROM_STORED.motor_steps_pt[2][2];
-		// set_target(x, y, z);
+		//  if (SETTINGS.AUX_ON) set_target(x, y, z);
+    //  else   set_target(x, y, 0);
 		// lcd.at(1,1,"Going to End Pt."); 
 		// dda_move(10);
 		//end of move to end position
@@ -760,6 +763,6 @@ void go_to_start_new() // interrupt routine
 	} //end of three point calcs
 
 	//We don't know how long we will be waiting - go to powersave.
-	if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON  && SETTINGS.sequence_repeat_type) disable_PT(); //don't powersave for continuous
-	if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON && SETTINGS.sequence_repeat_type) disable_AUX(); //don't powersave for continuous
+	if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON  && !FLAGS.Repeat_Capture) disable_PT(); //don't powersave for continuous
+	if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON && !FLAGS.Repeat_Capture) disable_AUX(); //don't powersave for continuous
 }

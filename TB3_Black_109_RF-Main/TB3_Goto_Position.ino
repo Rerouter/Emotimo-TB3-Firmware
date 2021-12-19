@@ -146,7 +146,8 @@ void goto_position(uint32_t gotoshot_temp)
 		Serial.println(String(EEPROM_STORED.current_steps.z) + ";");
 		#endif
 
-		set_target(x,y,z); //we are in incremental mode to start abs is false
+		if (SETTINGS.AUX_ON) set_target(x, y, z);
+    else    set_target(x, y, 0);
 
 		#if DEBUG_GOTO
 		Serial.print("D;" + String(delta_steps.x) + ";");

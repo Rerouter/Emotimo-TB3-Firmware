@@ -255,7 +255,7 @@ long calculate_feedrate_delay_1()
   {
 #if DEBUG_MOTOR
     Serial.print("feedratedelay_1_StopMo= ");
-    Serial.print((((EEPROM_STORED.intval - EEPROM_STORED.static_tm) * 100000) / master_steps) * 0.5);
+    Serial.print((((EEPROM_STORED.intval - EEPROM_STORED.static_tm) * 1000000) / master_steps) * 0.5);
     Serial.print(";");
 #endif
     return ((((10L) * 100000L) / master_steps) * 0.5); //  Use half available time to move for stills

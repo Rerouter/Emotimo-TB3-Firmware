@@ -384,9 +384,8 @@ void Set_Shot_Repeat()
   if (FLAGS.redraw) {
     lcd.empty();
     lcd.at(1, 1, "Select Shot Type");
-    if (SETTINGS.sequence_repeat_type == 1)			 lcd.at(2, 1, "Run Once");
-    if (SETTINGS.sequence_repeat_type == 0)			 lcd.at(2, 1, "Continuous Loop");
-    if (SETTINGS.sequence_repeat_type == -1)		 lcd.at(2, 1, "Repeat Forward"); //not currently supported
+    if (!FLAGS.Repeat_Capture)       lcd.at(2, 1, "Run Once");
+    else                          			lcd.at(2, 1, "Continuous Loop");
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -399,9 +398,8 @@ void Set_Shot_Repeat()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        SETTINGS.sequence_repeat_type++;
-        if (SETTINGS.sequence_repeat_type > 1) {
-          SETTINGS.sequence_repeat_type = 1;
+        if (!FLAGS.Repeat_Capture) {
+          FLAGS.Repeat_Capture = true;
         }
         else  {
           FLAGS.redraw = true;
@@ -409,9 +407,8 @@ void Set_Shot_Repeat()
         break;
   
       case 1: // Down
-        SETTINGS.sequence_repeat_type--;
-        if (SETTINGS.sequence_repeat_type < 0) {
-          SETTINGS.sequence_repeat_type = 0;
+        if (FLAGS.Repeat_Capture) {
+          FLAGS.Repeat_Capture = false;
         }
         else  {
           FLAGS.redraw = true;

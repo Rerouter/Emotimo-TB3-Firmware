@@ -21,14 +21,14 @@
 /*
   void Program_Engaged_Toggle()	{  //used for pausing
 	  ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
-	  EEPROM_STORED.Program_Engaged=!EEPROM_STORED.Program_Engaged; //toggle off the loop
+	  FLAGS.Program_Engaged=!FLAGS.Program_Engaged; //toggle off the loop
   }
 */
 
 
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
-  EEPROM_STORED.Program_Engaged = false; //toggle off the loop
+  FLAGS.Program_Engaged = false; //toggle off the loop
   if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
   if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
   inprogtype = 0; //default this to the first option, Resume
@@ -38,7 +38,7 @@ void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 
 void SMS_Resume() //this runs once and is quick - not persistent
 {
-  EEPROM_STORED.Program_Engaged = true; //toggle off the loop
+  FLAGS.Program_Engaged = true; //toggle off the loop
   lcd.empty();
   lcd.at(1, 1, "Resuming");
   delay (1000);

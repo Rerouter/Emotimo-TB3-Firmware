@@ -840,7 +840,6 @@ void Set_Static_Time()
   NunChuckRequestData();
   NunChuckProcessData();
 
-  if (EEPROM_STORED.static_tm < 20) GLOBAL.joy_y_lock_count = 0;
   EEPROM_STORED.static_tm += joy_capture3();
   if (EEPROM_STORED.static_tm > GLOBAL.max_shutter || !EEPROM_STORED.static_tm)
   {
@@ -1296,7 +1295,7 @@ void button_actions_review()
         if ((millis() - GLOBAL.display_last_tm) > 1000) display_time(2, 1);
         NunChuckRequestData();
         NunChuckProcessData();
-        if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged)
+        if (HandleButtons() == CZ_Held && !FLAGS.Program_Engaged)
         {
           GLOBAL.start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
         }
@@ -1310,7 +1309,7 @@ void button_actions_review()
 
       if (EEPROM_STORED.intval == EXTTRIG_INTVAL)  lcd.at(2, 1, "Waiting for Man.");
 
-      EEPROM_STORED.Program_Engaged = true;
+      FLAGS.Program_Engaged = true;
       FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
       GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
       GLOBAL.sequence_repeat_count = 0; //this is zeroed out every time we start a new shot
@@ -1377,7 +1376,7 @@ void button_actions_end_of_program()
       EEPROM_STORED.REVERSE_PROG_ORDER = false;
       if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-      //EEPROM_STORED.Program_Engaged=true;
+      //FLAGS.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
       if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
@@ -1398,7 +1397,7 @@ void button_actions_end_of_program()
       EEPROM_STORED.REVERSE_PROG_ORDER = true;
       if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-      //EEPROM_STORED.Program_Engaged=true;
+      //FLAGS.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
       if (EEPROM_STORED.progtype == REG2POINTMOVE || EEPROM_STORED.progtype == REV2POINTMOVE) {
@@ -1443,7 +1442,7 @@ void Auto_Repeat_Video()
   	NunChuckRequestData();
   	NunChuckProcessData();
   	Check_Prog(); //look for long button press
-  	if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged) {
+  	if (HandleButtons() == CZ_Held && !FLAGS.Program_Engaged) {
   		GLOBAL.start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
   	}
     }
@@ -1454,7 +1453,7 @@ void Auto_Repeat_Video()
   draw(49, 1, 1); //lcd.at(1,1,"Program Running");
   //delay(GLOBAL.prompt_time/3);
 
-  EEPROM_STORED.Program_Engaged = true;
+  FLAGS.Program_Engaged = true;
   FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
 
   GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
@@ -1483,8 +1482,8 @@ void Auto_Repeat_Video()
 
 void Pause_Prog()
 {
-  EEPROM_STORED.Program_Engaged = !EEPROM_STORED.Program_Engaged; //turn off the loop
-  if (!EEPROM_STORED.Program_Engaged) {  //program turned off
+  FLAGS.Program_Engaged = !FLAGS.Program_Engaged; //turn off the loop
+  if (!FLAGS.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!
     lcd.at(1, 11, " Pause");
     delay(GLOBAL.prompt_time);
@@ -1610,7 +1609,7 @@ void display_status()
         //Stop the program and go to low power state
         disable_PT();
         disable_AUX();
-        EEPROM_STORED.Program_Engaged = false;
+        FLAGS.Program_Engaged = false;
         lcd.empty();
         draw(60, 1, 1); //lcd.at(1,1,"Battery too low");
         draw(61, 2, 1); //lcd.at(2,1,"  to continue");

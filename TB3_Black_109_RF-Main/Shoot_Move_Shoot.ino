@@ -14,7 +14,7 @@ boolean   move_with_acceleration = true; // false = no accel, true = accel
 void ShootMoveShoot()
 {
   // //Step 1 if internal interval.Kick off the shot sequence. This happens once per camera shot.
-  if ( (EEPROM_STORED.intval > 3) && EEPROM_STORED.Program_Engaged && !(Shot_Sequence_Started) && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.interval) )
+  if ( (EEPROM_STORED.intval > 3) && FLAGS.Program_Engaged && !(Shot_Sequence_Started) && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.interval) )
   {
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
@@ -35,7 +35,7 @@ void ShootMoveShoot()
   }
 
   //Step 1 if external triggering. This happens once per camera shot.
-  if ( EEPROM_STORED.Program_Engaged && !(Shot_Sequence_Started) && (EEPROM_STORED.intval == EXTTRIG_INTVAL) && FLAGS.Interrupt_Fire_Engaged )
+  if ( FLAGS.Program_Engaged && !(Shot_Sequence_Started) && (EEPROM_STORED.intval == EXTTRIG_INTVAL) && FLAGS.Interrupt_Fire_Engaged )
   {
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
@@ -69,14 +69,14 @@ void ShootMoveShoot()
 #endif
     Flag_Shot_Timer_Active = true;
     //Fire Camera
-    if (EEPROM_STORED.intval != 3) CameraShoot((uint32_t)EEPROM_STORED.static_tm * 100); //start shutter sequence
+    if (EEPROM_STORED.intval != 3) CameraShoot(EEPROM_STORED.static_tm * 100); //start shutter sequence
     EEPROM_STORED.camera_fired++;
   }
   //End out static time - check that we are in an program active and static time,  Shutter not engaged, check shot cycle time agains prefire+statictime
   //If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
   //move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
-  //if (EEPROM_STORED.Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time*100+EEPROM_STORED.static_tm*100)) ) {
+  //if (FLAGS.Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time * 100 +EEPROM_STORED.static_tm * 100)) ) {
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time * 100 + EEPROM_STORED.static_tm * 100)) )
   { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
@@ -118,7 +118,7 @@ void ShootMoveShoot()
   { //end of program
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-    EEPROM_STORED.Program_Engaged = false;
+    FLAGS.Program_Engaged = false;
     if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
     if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(GLOBAL.prompt_time);
@@ -162,12 +162,12 @@ void VideoLoop ()
     Serial.print("Video Runtime"); Serial.println(millis() - GLOBAL.interval_tm);
 #endif
 
-    if (!FLAGS.motorMoving && (SETTINGS.sequence_repeat_type == 0))
+    if (!FLAGS.motorMoving && FLAGS.Repeat_Capture)
     { //new end condition for RUN CONTINOUS
       boolean break_continuous = false;
       lcd.empty();
       draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-      EEPROM_STORED.Program_Engaged = false;
+      FLAGS.Program_Engaged = false;
       for (uint8_t i = 0; i < 30; i++) {
         NunChuckRequestData();
         NunChuckProcessData();
@@ -193,7 +193,7 @@ void VideoLoop ()
         if ((millis() - GLOBAL.display_last_tm) > 1000) display_time(2, 1);
         NunChuckRequestData();
         NunChuckProcessData();
-        //if (HandleButtons() == CZ_Held && !EEPROM_STORED.Program_Engaged) {
+        //if (HandleButtons() == CZ_Held && !FLAGS.Program_Engaged) {
         //  GLOBAL.start_delay_tm=((millis()/1000L)+5); //start right away by lowering this to 5 seconds.
         //}
       }
@@ -202,10 +202,10 @@ void VideoLoop ()
       if (!break_continuous) Auto_Repeat_Video(); //only run this if there isn't a break command
       FLAGS.redraw = true;
     }
-    else if (!FLAGS.motorMoving && (SETTINGS.sequence_repeat_type == 1)) { //new end condition for RUN ONCE
+    else if (!FLAGS.motorMoving && !FLAGS.Repeat_Capture) { //new end condition for RUN ONCE
       lcd.empty();
       draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-      EEPROM_STORED.Program_Engaged = false;
+      FLAGS.Program_Engaged = false;
       if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
       if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
       delay(GLOBAL.prompt_time * 2);
@@ -245,7 +245,7 @@ void VideoLoop ()
     if ( EEPROM_STORED.camera_total_shots  && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {
       lcd.empty();
       //draw(58,1,1);//lcd.at(1,1,"Program Complete");
-      EEPROM_STORED.Program_Engaged = false;
+      FLAGS.Program_Engaged = false;
       if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
       if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
       delay(GLOBAL.prompt_time * 2);
@@ -306,10 +306,10 @@ void ExternalTriggerLoop ()
   //end interrupt check and flagging
 
   //  Start of states for external shooting loop
-  if ( EEPROM_STORED.Program_Engaged && !(Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //start a shot sequence flag
+  if ( FLAGS.Program_Engaged && !(Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //start a shot sequence flag
     Shot_Sequence_Started = true; //
   }
-  if ( EEPROM_STORED.Program_Engaged && (Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //fire the camera can happen more than once in a shot sequence with HDR
+  if ( FLAGS.Program_Engaged && (Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //fire the camera can happen more than once in a shot sequence with HDR
 #if DEBUG
     Serial.print("Startshot_at:");
     Serial.print(millis());
@@ -357,7 +357,7 @@ void ExternalTriggerLoop ()
   if ( EEPROM_STORED.camera_moving_shots && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {  //end of program
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-    EEPROM_STORED.Program_Engaged = false;
+    FLAGS.Program_Engaged = false;
     if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
     if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(GLOBAL.prompt_time * 2);
@@ -395,7 +395,7 @@ void EndOfProgramLoop ()
 void PanoLoop ()
 {
   //Kick off the shot sequence!!!  This happens once per camera shot.
-  if ( (EEPROM_STORED.intval > 2) && EEPROM_STORED.Program_Engaged && !Shot_Sequence_Started && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.interval) )
+  if ( (EEPROM_STORED.intval > 2) && FLAGS.Program_Engaged && !Shot_Sequence_Started && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.interval) )
   {
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
@@ -431,7 +431,7 @@ void PanoLoop ()
 
     Flag_Shot_Timer_Active = true;
     //Fire Camera
-    CameraShoot((uint32_t)EEPROM_STORED.static_tm * 100); //start shutter sequence
+    CameraShoot(EEPROM_STORED.static_tm * 100); //start shutter sequence
     EEPROM_STORED.camera_fired++;
   }
 
@@ -439,7 +439,7 @@ void PanoLoop ()
   //If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
   //move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
-  //if (EEPROM_STORED.Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time*100+EEPROM_STORED.static_tm*100)) ) {
+  //if (FLAGS.Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time * 100+EEPROM_STORED.static_tm * 100)) ) {
   
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - GLOBAL.interval_tm) > (EEPROM_STORED.prefire_time * 100 + EEPROM_STORED.static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
@@ -509,7 +509,7 @@ void PanoLoop ()
       //Print_Motor_Params(2);
     }
     //test for completed move
-    if (Shot_Sequence_Started && FLAGS.Move_Engauged && FLAGS.motorMoving == 0) //motors completed the move
+    if (Shot_Sequence_Started && FLAGS.Move_Engauged && !FLAGS.motorMoving) //motors completed the move
     {
 #if DEBUG
       Serial.println("finished accel move");
@@ -527,7 +527,7 @@ void PanoLoop ()
   if ( EEPROM_STORED.camera_moving_shots && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {  //end of program
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-    EEPROM_STORED.Program_Engaged = false;
+    FLAGS.Program_Engaged = false;
     if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
     if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(GLOBAL.prompt_time * 2);

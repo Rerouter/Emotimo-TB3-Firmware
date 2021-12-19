@@ -86,18 +86,18 @@ bool CameraShutter()
 }
 
 
-void CameraShoot(uint32_t exp_tm)
+void CameraShoot(uint32_t exposure_milliseconds)
 {
   // determine if focus pin should be brought high
   // w. the shutter pin (for some nikons, etc.)
 
 
-  if (exp_tm)  // if time is 0, don't start the camera, treat as infinite
+  if (exposure_milliseconds)  // if time is 0, don't start the camera
   {
     CameraFocus(true);
     CameraShutter(true);
     // start timer to stop camera exposure
-    MsTimer2_set(exp_tm);
+    MsTimer2_set(exposure_milliseconds);
     MsTimer2_start();
   }
 

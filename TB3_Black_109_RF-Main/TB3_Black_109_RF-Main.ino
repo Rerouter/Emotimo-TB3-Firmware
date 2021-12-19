@@ -94,20 +94,21 @@ NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 //#define STOPMOT //not used
 
 //TB3 section - Black or Orange Port Mapping for Step pins on Stepper Page
-#define MOTORS		  3
-#define MOTOR0_STEP	5
-#define MOTOR1_STEP	6
-#define MOTOR2_STEP	7
-#define MOTOR0_DIR	8
-#define MOTOR1_DIR	9
-#define MOTOR2_DIR	10
-#define MOTOR_EN	  A3
-#define MOTOR_EN2	  11
-#define MS1		    	A1
-#define MS2			    A2
-#define MS3			    A2
-#define IO_2		    2 // drives middle of 2.5 mm connector on I/O port
-#define IO_3		    3 // drives tip of 2.5 mm connector on I/O port
+#define MOTORS		    3
+#define MOTOR0_STEP	  5
+#define MOTOR1_STEP	  6
+#define MOTOR2_STEP	  7
+#define MOTOR0_DIR	  8
+#define MOTOR1_DIR	  9
+#define MOTOR2_DIR	  10
+#define MOTOR_EN	    A3
+#define MOTOR_EN2	    11
+#define MS1		    	  A1
+#define MS2			      A2
+#define MS3			      A2
+#define IO_2		      2         // drives middle of 2.5 mm connector on I/O port
+#define IO_3		      3         // drives tip of 2.5 mm connector on I/O port
+#define STEPS_PER_DEG 444.444;  // 160000 MS per 360 degees = 444.4444444
 
 //end TB3 section
 
@@ -119,17 +120,18 @@ struct LONG {
 
 
 struct Flags {  //Program Status Flags
-    boolean progstep_forward_dir   = true;  // boolean to define direction of menu travel to allow for easy skipping of menus
+    boolean Program_Engaged        = false;
     boolean Move_Engauged          = false;
+    boolean progstep_forward_dir   = true;  // boolean to define direction of menu travel to allow for easy skipping of menus
     boolean Interrupt_Fire_Engaged = false;
-    boolean redraw                = 1;      // variable to help with LCD dispay variable that need to show one time
-    boolean maxVelLimit = false;      // Program Flag for motor speed limited
-    uint8_t motorMoving = 0;          // Program Flag for motor moving
+    boolean redraw                 = true;  // variable to help with LCD dispay variable that need to show one time
+    boolean maxVelLimit            = false; // Program Flag for motor speed limited
+    boolean motorMoving            = false; // Program Flag for motor moving
+    boolean Repeat_Capture         = false; // Defaults - Run Once = 0, Continuous Loop = 1
 } FLAGS;
 
 
 struct Settings { // User changable Settings
-  boolean  AUX_ON;                        // 1=Aux Enabled, 0=Aux disabled
   boolean  PAUSE_ENABLED;                 // 1=Pause Enabled, 0=Pause disabled
   uint8_t  LCD_BRIGHTNESS_DURING_RUN;     // 0 is off 8 is max
   uint16_t AUX_MAX_JOG_STEPS_PER_SEC;     // value x 1000  20 is the top or 20000 steps per second.
@@ -137,9 +139,8 @@ struct Settings { // User changable Settings
   uint16_t TILT_MAX_JOG_STEPS_PER_SEC = 10000;
   uint8_t  POWERSAVE_PT;                  // 1=None - always on  2 - low   3=standard    4=High
   uint8_t  POWERSAVE_AUX;                 // 1=None - always on  2 - low   3=standard    4=High
-  boolean  AUX_REV;                       // 1=Aux Enabled, 0=Aux disabled
-  int8_t   sequence_repeat_type = 1;      //1 Defaults - Run Once, 0 Continuous Loop,  -1 Continuous Forward
-  float    STEPS_PER_DEG = 444.444;       //160000 MS per 360 degees = 444.4444444
+  boolean  AUX_REV;                       // Aux Axis Direction
+  boolean  AUX_ON;                        // Aux Axis Enabled
 
   /*
   STEPS_PER_INCH_AUX for various motors with 17 tooth final gear on 5mm pitch belt
@@ -161,22 +162,21 @@ struct Global { // EEPROM Stored Globals
   // EEPROM.put() uses the update function which reads to see if there is a difference before writing, so this method apart from taking longer will be safer over all
   // 512 Bytes for Uno
   // 4096 Bytes for 2560
-  uint32_t build_version        = 10953;  //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
+  uint16_t build_version        = 10953;  //this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
 
-  uint16_t progtype             = 0;      //updownmenu selection
-  uint32_t intval               = 2;      //seconds x10  - used for the interval prompt and display
-  uint32_t interval             = 2000;   //calculated and is in ms
-  uint32_t camera_fired         = 0;      //number of shots fired
-  uint32_t camera_moving_shots  = 200;    // frames for new duration/frames prompt
+  uint16_t progtype             = 0;      // updownmenu selection
+  uint16_t intval               = 2;      // x0.1 seconds  - used for the interval prompt and display
+  uint32_t interval             = 2000;   // interval in milliseconds
+  uint32_t camera_fired         = 0;      // number of shots fired
+  uint16_t camera_moving_shots  = 200;    // frames for new duration/frames prompt
   uint32_t camera_total_shots   = 0;      // used at the end target for camera fired to compare against
   uint16_t overaldur            = 20;     // seconds now for video only
-  uint16_t prefire_time         = 1;      // currently hardcoded here to .1 second - this powers up motor early for the shot
+  uint8_t  prefire_time         = 1;      // x0.1 seconds to power up the motor before the shot begins
+  uint16_t static_tm            = 1;      // x0.1 seconds to capture an image for
   uint16_t rampval              = 50;
-  uint16_t static_tm            = 1;      // new variable
   uint16_t lead_in              = 1;
   uint16_t lead_out             = 1;
   uint16_t progstep             = 0;      // used to define case for main loop
-  boolean  Program_Engaged      = false;
   boolean  REVERSE_PROG_ORDER;            // Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
   boolean  MOVE_REVERSED_FOR_RUN = 0;
   LONG     current_steps;
@@ -241,10 +241,10 @@ volatile bool nextMoveLoaded    = false; // Program flag for next move ready
 */
 
 enum powersave : uint8_t {
-  PWR_ALWAYS_ON    = 1, // Motors are always on,
-  PWR_PROGRAM_ON   = 2, // Motors at full power when ever a program is active, in low power in main menu
-  PWR_SHOOTMOVE_ON = 3, // Motors at full power for moves and image capturing, in low power otherwise
-  PWR_MOVEONLY_ON  = 4  // Motors only powered for movements, it can loose up to 8 steps position per stop
+  PWR_ALWAYS_ON    = 0, // Motors are always on,
+  PWR_PROGRAM_ON   = 1, // Motors at full power when ever a program is active, in low power in main menu
+  PWR_SHOOTMOVE_ON = 2, // Motors at full power for moves and image capturing, in low power otherwise
+  PWR_MOVEONLY_ON  = 3  // Motors only powered for movements, it can loose up to 8 steps position per stop
 };
 
 
@@ -394,8 +394,10 @@ void setup()
   // setup motor pins
   pinMode(MOTOR0_STEP,	OUTPUT);
   pinMode(MOTOR0_DIR,		OUTPUT);
+  
   pinMode(MOTOR1_STEP,	OUTPUT);
   pinMode(MOTOR1_DIR,		OUTPUT);
+  
   pinMode(MOTOR2_STEP,	OUTPUT);
   pinMode(MOTOR2_DIR,		OUTPUT);
 
@@ -436,9 +438,7 @@ void setup()
 
   delay(GLOBAL.prompt_time * 2);
   lcd.empty();
-  delay(100);
-  draw(2, 1, 1); // Connect Joystick
-
+  
   //Setup Serial Connection
 
   Serial.begin(57600);
@@ -466,6 +466,7 @@ void setup()
   //End Setup of EEPROM
 
   //Setup Nunchucks and Calibrate
+  draw(2, 1, 1); // Connect Joystick
   Nunchuck.init(0);
   for (uint8_t reads = 1; reads < 17; reads++)
   {
@@ -848,7 +849,7 @@ void MenuMess()
 void loop()
 { //Main Loop
   while (1)
-  { //use debugging WHEN HIT here for monitoring - {SETTINGS.sequence_repeat_type},{EEPROM_STORED.progstep},{EEPROM_STORED.progtype},{EEPROM_STORED.camera_fired}
+  { //use debugging WHEN HIT here for monitoring - {!FLAGS.Repeat_Capture},{EEPROM_STORED.progstep},{EEPROM_STORED.progtype},{EEPROM_STORED.camera_fired}
     switch (EEPROM_STORED.progstep)
     {
       //start of 2 point SMS/Video routine

@@ -358,10 +358,10 @@ void pano_button_actions_review()
       draw(49, 1, 1); //lcd.at(1,1,"Program Running");
       delay(GLOBAL.prompt_time / 3);
   
-      //EEPROM_STORED.static_tm = 1; //use a tenth of a second
+      //EEPROM_STORED.static_tm = 100; //use a tenth of a second
       EEPROM_STORED.intval = EEPROM_STORED.static_tm + 3; // calc interval based on static time only
       //intval = EEPROM_STORED.static_tm; // calc interval based on static time only
-      EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //tenths of a second to ms
+      EEPROM_STORED.interval = EEPROM_STORED.intval; //tenths of a second to ms
       GLOBAL.interval_tm = 0; //set this to 0 to immediately trigger the first shot
   
       if (EEPROM_STORED.intval > 3)
@@ -371,7 +371,7 @@ void pano_button_actions_review()
       }
   
       EEPROM_STORED.camera_fired = 0; //reset the counter
-      EEPROM_STORED.Program_Engaged = true; //leave this for pano
+      FLAGS.Program_Engaged = true; //leave this for pano
       FLAGS.Interrupt_Fire_Engaged = true; //just to start off first shot immediately
       FLAGS.redraw = false;
       lcd.bright(20);
@@ -644,7 +644,7 @@ void button_actions290()
     case C_Pressed:
       if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX();
-      //EEPROM_STORED.Program_Engaged=true;
+      //FLAGS.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       EEPROM_STORED.current_steps.x = motors[0].position; //get our motor position variable synced
       EEPROM_STORED.current_steps.y = motors[1].position; //get our motor position variable synced

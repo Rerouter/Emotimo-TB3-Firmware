@@ -266,7 +266,7 @@ void DFSetup()
 	sendPositionCounter = 10;
 	nextMoveLoaded = false;
 	hardStopRequested = false;
-	FLAGS.motorMoving=0;//eMotimo added - 
+	FLAGS.motorMoving = false;//eMotimo added - 
 
 	for (uint8_t i = 0; i < 32; i++)
 		txBuf[i] = 0;
