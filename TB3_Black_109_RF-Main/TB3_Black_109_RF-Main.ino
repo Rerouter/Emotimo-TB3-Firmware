@@ -77,10 +77,10 @@
 NHDLCD9 lcd(4, 2, 16); // desired pin, rows, cols   //BB for LCD
 
 //Debug Parameters
-#define DEBUG 1
+#define DEBUG 0
 #define DEBUG_MOTOR 0
 #define DEBUG_NC 0
-#define DEBUG_PANO 1
+#define DEBUG_PANO 0
 #define DEBUG_GOTO 0
 
 // Defines
@@ -212,7 +212,7 @@ struct Global2 { // Non Stored Globals
 
   uint8_t  joy_y_lock_count      = 0;
   uint8_t  joy_x_lock_count      = 0;
-  uint8_t  Button_Hold_Threshold = 25;
+  uint8_t  Button_Hold_Threshold = 20;
 
   int8_t joy_x_axis, joy_y_axis, acc_x_axis, acc_y_axis;
 
@@ -470,8 +470,7 @@ void setup()
   Nunchuck.init(0);
   for (uint8_t reads = 1; reads < 17; reads++)
   {
-    Nunchuck.getData();
-    //Nunchuck.printData();
+    NunChuckRequestData();
     lcd.at(2, reads, "+");
     if (abs(Nunchuck.joyx() - 127) > 60 || abs(Nunchuck.joyy() - 127) > 60 )
     {
@@ -997,6 +996,10 @@ void loop()
         Pano_Review_Confirm();
         break;
       //end of Pano Mode
+
+      case 299: // Pano Pause Menu - To stop or edit a panorama in progress
+        Pano_Paused_Menu();
+        break;
 
       //----------------------------------------------------------------------------------------------------------------------------
 

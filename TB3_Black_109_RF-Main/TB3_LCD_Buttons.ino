@@ -79,8 +79,8 @@ uint8_t HandleButtons()
         case C_Pressed:
           last = C_Pressed;
           if (held < 250) held++;
-          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return C_Held; }
-          else                                     { return Read_Again;       }
+          if (held > GLOBAL.Button_Hold_Threshold) { return C_Held;     }
+          else                                     { return Read_Again; }
 
         default:
           held = 0;
@@ -97,8 +97,8 @@ uint8_t HandleButtons()
         case Z_Pressed:
           last = Z_Pressed;
           if (held < 250) held++;
-          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return Z_Held; }
-          else                                     { return Read_Again;       }
+          if (held > GLOBAL.Button_Hold_Threshold) { return Z_Held;     }
+          else                                     { return Read_Again; }
           
         default:
           held = 0;
@@ -115,8 +115,8 @@ uint8_t HandleButtons()
         case CZ_Pressed:
           last = CZ_Pressed;
           if (held < 250) held++;
-          if (held > GLOBAL.Button_Hold_Threshold) { held = 0; return CZ_Held; }
-          else                                     { return Read_Again;        }
+          if (held > GLOBAL.Button_Hold_Threshold) { return CZ_Held;    }
+          else                                     { return Read_Again; }
 
        default:
           held = 0;
@@ -431,14 +431,14 @@ void button_actions_move_end()
 
       //end stop the motors
 
-      motors[0].position = EEPROM_STORED.current_steps.x;
-      motors[1].position = EEPROM_STORED.current_steps.y;
-      motors[2].position = EEPROM_STORED.current_steps.z;
+      motors[0]._position = EEPROM_STORED.current_steps.x;
+      motors[1]._position = EEPROM_STORED.current_steps.y;
+      motors[2]._position = EEPROM_STORED.current_steps.z;
 
 #if DEBUG
-      Serial.print("motors[0].position:"); Serial.println( motors[0].position);
-      Serial.print("motors[1].position:"); Serial.println( motors[1].position);
-      Serial.print("motors[2].position:"); Serial.println( motors[2].position);
+      Serial.print("motors[0]._position:"); Serial.println( motors[0]._position);
+      Serial.print("motors[1]._position:"); Serial.println( motors[1]._position);
+      Serial.print("motors[2]._position:"); Serial.println( motors[2]._position);
 #endif
 
       EEPROM_STORED.motor_steps_pt[2][0] = EEPROM_STORED.current_steps.x; //now signed storage
@@ -477,7 +477,6 @@ void Move_to_Point_X(uint8_t Point)
     {
       // Programming center for PANOGIGA AND PORTRAITPANO UD010715
       lcd.at(1, 2, "Set AOV Corner");
-      set_position(0, 0, 0);
     }
     else if (EEPROM_STORED.progstep == 304)
     {
@@ -524,6 +523,10 @@ void button_actions_move_x(uint8_t Point)
 {
   switch (HandleButtons())
   {
+    case CZ_Held:
+        if (EEPROM_STORED.progstep == 202)  set_position(0, 0, 0);
+        break;
+            
     case C_Pressed:
         //begin to stop the motors
         //this puts input to zero to allow a stop
@@ -847,7 +850,7 @@ void Set_Static_Time()
     else                                 { EEPROM_STORED.static_tm = 1; }
   }
 
-  if (static_tm_last != EEPROM_STORED.static_tm) DisplayStatic_tm();
+  if (static_tm_last != EEPROM_STORED.static_tm) {DisplayStatic_tm(); delay(GLOBAL.prompt_time/4);}
   button_actions_stat_time();  //read buttons, look for c button press to set interval
 }
 
@@ -1482,11 +1485,12 @@ void Auto_Repeat_Video()
 
 void Pause_Prog()
 {
+  ButtonState = Read_Again;
   FLAGS.Program_Engaged = !FLAGS.Program_Engaged; //turn off the loop
   if (!FLAGS.Program_Engaged) {  //program turned off
     write_all_ram_to_eeprom(); //capture current steps too!
     lcd.at(1, 11, " Pause");
-    delay(GLOBAL.prompt_time);
+    delay(2000);
     NunChuckRequestData();
   }
   else { //turn it on

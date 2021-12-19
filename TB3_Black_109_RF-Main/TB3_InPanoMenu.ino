@@ -3,40 +3,54 @@
   (c) 2015 Brian Burling eMotimo INC
 
 
-	This program is free software: you can redistribute it and/or modify
-	it under the terms of the GNU General Public License as published by
-	the Free Software Foundation, either version 3 of the License, or
-	(at your option) any later version.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-	This program is distributed in the hope that it will be useful,
-	but WITHOUT ANY WARRANTY; without even the implied warranty of
-	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	GNU General Public License for more details.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-	You should have received a copy of the GNU General Public License
-	along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 
 /*
-  void Program_Engaged_Toggle()	{  //used for pausing
-	  ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
-	  FLAGS.Program_Engaged=!FLAGS.Program_Engaged; //toggle off the loop
+  void Program_Engaged_Toggle() {  //used for pausing
+    ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
+    FLAGS.Program_Engaged=!FLAGS.Program_Engaged; //toggle off the loop
   }
 */
+uint16_t panoprogtype = 0;
 
+//In Program Menu Ordering
 
-void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
+#define PANO_OPTIONS  8    //up this when code for gotoframe
+enum panoprogtype : uint8_t {
+  PANO_RESUME       = 0,
+  PANO_GOTO_START   = 1,
+  PANO_GOTO_END     = 2,
+  PANO_GOTO_FRAME   = 3,
+  PANO_INTERVAL     = 4,
+  PANO_FOCUS_INT    = 5,
+  PANO_EXT_TRIGGER  = 6,
+  PANO_DETOUR       = 7   
+};
+
+void Pano_Pause() //this runs once and is quick - not persistent
 {
   FLAGS.Program_Engaged = false; //toggle off the loop
   if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
   if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-  inprogtype = 0; //default this to the first option, Resume
+  panoprogtype = 0; //default this to the first option, Resume
   progstep_goto(1001); //send us to a loop where we can select options
 }
 
 
-void SMS_Resume() //this runs once and is quick - not persistent
+void Pano_Resume() //this runs once and is quick - not persistent
 {
   FLAGS.Program_Engaged = true; //toggle off the loop
   lcd.empty();
@@ -46,7 +60,7 @@ void SMS_Resume() //this runs once and is quick - not persistent
 }
 
 
-void InProg_Select_Option()
+void Pano_Paused_Menu()
 {
   if (FLAGS.redraw)
   {
@@ -58,7 +72,7 @@ void InProg_Select_Option()
         break;
 
       case INPROG_RTS:
-        draw(87, 1, 6); //lcd.at(1,6,"Go to Start");
+        draw(87, 1, 6); //lcd.at(1,6,"Restart");
         break;
 
       case INPROG_GOTO_END:
@@ -91,13 +105,6 @@ void InProg_Select_Option()
     delay(GLOBAL.prompt_time);
 
   } //end first time
-
-  if ((millis() - GLOBAL.NClastread) > 50)
-  {
-    GLOBAL.NClastread = millis();
-    NunChuckRequestData();
-    NunChuckProcessData();
-  }
     
   switch(inprogtype)
   {
@@ -135,32 +142,39 @@ void InProg_Select_Option()
       break;
   }
 
-
-  switch(joy_capture_y_map())
+  if ((millis() - GLOBAL.NClastread) > 50)
   {
-    case -1: // Up
-      inprogtype++;
-      if (inprogtype > (INPROG_OPTIONS - 1)) 	inprogtype = (INPROG_OPTIONS - 1);
-      else
-      {
-        FLAGS.redraw = true;
-      }
-      break;
+    GLOBAL.NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+    
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        inprogtype++;
+        if (inprogtype > (INPROG_OPTIONS - 1))  inprogtype = (INPROG_OPTIONS - 1);
+        else
+        {
+          FLAGS.redraw = true;
+        }
+        break;
+  
+      case 1: // Down
+        inprogtype--;
+        if (inprogtype > (INPROG_OPTIONS - 1))  inprogtype = 0;
+        else
+        {
+          FLAGS.redraw = true;
+        }
+        break;
+    }
 
-    case 1: // Down
-      inprogtype--;
-      if (inprogtype > (INPROG_OPTIONS - 1))	inprogtype = 0;
-      else
-      {
-        FLAGS.redraw = true;
-      }
-      break;
+     button_actions_Pano_Paused_Menu();
   }
-  button_actions_InProg_Select_Option();
 }
 
 
-void button_actions_InProg_Select_Option()
+void button_actions_Pano_Paused_Menu()
 {
   switch (HandleButtons())
   {
@@ -245,10 +259,10 @@ void button_actions_InProg_Select_Option()
 }
 
 
-void GoToPanoShot()
+void DisplayGoToShot()
 {
   lcd.at(1, 13, GLOBAL.goto_shot);
-  if	    (GLOBAL.goto_shot < 10)	  lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  if      (GLOBAL.goto_shot < 10)   lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
   else if (GLOBAL.goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
   else if (GLOBAL.goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
 }

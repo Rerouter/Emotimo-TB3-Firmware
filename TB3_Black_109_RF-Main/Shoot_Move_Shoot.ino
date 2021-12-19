@@ -19,11 +19,6 @@ void ShootMoveShoot()
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
 
-#if DEBUG
-    Serial.print("trueinterval: ");
-    Serial.print(GLOBAL.interval_tm - GLOBAL.interval_tm_last);
-    Serial.print(";");
-#endif
     FLAGS.Interrupt_Fire_Engaged = false; //clear this flag to avoid rentering this routine
     Shot_Sequence_Started = true; //
     Flag_Prefire_Focus_Enabled = true; //
@@ -40,11 +35,6 @@ void ShootMoveShoot()
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
 
-#if DEBUG
-    Serial.print("trueinterval: ");
-    Serial.print(GLOBAL.interval_tm - GLOBAL.interval_tm_last);
-    Serial.print(";");
-#endif
     FLAGS.Interrupt_Fire_Engaged = false; //clear this flag to avoid rentering this routine
 
     Shot_Sequence_Started = true; //
@@ -62,11 +52,6 @@ void ShootMoveShoot()
   if ((Shot_Sequence_Started) && (Flag_Prefire_Focus_Enabled)  && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.prefire_time * 100))
   {
     Flag_Prefire_Focus_Enabled = false;
-#if DEBUG
-    Serial.print("PreDoneAt ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
     Flag_Shot_Timer_Active = true;
     //Fire Camera
     if (EEPROM_STORED.intval != 3) CameraShoot(EEPROM_STORED.static_tm * 100); //start shutter sequence
@@ -88,17 +73,9 @@ void ShootMoveShoot()
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
     FLAGS.Move_Engauged = true; //move motors
-#if DEBUG_MOTOR
-    Serial.print("MoveStart ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
+
     move_motors();
-#if DEBUG_MOTOR
-    Serial.print("Moveend ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
+    
     //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
     if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
     if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX(); //
@@ -109,9 +86,6 @@ void ShootMoveShoot()
     Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
     FLAGS.Interrupt_Fire_Engaged = false;
     //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-    Serial.println("EOL");
-#endif
   }
 
   if ( EEPROM_STORED.camera_moving_shots > 0  && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots && !CameraShutter())
@@ -132,7 +106,7 @@ void ShootMoveShoot()
   NunChuckProcessData();
   //if (HandleButtons() == CZ_Held && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
   //if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval>3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started && HandleButtons() == Released ) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
 }
 
 void VideoLoop ()
@@ -158,9 +132,6 @@ void VideoLoop ()
     }
     while (FLAGS.motorMoving);
     stopISR1 ();
-#if DEBUG
-    Serial.print("Video Runtime"); Serial.println(millis() - GLOBAL.interval_tm);
-#endif
 
     if (!FLAGS.motorMoving && FLAGS.Repeat_Capture)
     { //new end condition for RUN CONTINOUS
@@ -219,28 +190,9 @@ void VideoLoop ()
   //Start video loop for 3 Point moves - this loop does not use the new motor move profile as it needs to calculate each and every segment
   else if (EEPROM_STORED.progtype == REG3POINTMOVE || EEPROM_STORED.progtype == REV3POINTMOVE)
   { //this is regular 3 point move program that can be modified later
-#if DEBUG
-    GLOBAL.interval_tm_last = GLOBAL.interval_tm;
-    GLOBAL.interval_tm = millis();
-    //Start us moving
-    Serial.print("trueinterval ");
-    Serial.print(GLOBAL.interval_tm - GLOBAL.interval_tm_last);
-    Serial.print(";");
-#endif
-
-#if DEBUG_MOTOR
-    Serial.print("MoveStart ");
-    Serial.print(millis());
-    Serial.print(";");
-#endif
 
     EEPROM_STORED.camera_fired ++; //still need this for framing
     move_motors();
-
-#if DEBUG_MOTOR
-    Serial.print("Moveend ");
-    Serial.println(millis());
-#endif
 
     if ( EEPROM_STORED.camera_total_shots  && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {
       lcd.empty();
@@ -285,22 +237,11 @@ void ExternalTriggerLoop ()
     if (!iostate) //The trigger is active, start recording the time
     {
       ext_shutter_open = true;
-
-#if DEBUG
-      shuttertimer_open = micros();
-      Serial.print("shuttertimer_a="); Serial.print(shuttertimer_open);
-#endif
     }
     else //shutter closed - sense pin goes back high - stop the clock and report
     {
       ext_shutter_open = false;
       ext_shutter_count++;
-
-#if DEBUG
-      shuttertimer_close = micros(); //turn on the led / shutter
-      Serial.print(" ext_shutter_count="); Serial.print(ext_shutter_count);
-      Serial.print(" shuttertimer_b="); Serial.print(shuttertimer_close); Serial.print("diff="); Serial.println(shuttertimer_close - shuttertimer_open);
-#endif
     }
   }
   //end interrupt check and flagging
@@ -310,11 +251,6 @@ void ExternalTriggerLoop ()
     Shot_Sequence_Started = true; //
   }
   if ( FLAGS.Program_Engaged && (Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //fire the camera can happen more than once in a shot sequence with HDR
-#if DEBUG
-    Serial.print("Startshot_at:");
-    Serial.print(millis());
-    Serial.println(";");
-#endif
     //Fire the Camera without a timer, just turn on the focus and shutter pins - and stop when the shot is done.
     CameraFocus(true); //Fire without a timer
     CameraShutter(true);
@@ -328,17 +264,7 @@ void ExternalTriggerLoop ()
       //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
       FLAGS.Move_Engauged = true; //move motors
-#if DEBUG_MOTOR
-      Serial.print("MoveStart ");
-      Serial.print(millis() - GLOBAL.interval_tm);
-      Serial.print(";");
-#endif
       move_motors();
-#if DEBUG_MOTOR
-      Serial.print("Moveend ");
-      Serial.print(millis() - GLOBAL.interval_tm);
-      Serial.print(";");
-#endif
 
       //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
       if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
@@ -349,9 +275,6 @@ void ExternalTriggerLoop ()
 
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-      Serial.println("EOL");
-#endif
     }
   }
   if ( EEPROM_STORED.camera_moving_shots && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {  //end of program
@@ -367,7 +290,8 @@ void ExternalTriggerLoop ()
   NunChuckRequestData();
   NunChuckProcessData();
   //if (HandleButtons() == CZ_Held && EEPROM_STORED.intval == EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged = true; // manual trigger
-  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) SMS_In_Shoot_Paused_Menu(); //pause an SMS program
+  //if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
 }
 
 void EndOfProgramLoop ()
@@ -400,12 +324,6 @@ void PanoLoop ()
     GLOBAL.interval_tm_last = GLOBAL.interval_tm; //just used for shot timing comparison
     GLOBAL.interval_tm = millis(); //start the clock on our shot sequence
 
-#if DEBUG
-    Serial.print("trueinterval: ");
-    Serial.print(GLOBAL.interval_tm - GLOBAL.interval_tm_last);
-    Serial.print(";");
-#endif
-
     FLAGS.Interrupt_Fire_Engaged      = false; //clear this flag to avoid re-entering this routine
     Shot_Sequence_Started       = true;  //
     Flag_Prefire_Focus_Enabled  = true; //
@@ -422,13 +340,6 @@ void PanoLoop ()
 
   if (Shot_Sequence_Started && Flag_Prefire_Focus_Enabled  && ((millis() - GLOBAL.interval_tm) > EEPROM_STORED.prefire_time * 100)) {
     Flag_Prefire_Focus_Enabled = false;
-    
-#if DEBUG
-    Serial.print("PreDoneAt ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
-
     Flag_Shot_Timer_Active = true;
     //Fire Camera
     CameraShoot(EEPROM_STORED.static_tm * 100); //start shutter sequence
@@ -450,16 +361,7 @@ void PanoLoop ()
 
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
     FLAGS.Move_Engauged = true; //move motors
-    
-#if DEBUG_MOTOR
-    Serial.print("MoveStart ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
 
-#if DEBUG_PANO
-    Serial.print("progtype "); Serial.println(EEPROM_STORED.progtype);
-#endif
     if (EEPROM_STORED.progtype == PANOGIGA) //regular pano
     {
       if (move_with_acceleration) move_motors_pano_accel();
@@ -467,18 +369,9 @@ void PanoLoop ()
     }
     else if (EEPROM_STORED.progtype == PORTRAITPANO) //PORTRAITPANO method array load
     {
-#if DEBUG_PANO
-      Serial.print("entered PORTRAITPANO loop");
-#endif
       move_motors_accel_array();
       delay (PanoPostMoveDelay);
     }
-    //
-#if DEBUG_MOTOR
-    Serial.print("Moveend ");
-    Serial.print(millis() - GLOBAL.interval_tm);
-    Serial.print(";");
-#endif
 
     //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
     //if (SETTINGS.POWERSAVE_PT>PWR_PROGRAM_ON)   disable_PT();
@@ -486,17 +379,11 @@ void PanoLoop ()
 
     if (!move_with_acceleration)
     {
-#if DEBUG
-      Serial.println("finished basic move");
-#endif
       if (EEPROM_STORED.intval != 3) display_status(); //update after shot complete to avoid issues with pausing
       FLAGS.Move_Engauged = false;
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
       FLAGS.Interrupt_Fire_Engaged = false;
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-      Serial.println("EOL");
-#endif
     }
   } //end test
 
@@ -511,17 +398,11 @@ void PanoLoop ()
     //test for completed move
     if (Shot_Sequence_Started && FLAGS.Move_Engauged && !FLAGS.motorMoving) //motors completed the move
     {
-#if DEBUG
-      Serial.println("finished accel move");
-#endif
       if (EEPROM_STORED.intval != 3) display_status(); //update after shot complete to avoid issues with pausing
       FLAGS.Move_Engauged = false;
       Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
       FLAGS.Interrupt_Fire_Engaged = false;
       //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-      Serial.println("EOL");
-#endif
     }
   }
   if ( EEPROM_STORED.camera_moving_shots && EEPROM_STORED.camera_fired >= EEPROM_STORED.camera_total_shots) {  //end of program
@@ -538,7 +419,8 @@ void PanoLoop ()
   NunChuckRequestData();
   NunChuckProcessData();
   // if (HandleButtons() == CZ_Held && EEPROM_STORED.intval==EXTTRIG_INTVAL ) FLAGS.Interrupt_Fire_Engaged=true; // manual trigger
-  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+  if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) SMS_In_Shoot_Paused_Menu(); //pause an SMS program
+  //if (SETTINGS.PAUSE_ENABLED && HandleButtons() == CZ_Held && EEPROM_STORED.intval > 3 && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
 }
 
 void PanoEnd ()

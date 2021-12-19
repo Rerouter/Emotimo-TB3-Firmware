@@ -21,9 +21,9 @@
 
 void move_motors()
 {
-	int32_t x=0.0;
-	int32_t y=0.0;
-	int32_t z=0.0;
+	int32_t x = 0;
+	int32_t y = 0;
+	int32_t z = 0;
 
 	//need this routine for both 2 and 3 point moves since 3 points can use this logic to determine aux motor progress	  
 
@@ -326,9 +326,9 @@ void go_to_origin_max_speed() // interrupt routine
 
 
 	#if DEBUG_MOTOR
-	Serial.println("motors[0].position:" + motors[0].position);
-	Serial.println("motors[1].position:" + motors[1].position);
-	Serial.println("motors[2].position:" + motors[2].position);
+	Serial.println("motors[0]._position:" + motors[0]._position);
+	Serial.println("motors[1]._position:" + motors[1]._position);
+	Serial.println("motors[2]._position:" + motors[2]._position);
 
 	Serial.println("motors[0].dest:" + motors[0].destination);
 	Serial.println("motors[1].dest:" + motors[1].destination);
@@ -357,9 +357,9 @@ void go_to_origin_max_speed() // interrupt routine
 	Serial.println("Mot 1 current steps after move:" + String(EEPROM_STORED.current_steps.y));
 	Serial.println("Mot 2 current steps after move:" + String(EEPROM_STORED.current_steps.z));
 
-	Serial.println("motors[0].position:" + String(motors[0].position));
-	Serial.println("motors[1].position:" + String(motors[1].position));
-	Serial.println("motors[2].position:" + String(motors[2].position));
+	Serial.println("motors[0]._position:" + String(motors[0]._position));
+	Serial.println("motors[1]._position:" + String(motors[1]._position));
+	Serial.println("motors[2]._position:" + String(motors[2]._position));
   #endif
 }
 
@@ -377,9 +377,9 @@ void go_to_origin_slow() // interrupt routine
 	synched3PtMove_max(0, 0, 0); 
 
 	#if DEBUG_MOTOR
-	Serial.println("motors[0].position:" + String(motors[0].position));
-	Serial.println("motors[1].position:" + String(motors[1].position));
-	Serial.println("motors[2].position:" + String(motors[2].position));
+	Serial.println("motors[0]._position:" + String(motors[0]._position));
+	Serial.println("motors[1]._position:" + String(motors[1]._position));
+	Serial.println("motors[2]._position:" + String(motors[2]._position));
 
 	Serial.println("motors[0].dest:" + String(motors[0].destination));
 	Serial.println("motors[1].dest:" + String(motors[1].destination));
@@ -408,9 +408,9 @@ void go_to_origin_slow() // interrupt routine
 	Serial.println("Mot 1 current steps after move:" + String(EEPROM_STORED.current_steps.y));
 	Serial.println("Mot 2 current steps after move:" + String(EEPROM_STORED.current_steps.z));
 
-	Serial.println("motors[0].position:" + String(motors[0].position));
-	Serial.println("motors[1].position:" + String(motors[1].position));
-	Serial.println("motors[2].position:" + String(motors[2].position));
+	Serial.println("motors[0]._position:" + String(motors[0]._position));
+	Serial.println("motors[1]._position:" + String(motors[1]._position));
+	Serial.println("motors[2]._position:" + String(motors[2]._position));
   #endif
 }  
 
@@ -469,9 +469,9 @@ void go_to_start_old()
 
 		stopISR1 ();
 		//Clean up positions so we don't drift
-		motors[0].position = EEPROM_STORED.current_steps.x;
-		motors[1].position = EEPROM_STORED.current_steps.y;
-		motors[2].position = EEPROM_STORED.current_steps.z;
+		motors[0]._position = EEPROM_STORED.current_steps.x;
+		motors[1]._position = EEPROM_STORED.current_steps.y;
+		motors[2]._position = EEPROM_STORED.current_steps.z;
 
 		#if DEBUG_MOTOR
 		Serial.print("midpoint_preflip");
@@ -515,7 +515,7 @@ void go_to_start_old()
       #endif
 		}
 
-		//This is to calc the steps at the end of rampup for each motor.  Each array value is for a motor
+		//This is to calc the steps at the end of rampup for each motor->  Each array value is for a motor
 		for (uint8_t i=0; i < MOTORS; i++)
 		{
 			EEPROM_STORED.ramp_params_steps[i] = EEPROM_STORED.rampval * EEPROM_STORED.linear_steps_per_shot[i] / 2; //steps at end of ramping target
@@ -549,7 +549,7 @@ void go_to_start_old()
       #endif
 		}
 
-		//This is to calc the steps at the end of rampup for each motor.  Each array value is for a motor
+		//This is to calc the steps at the end of rampup for each motor->  Each array value is for a motor
 		for (uint8_t i=2; i < MOTORS; i++)
 		{ //overwritw for just the aux motor using second point
 			EEPROM_STORED.ramp_params_steps[i] = EEPROM_STORED.rampval * EEPROM_STORED.linear_steps_per_shot[i] / 2; //steps at end of ramping target
@@ -567,9 +567,9 @@ void go_to_start_old()
 
 
 	//Sync DF positions variables to floating points
-	motors[0].position = EEPROM_STORED.current_steps.x;
-	motors[1].position = EEPROM_STORED.current_steps.y;
-	motors[2].position = EEPROM_STORED.current_steps.z;
+	motors[0]._position = EEPROM_STORED.current_steps.x;
+	motors[1]._position = EEPROM_STORED.current_steps.y;
+	motors[2]._position = EEPROM_STORED.current_steps.z;
 
 	enable_PanTilt();
 	enable_AUX();
@@ -622,9 +622,9 @@ void go_to_start_new() // interrupt routine
 		stopISR1 ();
 
 		//Clean up positions so we don't drift
-		motors[0].position = EEPROM_STORED.current_steps.x;
-		motors[1].position = EEPROM_STORED.current_steps.y;
-		motors[2].position = EEPROM_STORED.current_steps.z;
+		motors[0]._position = EEPROM_STORED.current_steps.x;
+		motors[1]._position = EEPROM_STORED.current_steps.y;
+		motors[2]._position = EEPROM_STORED.current_steps.z;
 
 		#if DEBUG_MOTOR
 		Serial.print("midpoint_preflip:");
@@ -670,9 +670,9 @@ void go_to_start_new() // interrupt routine
 	synched3PtMove_max(0.0, 0.0, 0.0); 
 
 	#if DEBUG_MOTOR
-	Serial.println("motors[0].position:" + String(motors[0].position));
-	Serial.println("motors[1].position:" + String(motors[1].position));
-	Serial.println("motors[2].position:" + String(motors[2].position));
+	Serial.println("motors[0]._position:" + String(motors[0]._position));
+	Serial.println("motors[1]._position:" + String(motors[1]._position));
+	Serial.println("motors[2]._position:" + String(motors[2]._position));
 	
 	Serial.println("motors[0].dest:" + String(motors[0].destination));
 	Serial.println("motors[1].dest:" + String(motors[1].destination));
@@ -699,9 +699,9 @@ void go_to_start_new() // interrupt routine
 	Serial.println("Mot 1 current steps after move:" + String(EEPROM_STORED.current_steps.y));
 	Serial.println("Mot 2 current steps after move:" + String(EEPROM_STORED.current_steps.z));
 
-	Serial.println("motors[0].position:" + String(motors[0].position));
-	Serial.println("motors[1].position:" + String(motors[1].position));
-	Serial.println("motors[2].position:" + String(motors[2].position));
+	Serial.println("motors[0]._position:" + String(motors[0]._position));
+	Serial.println("motors[1]._position:" + String(motors[1]._position));
+	Serial.println("motors[2]._position:" + String(motors[2]._position));
   #endif
 
 	//still missing the reverse, but this calcs for ramp are now in.
@@ -716,7 +716,7 @@ void go_to_start_new() // interrupt routine
       #endif
 		}
 
-		//This is to calc the steps at the end of rampup for each motor.  Each array value is for a motor
+		//This is to calc the steps at the end of rampup for each motor->  Each array value is for a motor
 		for (uint8_t i=0; i < MOTORS; i++)
 		{
 			EEPROM_STORED.ramp_params_steps[i] = EEPROM_STORED.rampval * EEPROM_STORED.linear_steps_per_shot[i] / 2; //steps at end of ramping target
@@ -752,7 +752,7 @@ void go_to_start_new() // interrupt routine
       #endif
 		}
 
-		//This is to calc the steps at the end of rampup for each motor.  Each array value is for a motor
+		//This is to calc the steps at the end of rampup for each motor->  Each array value is for a motor
 		for (uint8_t i=2; i < MOTORS; i++)
 		{ //overwritw for just the aux motor using second point
 			EEPROM_STORED.ramp_params_steps[i] = EEPROM_STORED.rampval * EEPROM_STORED.linear_steps_per_shot[i] / 2; //steps at end of ramping target

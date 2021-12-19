@@ -37,6 +37,18 @@ private:
 	uint8_t _bv[10];
 	uint8_t _ro[5];
 	void command(uint8_t);
+  
+  enum _bv : uint8_t {
+  PINOUT       = 0,
+  POSBASE      = 1,
+  BOUNCE       = 2,
+  NUMROWS      = 3,
+  NUMCOLS      = 4,
+  LASTROW      = 5,
+  LASTCOL      = 6,
+  LASTBRIGHT   = 8,
+  BOUNCEMicros = 9
+};
 
 public:
 	NHDLCD9 ( uint8_t pin, uint8_t numRows, uint8_t numCols, uint8_t posBase=1 );
@@ -61,12 +73,13 @@ public:
 	// shortcuts for printing at particular positions
    void at ( uint8_t row, uint8_t col, char );
    void at ( uint8_t row, uint8_t col, const char[] );
+   void at ( uint8_t row, uint8_t col, int8_t );
    void at ( uint8_t row, uint8_t col, uint8_t );
    void at ( uint8_t row, uint8_t col, int16_t );
    void at ( uint8_t row, uint8_t col, uint16_t );
    void at ( uint8_t row, uint8_t col, int32_t );
    void at ( uint8_t row, uint8_t col, uint32_t );
-   void at ( uint8_t row, uint8_t col, long, int );
+   void at ( uint8_t row, uint8_t col, int32_t, int16_t );
    void at ( uint8_t row, uint8_t col, String );
 };
 

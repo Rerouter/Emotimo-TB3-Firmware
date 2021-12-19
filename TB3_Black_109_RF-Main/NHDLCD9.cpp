@@ -12,15 +12,6 @@
 
 /* ======================================================== */
 
-#define PINOUT      0
-#define POSBASE     1
-#define BOUNCE      2
-#define NUMROWS     3
-#define NUMCOLS     4
-#define LASTROW     5
-#define LASTCOL     6
-#define LASTBRIGHT  8
-#define BOUNCEMicros 9
 
 //--------------------------
 NHDLCD9::NHDLCD9 ( uint8_t pin, uint8_t numRows, uint8_t numCols, uint8_t posBase )
@@ -33,7 +24,7 @@ NHDLCD9::NHDLCD9 ( uint8_t pin, uint8_t numRows, uint8_t numCols, uint8_t posBas
 	_bv[LASTROW] = 1;
 	_bv[LASTCOL] = 1;
 	_bv[LASTBRIGHT] = 8;
-	_bv[BOUNCEMicros] = 500;
+	_bv[BOUNCEMicros] = 255;
 	_ro[0] = 0;
 	_ro[1] = 64;
 	_ro[2] = numCols;
@@ -160,10 +151,11 @@ void NHDLCD9::command(uint8_t value){
 void NHDLCD9::at ( uint8_t row, uint8_t col, char v )			        	{ pos(row,col); print(v); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, const char v[] )	    	{ pos(row,col); print(v); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, uint8_t v )		      	{ pos(row,col); print(v); }
-void NHDLCD9::at ( uint8_t row, uint8_t col, int16_t v )		      	{ pos(row,col); print(v); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, uint16_t v )		      	{ pos(row,col); print(v); }
+void NHDLCD9::at ( uint8_t row, uint8_t col, uint32_t v )           { pos(row,col); print(v); }
+void NHDLCD9::at ( uint8_t row, uint8_t col, int8_t v )             { pos(row,col); print(v); }
+void NHDLCD9::at ( uint8_t row, uint8_t col, int16_t v )            { pos(row,col); print(v); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, int32_t v )			      { pos(row,col); print(v); }
-void NHDLCD9::at ( uint8_t row, uint8_t col, uint32_t v )			      { pos(row,col); print(v); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, int32_t v, int16_t t )	{ pos(row,col); print(v,t); }
 void NHDLCD9::at ( uint8_t row, uint8_t col, String v)			      	{ pos(row,col); print(v); }
 

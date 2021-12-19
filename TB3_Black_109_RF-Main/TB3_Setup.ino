@@ -128,10 +128,13 @@ void Setup_POWERSAVE_PT()
   if (FLAGS.redraw) {
     lcd.empty();
     lcd.at(1, 1, "PT Motors on");
-    if      (SETTINGS.POWERSAVE_PT == PWR_ALWAYS_ON)	  draw(70, 2, 1); //lcd.at(2,1,"AlwaysOn");
-    else if (SETTINGS.POWERSAVE_PT == PWR_PROGRAM_ON)	  draw(71, 2, 1); //lcd.at(2,1,"ProgramOn");
-    else if (SETTINGS.POWERSAVE_PT == PWR_SHOOTMOVE_ON)	draw(72, 2, 1); //lcd.at(2,1,"ShootMoveOn");
-    else if (SETTINGS.POWERSAVE_PT == PWR_MOVEONLY_ON)	draw(73, 2, 1); //lcd.at(2,1,"MoveOnly");
+    switch (SETTINGS.POWERSAVE_PT)
+    {
+      case PWR_ALWAYS_ON:    draw(70, 2, 1); break; //lcd.at(2,1,"AlwaysOn");
+      case PWR_PROGRAM_ON:   draw(71, 2, 1); break; //lcd.at(2,1,"ProgramOn");
+      case PWR_SHOOTMOVE_ON: draw(72, 2, 1); break; //lcd.at(2,1,"ShootMoveOn");
+      case PWR_MOVEONLY_ON:  draw(73, 2, 1); break; //lcd.at(2,1,"MoveOnly");
+    }
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -144,15 +147,15 @@ void Setup_POWERSAVE_PT()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        SETTINGS.POWERSAVE_PT++;
-        if (SETTINGS.POWERSAVE_PT > PWR_MOVEONLY_ON) { SETTINGS.POWERSAVE_PT = PWR_MOVEONLY_ON; }
-        else  { FLAGS.redraw = true; }
+        if (SETTINGS.POWERSAVE_PT == PWR_MOVEONLY_ON) { SETTINGS.POWERSAVE_PT = PWR_ALWAYS_ON; }
+        else                                          { SETTINGS.POWERSAVE_PT++; }
+        FLAGS.redraw = true;
         break;
   
       case 1: // Down
-        SETTINGS.POWERSAVE_PT--;
-        if (SETTINGS.POWERSAVE_PT < PWR_ALWAYS_ON) { SETTINGS.POWERSAVE_PT = PWR_ALWAYS_ON; }
-        else  { FLAGS.redraw = true;  }
+        if (SETTINGS.POWERSAVE_PT == PWR_ALWAYS_ON)   { SETTINGS.POWERSAVE_PT = PWR_MOVEONLY_ON; }
+        else                                          { SETTINGS.POWERSAVE_PT--; }
+        FLAGS.redraw = true;
         break;
     }
   
@@ -177,10 +180,13 @@ void Setup_POWERSAVE_AUX()
   if (FLAGS.redraw) {
     lcd.empty();
     lcd.at(1, 1, "AUX Motors On:");
-    if      (SETTINGS.POWERSAVE_AUX == 1)	  draw(70, 2, 1); //lcd.at(2,1,"Always");
-    else if (SETTINGS.POWERSAVE_AUX == 2)	  draw(71, 2, 1); //lcd.at(2,1,"Program");
-    else if (SETTINGS.POWERSAVE_AUX == 3)	  draw(72, 2, 1); //lcd.at(2,1,"Shoot (accuracy)");
-    else if (SETTINGS.POWERSAVE_AUX == 4)	  draw(73, 2, 1); //lcd.at(2,1,"Shoot (pwr save)");
+    switch (SETTINGS.POWERSAVE_AUX)
+    {
+      case PWR_ALWAYS_ON:    draw(70, 2, 1); break; //lcd.at(2,1,"AlwaysOn");
+      case PWR_PROGRAM_ON:   draw(71, 2, 1); break; //lcd.at(2,1,"ProgramOn");
+      case PWR_SHOOTMOVE_ON: draw(72, 2, 1); break; //lcd.at(2,1,"ShootMoveOn");
+      case PWR_MOVEONLY_ON:  draw(73, 2, 1); break; //lcd.at(2,1,"MoveOnly");
+    }
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -189,27 +195,19 @@ void Setup_POWERSAVE_AUX()
     GLOBAL.NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-    
+
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        SETTINGS.POWERSAVE_AUX++;
-        if (SETTINGS.POWERSAVE_AUX > 4) {
-          SETTINGS.POWERSAVE_AUX = 4;
-        }
-        else  {
-          FLAGS.redraw = true;
-        }
+        if (SETTINGS.POWERSAVE_AUX == PWR_MOVEONLY_ON) { SETTINGS.POWERSAVE_AUX = PWR_ALWAYS_ON; }
+        else                                           { SETTINGS.POWERSAVE_AUX++; }
+        FLAGS.redraw = true;
         break;
   
       case 1: // Down
-        SETTINGS.POWERSAVE_AUX--;
-        if (!SETTINGS.POWERSAVE_AUX) {
-          SETTINGS.POWERSAVE_AUX = 1;
-        }
-        else  {
-          FLAGS.redraw = true;
-        }
+        if (SETTINGS.POWERSAVE_AUX == PWR_ALWAYS_ON)   { SETTINGS.POWERSAVE_AUX = PWR_MOVEONLY_ON; }
+        else                                           { SETTINGS.POWERSAVE_AUX--; }
+        FLAGS.redraw = true;
         break;
     }
   
@@ -249,16 +247,16 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        SETTINGS.LCD_BRIGHTNESS_DURING_RUN++;
-        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN > 8) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 8;
-        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
+        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN == 8) { SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 1; }
+        else                                         { SETTINGS.LCD_BRIGHTNESS_DURING_RUN++;   }
+        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
         FLAGS.redraw = true;
         break;
   
       case 1: // Down
-        SETTINGS.LCD_BRIGHTNESS_DURING_RUN--;
-        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN < 1) SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 1;
-        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN);
+        if (SETTINGS.LCD_BRIGHTNESS_DURING_RUN == 1) { SETTINGS.LCD_BRIGHTNESS_DURING_RUN = 8; }
+        else                                         { SETTINGS.LCD_BRIGHTNESS_DURING_RUN--;   }
+        lcd.bright(SETTINGS.LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
         FLAGS.redraw = true;
         break;
     }
@@ -400,8 +398,6 @@ void Set_Shot_Repeat()
       case -1: // Up
         if (!FLAGS.Repeat_Capture) {
           FLAGS.Repeat_Capture = true;
-        }
-        else  {
           FLAGS.redraw = true;
         }
         break;
@@ -409,8 +405,6 @@ void Set_Shot_Repeat()
       case 1: // Down
         if (FLAGS.Repeat_Capture) {
           FLAGS.Repeat_Capture = false;
-        }
-        else  {
           FLAGS.redraw = true;
         }
         break;

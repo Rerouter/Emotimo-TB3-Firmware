@@ -194,9 +194,9 @@ void set_position(int32_t x, int32_t y, int32_t z)
   EEPROM_STORED.current_steps.y = y;
   EEPROM_STORED.current_steps.z = z;
 
-  motors[0].position = x;
-  motors[1].position = y;
-  motors[2].position = z;
+  motors[0]._position = x;
+  motors[1]._position = y;
+  motors[2]._position = z;
 
   calculate_deltas();
 }
@@ -228,12 +228,12 @@ long calculate_feedrate_delay_1()
   if (GLOBAL.delta_steps.x > GLOBAL.delta_steps.y)
   {
     if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x)	master_steps = GLOBAL.delta_steps.z;
-    else								master_steps = GLOBAL.delta_steps.x;
+    else								                              master_steps = GLOBAL.delta_steps.x;
   }
   else
   {
     if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.y)	master_steps = GLOBAL.delta_steps.z;
-    else								master_steps = GLOBAL.delta_steps.y;
+    else								                              master_steps = GLOBAL.delta_steps.y;
   }
 
 #if DEBUG_MOTOR
@@ -281,12 +281,12 @@ long calculate_feedrate_delay_video()
   if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x)
   {
     if (GLOBAL.delta_steps.y > GLOBAL.delta_steps.z)	master_steps = GLOBAL.delta_steps.y;
-    else								master_steps = GLOBAL.delta_steps.z;
+    else								                              master_steps = GLOBAL.delta_steps.z;
   }
   else
   {
     if (GLOBAL.delta_steps.y > GLOBAL.delta_steps.x)	master_steps = GLOBAL.delta_steps.y;
-    else								master_steps = GLOBAL.delta_steps.x;
+    else								                              master_steps = GLOBAL.delta_steps.x;
   }
 #if DEBUG_MOTOR
   Serial.print("master_steps= ");
@@ -297,7 +297,7 @@ long calculate_feedrate_delay_video()
   //return ((EEPROM_STORED.interval*(1000L))/master_steps); //
 
   if (Move_State_2PT == Linear2PT)  current_feedrate = ((EEPROM_STORED.interval * (VIDEO_FEEDRATE_NUMERATOR) * long(EEPROM_STORED.keyframe[0][3] - EEPROM_STORED.keyframe[0][2])) / master_steps); //  total move for all linear
-  else							current_feedrate = ((EEPROM_STORED.interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
+  else							                current_feedrate = ((EEPROM_STORED.interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
 
 #if DEBUG_MOTOR
   Serial.print("feedratedelay_1_vid= ");
@@ -316,17 +316,14 @@ long calculate_feedrate_delay_2() //used for real time moves
   if (GLOBAL.delta_steps.x > GLOBAL.delta_steps.y)
   {
     if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.x) master_steps = GLOBAL.delta_steps.z;
-    else							   master_steps = GLOBAL.delta_steps.x;
+    else							                               master_steps = GLOBAL.delta_steps.x;
   }
   else
   {
     if (GLOBAL.delta_steps.z > GLOBAL.delta_steps.y) master_steps = GLOBAL.delta_steps.z;
-    else							   master_steps = GLOBAL.delta_steps.y;
+    else							                               master_steps = GLOBAL.delta_steps.y;
   }
-  //Serial.print("master_steps="); Serial.println(master_steps);
-  long fr = 10000L / master_steps;
-  //Serial.print("fr="); Serial.println(fr);
-  return (fr); // read about every 42 ms (24 times a second)
+  return 10000L / master_steps; // read about every 42 ms (24 times a second)
 }
 
 

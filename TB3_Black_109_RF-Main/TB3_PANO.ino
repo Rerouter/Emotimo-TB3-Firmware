@@ -107,8 +107,6 @@ void Set_angle_of_view()
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
-    //int32_t *ramValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
-    //int32_t *ramNotValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
   }
 
   //Velocity Engine update
@@ -118,8 +116,8 @@ void Set_angle_of_view()
     NunChuckProcessData();
     updateMotorVelocities2();
 
-    lcd.at(1, 11, steps_to_deg_decimal(abs(EEPROM_STORED.current_steps.x)));
-    lcd.at(2, 11, steps_to_deg_decimal(abs(EEPROM_STORED.current_steps.y)));
+    lcd.at(1, 11, steps_to_deg_decimal(EEPROM_STORED.current_steps.x));
+    lcd.at(2, 11, steps_to_deg_decimal(EEPROM_STORED.current_steps.y));
     button_actions_move_x(1);
   }
 }
@@ -272,18 +270,15 @@ void Set_PanoArrayType()
 String steps_to_deg_decimal(int32_t steps)
 {
   //Function is tested for 0 to 99.99 degrees - at 100 degrees and over, the decimal place moves.
-  if (steps < 0) steps = 0 - steps;
+  if (steps < 0) steps = -steps;
   String Degree_display = "";
 
-  int32_t temp_degs = (steps * 9L) / 4000L; //  9/4000 = 1/444.4444
-  int32_t temp_mod = (steps * 9L) % 4000L;
-  int32_t temp_tenths = (temp_mod * 10) / 4000L;
-  int32_t temp_hundredths = ((temp_mod * 100) / 4000L) - (temp_tenths * 10);
-  int32_t temp_thousandths = ((temp_mod * 1000) / 4000L) - (temp_tenths * 100) - (temp_hundredths * 10);
-  //Serial.println(temp_degs);
-  //Serial.println(temp_mod);
-  //Serial.println(temp_decimal);
-
+  uint32_t temp_degs = (steps * 9L) / 4000L; //  9/4000 = 1/444.4444
+  uint16_t temp_mod =  (steps * 9L) % 4000L;
+  uint8_t  temp_tenths      = temp_mod / 400L;
+  uint8_t  temp_hundredths  = temp_mod / 40L - temp_tenths * 10;
+  uint8_t  temp_thousandths = temp_mod / 4L - temp_tenths * 100 - temp_hundredths * 10;
+  
   if (temp_degs < 10) Degree_display += " ";
   Degree_display += temp_degs;
   Degree_display += ".";
@@ -380,8 +375,8 @@ void pano_button_actions_review()
         interrupts();
         DFSetup(); //setup the ISR
         //Set the motor position between standard and dragonframes
-        motors[0].position = EEPROM_STORED.current_steps.x;
-        motors[1].position = EEPROM_STORED.current_steps.y;
+        motors[0]._position = EEPROM_STORED.current_steps.x;
+        motors[1]._position = EEPROM_STORED.current_steps.y;
         display_status();
         //DFloop();
       }
@@ -424,14 +419,11 @@ void Pano_DisplayReviewProg()
       //lcd.empty();
       lcd.at(1, 1, "Delay:        ");
       lcd.at(2, 2, "Press C Button");
-      if (GLOBAL.start_delay_sec < 20) GLOBAL.joy_y_lock_count = 0;
 
       GLOBAL.start_delay_sec += joy_capture3();
       if (GLOBAL.start_delay_sec > 1800) {
-        GLOBAL.start_delay_sec = 0;
-      }
-      if (GLOBAL.start_delay_sec == 0) {
-        GLOBAL.start_delay_sec = 1800;
+        if (GLOBAL.start_delay_sec > 65000) { GLOBAL.start_delay_sec = 1800; }
+        else                                { GLOBAL.start_delay_sec = 0;    }
       }
       lcd.at(1, 7, GLOBAL.start_delay_sec);
       // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
@@ -447,8 +439,8 @@ void move_motors_pano_basic()
   uint16_t index_x; // Row Position of Pano
   uint16_t index_y; // Column Position of Pano
   uint16_t x_mod_pass_1; // Photos per Row
-  bool even_odd_row;
   int16_t slope_adjustment;
+  bool even_odd_row;
 
   //Figure out which row we are in
 
@@ -549,38 +541,44 @@ void move_motors_accel_array()
 
   int32_t x = 0;
   int32_t y = 0;
-  
-  if (PanoArrayType == PANO_9ShotCenter) {
-    x = steps_per_shot_max_x * OnionArray9[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * OnionArray9[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_25ShotCenter) {
-    x = steps_per_shot_max_x * OnionArray25[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * OnionArray25[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_7X3) {
-    x = steps_per_shot_max_x * SevenByThree[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * SevenByThree[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_9X5Type1) {
-    x = steps_per_shot_max_x * NineByFive_1[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * NineByFive_1[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_9X5Type2) {
-    x = steps_per_shot_max_x * NineByFive_2[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * NineByFive_2[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_5x5TopThird) {
-    x = steps_per_shot_max_x * TopThird25[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * TopThird25[EEPROM_STORED.camera_fired][1]) * -1;
-  }
-  else if (PanoArrayType == PANO_7X5TopThird) {
-    x = steps_per_shot_max_x * TopThird7by5[EEPROM_STORED.camera_fired][0];
-    y = int32_t(steps_per_shot_max_y * TopThird7by5[EEPROM_STORED.camera_fired][1]) * -1;
-  }
 
-  // x= EEPROM_STORED.motor_steps_pt[1][0] - step_per_pano_shot_x * index_x;
-  // y= EEPROM_STORED.motor_steps_pt[1][1] - step_per_pano_shot_y * index_y;
+  switch(PanoArrayType)
+  {
+    case PANO_9ShotCenter:
+      x = steps_per_shot_max_x * OnionArray9[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * OnionArray9[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_25ShotCenter:
+      x = steps_per_shot_max_x * OnionArray25[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * OnionArray25[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_7X3:
+      x = steps_per_shot_max_x * SevenByThree[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * SevenByThree[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_9X5Type1:
+      x = steps_per_shot_max_x * NineByFive_1[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * NineByFive_1[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_9X5Type2:
+      x = steps_per_shot_max_x * NineByFive_2[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * NineByFive_2[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_5x5TopThird:
+      x = steps_per_shot_max_x * TopThird25[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * TopThird25[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+
+    case PANO_7X5TopThird:
+      x = steps_per_shot_max_x * TopThird7by5[EEPROM_STORED.camera_fired][0];
+      y = int32_t(steps_per_shot_max_y * TopThird7by5[EEPROM_STORED.camera_fired][1]) * -1;
+      break;
+  }
 
 #if DEBUG_PANO
   Serial.print("x;"); Serial.println(x);
@@ -595,7 +593,6 @@ void move_motors_accel_array()
   updateMotorVelocities();
 
   //FLAGS.Move_Engauged=false; //clear move engaged flag
-  return;
 }//end move motors accel
 
 
@@ -621,11 +618,6 @@ void Move_to_Origin()
 
 void calc_pano_move() //pano - calculate other values
 {
-  //unsigned long total_shots_x; //calulated value for to divide up scene evenly  ABS(current steps)/max steps per shot+1 = just use integer math
-  //unsigned long total_shots_y; //calulated value for to divide up scene evenly
-  //unsigned long total_pano_shots; //rows x columns for display
-  //unsigned int step_per_pano_shot_x;
-  //unsigned int step_per_pano_shot_y;
   total_shots_x = (abs(EEPROM_STORED.current_steps.x) / steps_per_shot_max_x) + 2;
   total_shots_y = (abs(EEPROM_STORED.current_steps.y) / steps_per_shot_max_y) + 2;
   if (abs(EEPROM_STORED.current_steps.y) < 444.0) { //do a test to see if the tilt angle is very small - indating pano
@@ -646,8 +638,8 @@ void button_actions290()
       if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX();
       //FLAGS.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
-      EEPROM_STORED.current_steps.x = motors[0].position; //get our motor position variable synced
-      EEPROM_STORED.current_steps.y = motors[1].position; //get our motor position variable synced
+      EEPROM_STORED.current_steps.x = motors[0]._position; //get our motor position variable synced
+      EEPROM_STORED.current_steps.y = motors[1]._position; //get our motor position variable synced
       //noInterrupts(); //turn this off while programming for now
       lcd.bright(100);
       if      (EEPROM_STORED.progtype == PANOGIGA)     EEPROM_STORED.progstep = 206; //  move to the main program at the interval setting - UD050715
