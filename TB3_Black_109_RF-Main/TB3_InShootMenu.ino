@@ -29,8 +29,8 @@
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
   EEPROM_STORED.Program_Engaged = false; //toggle off the loop
-  if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-  if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+  if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+  if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
   inprogtype = 0; //default this to the first option, Resume
   progstep_goto(1001); //send us to a loop where we can select options
 }
@@ -86,8 +86,8 @@ void InProg_Select_Option()
 
     lcd.at(2, 1, "UpDown  C-Select");
     FLAGS.redraw = false;
-    if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-    if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+    if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+    if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
     delay(GLOBAL.prompt_time);
 
   } //end first time

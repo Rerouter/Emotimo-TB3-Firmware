@@ -125,8 +125,8 @@ void Choose_Program()
   if (FLAGS.redraw)
   {
     // Clean Up any previous states
-    if (SETTINGS.POWERSAVE_PT > 2)    disable_PT();  //  Put the motors back to idle
-    if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX(); //
+    if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)    disable_PT();  //  Put the motors back to idle
+    if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX(); //
     lcd.empty();                            //  Clear the LCD
 
     // Select what menu item we want.
@@ -1111,8 +1111,8 @@ void button_actions_lead_in_out()
         if (DEBUG) review_RAM_Contents();
 
         //delay(GLOBAL.prompt_time);
-        if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
-        if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
+        if (SETTINGS.POWERSAVE_PT>PWR_PROGRAM_ON)   disable_PT();
+        if (SETTINGS.POWERSAVE_AUX>PWR_PROGRAM_ON)   disable_AUX();
       */  //end of code block to be moved from LeadinLeadOut
 
       progstep_forward();
@@ -1171,8 +1171,8 @@ void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
 #endif
 
   //delay(GLOBAL.prompt_time);
-  if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-  if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+  if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+  if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
   //end of code block pulled from LeadinLeadOut
 }
 
@@ -1378,8 +1378,8 @@ void button_actions_end_of_program()
     case C_Pressed:
       // Normal
       EEPROM_STORED.REVERSE_PROG_ORDER = false;
-      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-      if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);
@@ -1399,8 +1399,8 @@ void button_actions_end_of_program()
 
     case Z_Pressed:
       EEPROM_STORED.REVERSE_PROG_ORDER = true;
-      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-      if (SETTINGS.POWERSAVE_AUX > 2)   disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       lcd.bright(8);

@@ -642,8 +642,8 @@ void button_actions290()
   switch (HandleButtons())
   {
     case C_Pressed:
-      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-      if (SETTINGS.POWERSAVE_AUX > 2)  disable_AUX();
+      if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX();
       //EEPROM_STORED.Program_Engaged=true;
       EEPROM_STORED.camera_fired = 0;
       EEPROM_STORED.current_steps.x = motors[0].position; //get our motor position variable synced

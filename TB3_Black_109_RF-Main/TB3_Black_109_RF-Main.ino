@@ -234,13 +234,21 @@ volatile bool nextMoveLoaded    = false; // Program flag for next move ready
 //New Powersave flags
 /*Power Save explanation
   We can power up and power down the Pan Tilt motors together.  We can power up and power down the Aux motor port as well.  We see three levels of power saving:
-  1)  None - Motors are always on - for VFX work where power isn't a factor and precision is most important.  Motors will get warm here on hot days.
+  1)  None - 
   2)  Low - only at the end of program
   3)  Standard - Power up the motors for the shooting time (all the time we hold the trigger down), and move, power down between shots.
   4)  High - Only power on for motor moves, turn off the motors when we reach the shooting position.
-    We are powered down for the shot and only power on for moves. This saves a ton of battery for long astro shots.
-    We do lose microstep resolution for this, but it usually is not visible.   We could be off by as much as 8/16 mircosetps for a shot or 0.018 degrees - Really small stuff!  Try this mode out!
+ 
 */
+
+enum powersave : uint8_t {
+  PWR_ALWAYS_ON    = 1, // Motors are always on - for VFX work where power isn't a factor and precision is most important.  Motors will get warm here on hot days.
+  PWR_PROGRAM_ON   = 2, // Motors at full power when ever a program is active, in low power in main menu
+  PWR_SHOOTMOVE_ON = 3, // Motors at full power for moves and image capturing, in low power otherwise
+  PWR_MOVEONLY_ON  = 4  // Motors only powered for movements, it can loose up to 8 steps position per stop
+};
+
+
 
 //Main Menu Ordering
 

@@ -128,10 +128,10 @@ void Setup_POWERSAVE_PT()
   if (FLAGS.redraw) {
     lcd.empty();
     lcd.at(1, 1, "PT Motors on");
-    if      (SETTINGS.POWERSAVE_PT == 1)	  draw(70, 2, 1); //lcd.at(2,1,"Always");
-    else if (SETTINGS.POWERSAVE_PT == 2)	  draw(71, 2, 1); //lcd.at(2,1,"Program");
-    else if (SETTINGS.POWERSAVE_PT == 3)	  draw(72, 2, 1); //lcd.at(2,1,"Shoot (accuracy)");
-    else if (SETTINGS.POWERSAVE_PT == 4)	  draw(73, 2, 1); //lcd.at(2,1,"Shoot (pwr save)");
+    if      (SETTINGS.POWERSAVE_PT == PWR_ALWAYS_ON)	  draw(70, 2, 1); //lcd.at(2,1,"AlwaysOn");
+    else if (SETTINGS.POWERSAVE_PT == PWR_PROGRAM_ON)	  draw(71, 2, 1); //lcd.at(2,1,"ProgramOn");
+    else if (SETTINGS.POWERSAVE_PT == PWR_SHOOTMOVE_ON)	draw(72, 2, 1); //lcd.at(2,1,"ShootMoveOn");
+    else if (SETTINGS.POWERSAVE_PT == PWR_MOVEONLY_ON)	draw(73, 2, 1); //lcd.at(2,1,"MoveOnly");
     FLAGS.redraw = false;
     delay(GLOBAL.prompt_time);
   }
@@ -145,13 +145,13 @@ void Setup_POWERSAVE_PT()
     {
       case -1: // Up
         SETTINGS.POWERSAVE_PT++;
-        if (SETTINGS.POWERSAVE_PT > 4) { SETTINGS.POWERSAVE_PT = 4; }
+        if (SETTINGS.POWERSAVE_PT > PWR_MOVEONLY_ON) { SETTINGS.POWERSAVE_PT = PWR_MOVEONLY_ON; }
         else  { FLAGS.redraw = true; }
         break;
   
       case 1: // Down
         SETTINGS.POWERSAVE_PT--;
-        if (SETTINGS.POWERSAVE_PT < 1) { SETTINGS.POWERSAVE_PT = 1; }
+        if (SETTINGS.POWERSAVE_PT < PWR_ALWAYS_ON) { SETTINGS.POWERSAVE_PT = PWR_ALWAYS_ON; }
         else  { FLAGS.redraw = true;  }
         break;
     }

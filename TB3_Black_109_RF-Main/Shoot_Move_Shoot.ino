@@ -30,8 +30,8 @@ void ShootMoveShoot()
     Flag_Camera_Triggers_In_Use = true; //
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    if (SETTINGS.POWERSAVE_PT < 4)   enable_PanTilt(); //don't power on for shot for high power saving
-    if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX < 4)   enable_AUX(); //don't power on for shot for high power saving
+    if (SETTINGS.POWERSAVE_PT < PWR_MOVEONLY_ON)   enable_PanTilt(); //don't power on for shot for high power saving
+    if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX < PWR_MOVEONLY_ON)   enable_AUX(); //don't power on for shot for high power saving
   }
 
   //Step 1 if external triggering. This happens once per camera shot.
@@ -52,8 +52,8 @@ void ShootMoveShoot()
     Flag_Camera_Triggers_In_Use = true; //
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    if (SETTINGS.POWERSAVE_PT < 4)   enable_PanTilt(); //don't power on for shot for high power saving
-    if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX < 4)   enable_AUX(); //don't power on for shot for high power saving
+    if (SETTINGS.POWERSAVE_PT < PWR_MOVEONLY_ON)   enable_PanTilt(); //don't power on for shot for high power saving
+    if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX < PWR_MOVEONLY_ON)   enable_AUX(); //don't power on for shot for high power saving
   }
 
   //End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
@@ -100,8 +100,8 @@ void ShootMoveShoot()
     Serial.print(";");
 #endif
     //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-    if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-    if (SETTINGS.POWERSAVE_AUX > 2)  disable_AUX(); //
+    if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+    if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX(); //
 
     //Update display
     if (EEPROM_STORED.intval != 3) display_status(); //update after shot complete to avoid issues with pausing
@@ -119,8 +119,8 @@ void ShootMoveShoot()
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     EEPROM_STORED.Program_Engaged = false;
-    if (SETTINGS.POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
-    if (SETTINGS.POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(GLOBAL.prompt_time * 2);
     EEPROM_STORED.progstep = 90;
     FLAGS.redraw = true;
@@ -206,8 +206,8 @@ void VideoLoop ()
       lcd.empty();
       draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
       EEPROM_STORED.Program_Engaged = false;
-      if (SETTINGS.POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
-      if (SETTINGS.POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
+      if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+      if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
       EEPROM_STORED.progstep = 90;
       FLAGS.redraw = true;
       delay(100);
@@ -247,8 +247,8 @@ void VideoLoop ()
       lcd.empty();
       //draw(58,1,1);//lcd.at(1,1,"Program Complete");
       EEPROM_STORED.Program_Engaged = false;
-      if (SETTINGS.POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
-      if (SETTINGS.POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
+      if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+      if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
       delay(GLOBAL.prompt_time * 2);
       EEPROM_STORED.progstep = 90;
       FLAGS.redraw = true;
@@ -344,8 +344,8 @@ void ExternalTriggerLoop ()
 #endif
 
       //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-      if (SETTINGS.POWERSAVE_PT > 2)   disable_PT();
-      if (SETTINGS.POWERSAVE_AUX > 2)  disable_AUX(); //
+      if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX(); //
 
       //Update display
       display_status();  //update after shot complete to avoid issues with pausing
@@ -361,8 +361,8 @@ void ExternalTriggerLoop ()
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     EEPROM_STORED.Program_Engaged = false;
-    if (SETTINGS.POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
-    if (SETTINGS.POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(GLOBAL.prompt_time * 2);
     EEPROM_STORED.progstep = 90;
     FLAGS.redraw = true;
@@ -416,8 +416,8 @@ void PanoLoop ()
     
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    //if (SETTINGS.POWERSAVE_PT<4)   enable_PanTilt();  //don't power on for shot for high power saving
-    //if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX<4)   enable_AUX();  //don't power on for shot for high power saving
+    //if (SETTINGS.POWERSAVE_PT<PWR_MOVEONLY_ON)   enable_PanTilt();  //don't power on for shot for high power saving
+    //if (SETTINGS.AUX_ON && SETTINGS.POWERSAVE_AUX<PWR_MOVEONLY_ON)   enable_AUX();  //don't power on for shot for high power saving
     enable_PanTilt();
   }
   //End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
@@ -484,8 +484,8 @@ void PanoLoop ()
 #endif
 
     //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-    //if (SETTINGS.POWERSAVE_PT>2)   disable_PT();
-    //if (SETTINGS.POWERSAVE_AUX>2)   disable_AUX();
+    //if (SETTINGS.POWERSAVE_PT>PWR_PROGRAM_ON)   disable_PT();
+    //if (SETTINGS.POWERSAVE_AUX>PWR_PROGRAM_ON)   disable_AUX();
 
     if (!move_with_acceleration)
     {
@@ -531,8 +531,8 @@ void PanoLoop ()
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     EEPROM_STORED.Program_Engaged = false;
-    if (SETTINGS.POWERSAVE_PT > 1)   disable_PT(); //  low, standard, high, we power down at the end of program
-    if (SETTINGS.POWERSAVE_AUX > 1)  disable_AUX(); // low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+    if (SETTINGS.POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(2000);
     EEPROM_STORED.progstep = 290;
     FLAGS.redraw = true;

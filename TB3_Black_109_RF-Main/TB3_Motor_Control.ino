@@ -760,6 +760,6 @@ void go_to_start_new() // interrupt routine
 	} //end of three point calcs
 
 	//We don't know how long we will be waiting - go to powersave.
-	if (SETTINGS.POWERSAVE_PT > 2  && SETTINGS.sequence_repeat_type) disable_PT(); //don't powersave for continuous
-	if (SETTINGS.POWERSAVE_AUX > 2 && SETTINGS.sequence_repeat_type) disable_AUX(); //don't powersave for continuous
+	if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON  && SETTINGS.sequence_repeat_type) disable_PT(); //don't powersave for continuous
+	if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON && SETTINGS.sequence_repeat_type) disable_AUX(); //don't powersave for continuous
 }
