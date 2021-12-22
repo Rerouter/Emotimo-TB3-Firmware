@@ -150,8 +150,10 @@ void Pano_Paused_Menu()
       uint32_t intcamerafired_last = intcamerafired;
   
       intcamerafired -= joy_capture3(0);
-      if (intcamerafired > 60000)                    { intcamerafired = camera_total_shots; }
-      else if (intcamerafired > camera_total_shots)  { intcamerafired = 0;  }
+      uint16_t maxval = camera_total_shots;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (intcamerafired > overflowval)  { intcamerafired = maxval; }
+      else if (intcamerafired > maxval)  { intcamerafired = 0;  }
 
       if (intcamerafired_last != intcamerafired) {
         DisplayGoToPanoShot(intcamerafired);
@@ -165,8 +167,10 @@ void Pano_Paused_Menu()
       uint32_t intstatic_tm_last = intstatic_tm;
   
       intstatic_tm -= joy_capture3(0);
-      if (!intstatic_tm || intstatic_tm > 60000)  { intstatic_tm = max_shutter; }
-      else if (intstatic_tm > max_shutter)        { intstatic_tm = 1; }
+      uint16_t maxval = max_shutter;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (!intstatic_tm || intstatic_tm > overflowval)  { intstatic_tm = maxval; }
+      else if (intstatic_tm > maxval)                   { intstatic_tm = 1; }
     
       if (intstatic_tm_last != intstatic_tm) {
         DisplayStatic_tm(intstatic_tm);

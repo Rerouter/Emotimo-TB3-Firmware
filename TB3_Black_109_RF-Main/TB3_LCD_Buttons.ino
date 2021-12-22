@@ -185,7 +185,7 @@ void Choose_Program()
   
           case PANOGIGA:   //Pano Beta
             REVERSE_PROG_ORDER = false;
-            Trigger_Type = Static_Time_Trigger;//default this for static time selection
+            Trigger_Type = Static_Time_Trigger; // default this for static time selection
             interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
             progstep_goto(201);
             break;
@@ -486,11 +486,11 @@ void button_actions_move_x(uint8_t Point)
           lcd.empty();
           lcd.at (1, 5, "AOV Set");
         }
-        if (progstep == 204) //pano - calculate other values UD050715
+        else if (progstep == 204) //pano - calculate other values UD050715
         {
           calc_pano_move();
         }
-        if (progstep == 303) // PORTRAITPANO Method UD050715
+        else if (progstep == 303) // PORTRAITPANO Method UD050715
         {
           lcd.empty();
           lcd.at (1, 4, "Center Set");
@@ -531,7 +531,7 @@ void Set_Cam_Interval()
     lcd.empty();
     draw(18, 1, 1); //lcd.at(1,1,"Intval:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    DisplayInterval();
+    DisplayInterval(Trigger_Type);
     redraw = false;
   }
 
@@ -543,11 +543,13 @@ void Set_Cam_Interval()
     NunChuckProcessData();
     
     Trigger_Type += joy_capture3(1);
-    if (Trigger_Type > 60000)       { Trigger_Type = 36000; }
-    else if (Trigger_Type > 36000)  { Trigger_Type = 0;     }
+    uint16_t maxval = max_shutter;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!Trigger_Type || Trigger_Type > overflowval) { Trigger_Type = maxval; }
+    else if (Trigger_Type > maxval)                  { Trigger_Type = 1; }
     
     if (Trigger_Type_last != Trigger_Type) {
-      DisplayInterval();
+      DisplayInterval(Trigger_Type);
       delay(prompt_delay);
     }
     button_actions_intval();  //read buttons, look for c button press to set interval
@@ -555,39 +557,39 @@ void Set_Cam_Interval()
 }
 
 
-void DisplayInterval()
+void DisplayInterval(uint16_t shot_time)
 {
-  if (Trigger_Type == External_Trigger) //run the Ext
+  switch(shot_time)
   {
-    draw(19, 1, 8); //lcd.at(1,8," Ext.Trig");
+    case External_Trigger: draw(19, 1, 8);          break; //lcd.at(1,8," Ext.Trig");
+    case Button_Trigger:   lcd.at(1, 8, " Button"); break;
+    case Video_Trigger:    draw(20, 1, 8);          break; //lcd.at(1,8," Video   ");
+    default: shot_time -= 3;
   }
-  else if (Trigger_Type == Video_Trigger) //run the video routine
-  {
-    draw(20, 1, 8); //lcd.at(1,8," Video   ");
-  }
-  else if (Trigger_Type < 10)
+
+  if (shot_time < 10)
   {
     lcd.at(1, 13, " sec");
     lcd.at(1, 8, "  0.");
-    lcd.at(1, 10, Trigger_Type / 10);
-    lcd.at(1, 12, Trigger_Type % 10);
+    lcd.at(1, 10, shot_time / 10);
+    lcd.at(1, 12, shot_time % 10);
   }
-  else if (Trigger_Type < 100)
+  else if (shot_time < 100)
   {
     lcd.at(1, 8, "  ");
-    lcd.at(1, 10, Trigger_Type / 10);
-    lcd.at(1, 12, Trigger_Type % 10);
+    lcd.at(1, 10, shot_time / 10);
+    lcd.at(1, 12, shot_time % 10);
   }
-  else if (Trigger_Type < 1000)
+  else if (shot_time < 1000)
   {
     lcd.at(1, 8, " ");
-    lcd.at(1, 9, Trigger_Type / 10);
-    lcd.at(1, 12, Trigger_Type % 10);
+    lcd.at(1, 9, shot_time / 10);
+    lcd.at(1, 12, shot_time % 10);
   }
   else
   {
-    lcd.at(1, 8, Trigger_Type / 10);
-    lcd.at(1, 12, Trigger_Type % 10);
+    lcd.at(1, 8, shot_time / 10);
+    lcd.at(1, 12, shot_time % 10);
   }
 }
 
@@ -598,17 +600,11 @@ void button_actions_intval()
   {
     case C_Pressed:
     {
-      uint16_t video_sample_ms = 100; //
-      interval = Trigger_Type * 100; //tenths of a second to ms
-      //camera_exp_tm = 100;
-      if (Trigger_Type == External_Trigger) //means ext trigger
+      switch (External_Trigger)
       {
-        interval = 6000; //Hardcode this to 6.0 seconds are 10 shots per minute to allow for max shot selection
-      }
-      else if (Trigger_Type == Video_Trigger) //means video, set very small exposure time
-      {
-        //camera_exp_tm=5; //doesn't matter, we never call the shutter
-        interval = video_sample_ms; //we overwrite this later based on move length currently 100
+        case External_Trigger:  interval = max_shutter * 100;  break;  // Hardcode this to 60 seconds are 1 shots per minute to allow for max shot selection
+        case Video_Trigger:     interval = 100;                break;  // means video, set very small exposure time
+        default:                interval = (Trigger_Type - 3) * 100;   // tenths of a second to ms, subtracting the trigger modes so time between moves can go down to 0.1 seconds
       }
 
       lcd.empty();
@@ -636,7 +632,7 @@ void Set_Duration() //This is really setting frames
     delay(prompt_time);
     lcd.empty();
     draw(34, 1, 10); //lcd.at(1,9,"H:MM:SS");
-    if ((Trigger_Type > 3) || (Trigger_Type == External_Trigger))
+    if (Trigger_Type >= External_Trigger)
     {
       lcd.at(2, 11, "Frames"); //SMS
       camera_total_shots = camera_moving_shots;
@@ -662,8 +658,10 @@ void Set_Duration() //This is really setting frames
     { //video
       uint16_t overaldur_last = overaldur;
       overaldur += joy_capture3(1);
-      if (!overaldur || overaldur > 60000) { overaldur = 10000; }
-      else if (overaldur > 10000)          { overaldur = 1;  }
+      uint16_t maxval = 10000;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (!overaldur || overaldur > overflowval) { overaldur = maxval; }
+      else if (overaldur > maxval)               { overaldur = 1;  }
       
       if (overaldur_last != overaldur)
       {
@@ -676,8 +674,10 @@ void Set_Duration() //This is really setting frames
     { //sms
       uint32_t camera_moving_shots_last = camera_moving_shots;
       camera_moving_shots += joy_capture3(1);
-      if (camera_moving_shots < 10 || camera_moving_shots > 60000) { camera_moving_shots = 10000; }
-      else if (camera_moving_shots > 10000)                        { camera_moving_shots = 10;  }
+      uint16_t maxval = 10000;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (camera_moving_shots < 10 || camera_moving_shots > overflowval) { camera_moving_shots = maxval; }
+      else if (camera_moving_shots > maxval)                             { camera_moving_shots = 10;  }
       
       camera_total_shots = camera_moving_shots; //we add in lead in lead out later
       if (camera_moving_shots_last != camera_moving_shots) {
@@ -696,7 +696,7 @@ void Display_Duration()
   calc_time_remain(total_pano_move_time);
   display_time(1, 1);
 
-  if ((Trigger_Type > 3) || (Trigger_Type == External_Trigger))
+  if (Trigger_Type >= External_Trigger)
   {
     if (camera_total_shots < 100)
     {
@@ -750,7 +750,7 @@ void Set_Static_Time()
     draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     max_shutter = Trigger_Type - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
-    if (Trigger_Type == External_Trigger) max_shutter = 600; //external trigger = 60.0 Seconds
+    if (Trigger_Type == External_Trigger) max_shutter = 600; //external trigger = 60.0 Seconds7
     if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano modes = 3600.0 Seconds
     DisplayStatic_tm(static_tm);
     redraw = false;
@@ -763,8 +763,10 @@ void Set_Static_Time()
     NunChuckProcessData();
 
     static_tm += joy_capture3(1);
-    if (!static_tm || static_tm > 60000) { static_tm = max_shutter; }
-    else if (static_tm > max_shutter)    { static_tm = 1; }
+    uint16_t maxval = max_shutter;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!static_tm || static_tm > overflowval) { static_tm = maxval; }
+    else if (static_tm > maxval)               { static_tm = 1; }
     
     if (static_tm_last != static_tm) {
       DisplayStatic_tm(static_tm);
@@ -861,8 +863,10 @@ void Set_Ramp()
     NunChuckProcessData();
     
     rampval += joy_capture3(1);
-    if (!rampval || rampval > 60000) { rampval = 10000; }
-    else if (rampval > 10000)        { rampval = 1;  }
+    uint16_t maxval = 10000;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!rampval || rampval > overflowval) { rampval = maxval; }
+    else if (rampval > maxval)             { rampval = 1;  }
   
     if ( rampval * 3 > camera_moving_shots ) {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
       rampval = camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
@@ -949,8 +953,10 @@ void DisplayLeadIn_LeadOut()
     lcd.cursorOff();
     
     lead_in += joy_capture3(1);
-    if (!lead_in || lead_in > 60000) { lead_in = 5000; }
-    else if (lead_in > 5000)         { lead_in = 1;    }
+    uint16_t maxval = 5000;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!lead_in || lead_in > overflowval) { lead_in = maxval; }
+    else if (lead_in > maxval)             { lead_in = 1;    }
     delay(prompt_delay);
     
     lcd.at(1, 1, lead_in);
@@ -958,10 +964,10 @@ void DisplayLeadIn_LeadOut()
     if (lead_in < 10)   {
       lcd.at(1, 2, "   ");
     }
-    if (lead_in < 100)  {
+    else if (lead_in < 100)  {
       lcd.at(1, 3, "  ");
     }
-    if (lead_in < 1000) {
+    else if (lead_in < 1000) {
       lcd.at(1, 4, " ");
     }
     lcd.cursorBlock();
@@ -971,8 +977,10 @@ void DisplayLeadIn_LeadOut()
     lcd.cursorOff();
     
     lead_out += joy_capture3(1);
-    if (!lead_out || lead_out > 60000) { lead_out = 5000; }
-    else if (lead_out > 5000)          { lead_out = 1;    }
+    uint16_t maxval = 5000;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!lead_out || lead_out > overflowval) { lead_out = maxval; }
+    else if (lead_out > maxval)              { lead_out = 1;    }
     delay(prompt_delay);
 
     lcd.at(1, 9, lead_out);
@@ -980,10 +988,10 @@ void DisplayLeadIn_LeadOut()
     if (lead_out < 10)   {
       lcd.at(1, 10, "   ");
     }
-    if (lead_out < 100)  {
+    else if (lead_out < 100)  {
       lcd.at(1, 11, "  ");
     }
-    if (lead_out < 1000) {
+    else if (lead_out < 1000) {
       lcd.at(1, 12, " ");
     }
     lcd.cursorBlock();
@@ -1108,8 +1116,7 @@ void Calculate_Shot() //this used to reside in LeadInLeadout, but now pulled.
 
 void Review_Confirm()
 {
-  if (redraw)
-  {
+  if (redraw) {
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
@@ -1121,8 +1128,7 @@ void Review_Confirm()
     redraw = false;
   }
 
-  if ((millis() - display_last_tm) > (prompt_time * 4))
-  { //test for display update
+  if ((millis() - display_last_tm) > (prompt_time * 4)) { //test for display update
     //if ((millis()-diplay_last_tm) >(700)){ //test for display update
 
     reviewprog ++;
@@ -1137,8 +1143,7 @@ void Review_Confirm()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    if (joy_y_axis)
-    { //do read time updates to delay program
+    if (joy_y_axis) { //do read time updates to delay program
       reviewprog = 4;
       DisplayReviewProg();
       delay (prompt_delay);
@@ -1178,8 +1183,7 @@ void DisplayReviewProg()
 
     case 4:   //
       //lcd.empty();
-      if (redraw2)
-      {
+      if (redraw2) {
         lcd.at(1, 1, "Set Start Delay");
         lcd.at(2, 1, "			");
         draw(34, 2, 10); //lcd.at(2,10,"H:MM:SS");
@@ -1187,6 +1191,8 @@ void DisplayReviewProg()
       }
       // Clip it down to a uint16_t
       start_delay_sec += joy_capture3(1);
+      uint16_t maxval = max_shutter;
+      uint16_t overflowval = max(maxval + 100, 65400);
       if (start_delay_sec > 60000)       { start_delay_sec = 36000; }
       else if (start_delay_sec > 36000)  { start_delay_sec = 0;     }
       delay(prompt_delay);
@@ -1216,14 +1222,15 @@ void button_actions_review()
       {
         //enter delay routine
         calc_time_remain_start_delay ();
-        if ((millis() - display_last_tm) > 1000) display_time(2, 1);
+        if ((millis() - display_last_tm) > 1000) {
+          display_time(2, 1);
+        }
 
         if ((millis() - NClastread) > NCdelay) {
           NClastread = millis();
           NunChuckRequestData();
           NunChuckProcessData();
-          if (HandleButtons() == CZ_Held && !Program_Engaged)
-          {
+          if (HandleButtons() == CZ_Held && !Program_Engaged) {
             start_delay_tm = ((millis() / 1000L) + 5); //start right away by lowering this to 5 seconds.
           }
         }
@@ -1231,11 +1238,6 @@ void button_actions_review()
 
       enable_PanTilt();
       if (AUX_ON) enable_AUX();  //
-
-      //draw(49,1,1);//lcd.at(1,1,"Program Running");
-      //delay(prompt_time/3);
-
-      if (Trigger_Type == External_Trigger)  lcd.at(2, 1, "Waiting for Man.");
 
       Program_Engaged = true;
       Interrupt_Fire_Engaged = true; //just to start off first shot immediately
@@ -1246,8 +1248,7 @@ void button_actions_review()
         lcd.empty(); //clear for non video
         progstep = 50; //  move to the main programcamera_real_fire
       }
-      else if (Trigger_Type == Video_Trigger)
-      {
+      else if (Trigger_Type == Video_Trigger)  {
         lcd.empty();
         draw(49, 1, 1); //lcd.at(1,1,"Program Running");
         progstep = 51;
@@ -1641,7 +1642,7 @@ void Enter_Aux_Endpoint()
     lcd.at(1, 1, "AuxDist:   .  In");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     aux_dist = current_steps.z * 10 / STEPS_PER_INCH_AUX; //t
-    DisplayAUX_Dist();
+    DisplayAUX_Dist(aux_dist);
     redraw = false;
   }
 
@@ -1657,7 +1658,7 @@ void Enter_Aux_Endpoint()
     //STEPS_PER_INCH_AUX
 
     if (aux_dist_last != aux_dist) {
-      DisplayAUX_Dist();
+      DisplayAUX_Dist(aux_dist);
       delay (prompt_delay);
     }
 
@@ -1670,28 +1671,28 @@ void Enter_Aux_Endpoint()
 }
 
 
-void DisplayAUX_Dist()
+void DisplayAUX_Dist(int32_t distance)
 {
-  if (abs(aux_dist) < 10)
+  uint32_t abs_distance = abs(distance);
+  if (abs_distance < 10)
   {
     if (aux_dist < 0)   lcd.at(1, 9, " -0.");
-    else				lcd.at(1, 9, "  0.");
-    //lcd.at(1,10,aux_dist/10);
-    lcd.at(1, 13, abs(aux_dist % 10));
+    else				        lcd.at(1, 9, "  0.");
+    lcd.at(1, 13, abs_distance % 10);
   }
-  else if (abs(aux_dist) < 100)
+  else if (abs_distance < 100)
   {
     lcd.at(1, 9, "  ");
-    if (aux_dist < 0)   lcd.at(1, 10, aux_dist / 10);
-    else				lcd.at(1, 11, aux_dist / 10);
-    lcd.at(1, 13, abs(aux_dist % 10));
+    if (aux_dist < 0)   lcd.at(1, 10, distance / 10);
+    else				        lcd.at(1, 11, distance / 10);
+    lcd.at(1, 13, abs_distance % 10);
   }
-  else if (abs(aux_dist) < 1000)
+  else if (abs_distance < 1000)
   {
     lcd.at(1, 9, " ");
-    if (aux_dist < 0)   lcd.at(1, 9, aux_dist / 10);
-    else				lcd.at(1, 10, aux_dist / 10);
-    lcd.at(1, 13, abs(aux_dist % 10));
+    if (aux_dist < 0)   lcd.at(1, 9, distance / 10);
+    else				        lcd.at(1, 10, distance / 10);
+    lcd.at(1, 13, abs_distance % 10);
   }
 }
 

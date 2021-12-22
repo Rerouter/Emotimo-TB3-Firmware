@@ -670,7 +670,7 @@ void loop()
       default:
         lcd.at(1, 2, "Menu Error");
         delay(prompt_time);
-        progstep = 0;
+        ReturnToMenu();
     } //switch
   } // while
 } //loop

@@ -218,6 +218,4 @@ void goto_position(uint32_t gotoshot_temp)
 	stopISR1 ();
 
 	inprogtype=0; //set this to resume
-
-	return;
 }//end goto routine

@@ -25,6 +25,11 @@ void Program_Engaged_Toggle()	{  //used for pausing
 */
 
 
+static uint32_t smscamerafired;  // Internal variable to hold the current image in a panorama so we can edit it, and only apply it if we press throug
+static uint16_t smsstatic_tm;    // Internal variable to hold the current image firing time.
+
+
+
 void SMS_In_Shoot_Paused_Menu() //this runs once and is quick - not persistent
 {
   Program_Engaged = false; //toggle off the loop
@@ -66,15 +71,15 @@ void InProg_Select_Option()
 
       case INPROG_GOTO_FRAME:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
-        goto_shot = camera_fired;
-        DisplayGoToShot();
+        smscamerafired = camera_fired;
+        DisplayGoToShot(smscamerafired);
         break;
 
       case INPROG_INTERVAL:
         //draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
-        Trigger_Type = interval / 100;  // Convert from milliseconds to 0.1 second increments
+        smsstatic_tm = interval / 100;  // Convert from milliseconds to 0.1 second increments
         lcd.at(1, 1, "Intval:   .  sec");
-        DisplayInterval();
+        DisplayInterval(smsstatic_tm);
         break;
 
       case INPROG_STOPMOTION:
@@ -95,14 +100,16 @@ void InProg_Select_Option()
     case INPROG_GOTO_FRAME:
     {
       //read leftright values for the goto frames
-      uint32_t goto_shot_last = goto_shot;
+      uint32_t smscamerafired_last = smscamerafired;
   
-      goto_shot += joy_capture3(0);
-      if (!goto_shot || goto_shot > camera_total_shots + 100)  { goto_shot = camera_total_shots; }
-      else if (goto_shot > camera_total_shots)                 { goto_shot = 1; }
+      smscamerafired += joy_capture3(0);
+      uint16_t maxval = camera_total_shots;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (!smscamerafired || smscamerafired > maxval)  { smscamerafired = maxval; }
+      else if (smscamerafired > maxval)                { smscamerafired = 1; }
 
-      if (goto_shot_last != goto_shot) {
-        DisplayGoToShot();
+      if (smscamerafired_last != smscamerafired) {
+        DisplayGoToShot(smscamerafired);
         delay(prompt_delay);
       }
       break;
@@ -110,13 +117,15 @@ void InProg_Select_Option()
 
     case INPROG_INTERVAL:
       //read leftright values for the goto frames
-      uint16_t Trigger_Type_last = Trigger_Type;
+      uint16_t smsstatic_tm_last = smsstatic_tm;
   
-      Trigger_Type += joy_capture3(0);
-      if (Trigger_Type < 5 || Trigger_Type > 6000 + 100)  { Trigger_Type = 6000; }
-      else if (Trigger_Type > 6000)                       { Trigger_Type = 5; }
-      if (Trigger_Type_last != Trigger_Type) {
-        DisplayInterval();
+      smsstatic_tm += joy_capture3(0);
+      uint16_t maxval = max_shutter;
+      uint16_t overflowval = max(maxval + 100, 65400);
+      if (smsstatic_tm < 5 || smsstatic_tm > overflowval)  { smsstatic_tm = maxval; }
+      else if (smsstatic_tm > maxval)                      { smsstatic_tm = 5; }
+      if (smsstatic_tm_last != smsstatic_tm) {
+        DisplayInterval(smsstatic_tm);
         delay(prompt_delay);
       }
       break;
@@ -204,8 +213,8 @@ void button_actions_InProg_Select_Option()
         redraw = true;
         lcd.at(1, 4, "Going to");
         lcd.at(2, 4, "Frame:");
-        lcd.at(2, 11, goto_shot);
-        goto_position(goto_shot);
+        lcd.at(2, 11, smscamerafired);
+        goto_position(smscamerafired);
         inprogtype = INPROG_RESUME;
       }
       else if  (inprogtype == INPROG_INTERVAL) { //Change Interval and static time
@@ -214,11 +223,11 @@ void button_actions_InProg_Select_Option()
         uint32_t available_move_time = interval / 100 - static_tm; //this is the gap we keep interval isn't live
         //Serial.print("AMT:");Serial.println(available_move_time);
         if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-        interval = Trigger_Type * 100; //set the new ms timer for SMS
-        if (Trigger_Type > available_move_time)
+        interval = intstatic_tm * 100; //set the new ms timer for SMS
+        if (intstatic_tm > available_move_time)
         { //we can apply the gap
           //Serial.print("Trigger_Type-available_move_time pos: ");Serial.println(Trigger_Type-available_move_time);
-          static_tm = Trigger_Type - available_move_time;
+          static_tm = intstatic_tm - available_move_time;
           //Serial.print("static_tm= ");Serial.println(static_tm);
         }
         else  //squished it too much, go with minimum static time
@@ -232,10 +241,10 @@ void button_actions_InProg_Select_Option()
 }
 
 
-void DisplayGoToShot()
+void DisplayGoToShot(uint32_t image_count)
 {
-  lcd.at(1, 13, goto_shot);
-  if      (goto_shot < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
+  lcd.at(1, 13, image_count);
+  if      (image_count < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  else if (image_count < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
+  else if (image_count < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
 }

@@ -84,6 +84,7 @@ int8_t TopThird7by5 [36][2] = {{ 0, 0}, { 0,-1}, { 0,-2}, {-1,-2}, {-1,-1}, {-1,
                                { 3,-3}, { 2,-3}, { 1,-3}, { 0,-3}, {-1,-3}, {-2,-3}, {-2,-2}, {-2,-1}, {-2, 0}, {-2, 1},
                                {-3, 1}, {-3, 0}, {-3,-1}, {-3,-2}, {-3,-3}, { 0, 0}};
 
+
 void Set_angle_of_view()
 {
   if (redraw)
@@ -133,8 +134,7 @@ void Define_Overlap_Percentage()
     lcd.empty();
     draw(79, 1, 3); //lcd.at(1,2,"   % Overlap");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
-    //olpercentage=20;
-    Display_olpercentage();
+    Display_olpercentage(olpercentage);
     redraw = false;
     delay(prompt_time);
   }
@@ -152,7 +152,7 @@ void Define_Overlap_Percentage()
   
     if (olpercentage_last != olpercentage)
     {
-      Display_olpercentage();
+      Display_olpercentage(olpercentage);
       delay(prompt_delay);
     }
     button_actions_olpercentage();  //read buttons, look for c button press to set interval
@@ -160,18 +160,18 @@ void Define_Overlap_Percentage()
 }
 
 
-void Display_olpercentage()
+void Display_olpercentage(uint8_t overlap_percent)
 {
-  if (olpercentage < 10)
+  if (overlap_percent < 10)
   {
     lcd.at(1, 3, " "); //clear extra if goes from 3 to 2 or 2 to  1
-    lcd.at(1, 4, olpercentage);
+    lcd.at(1, 4, overlap_percent);
   }
   else
   {
-    lcd.at(1, 3, olpercentage);
+    lcd.at(1, 3, overlap_percent);
   }
-  // if (olpercentage<100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
+  // if (overlap_percent<100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
 }
 
 
@@ -179,13 +179,12 @@ void button_actions_olpercentage()
 {
   switch (HandleButtons())
   {
-    case C_Pressed: // looking for c button press
-      //perform all calcs based on Angle of view and percentage overlap
-      Pan_AOV_steps  = abs(current_steps.x); //Serial.println(Pan_AOV_steps);
-      Tilt_AOV_steps = abs(current_steps.y); //Serial.println(Tilt_AOV_steps);
+    case C_Pressed: // perform all calcs based on Angle of view and percentage overlap
+      Pan_AOV_steps  = abs(current_steps.x);
+      Tilt_AOV_steps = abs(current_steps.y);
   
-      steps_per_shot_max_x = Pan_AOV_steps  * (100 - olpercentage) / 100; //Serial.println(steps_per_shot_max_x);
-      steps_per_shot_max_y = Tilt_AOV_steps * (100 - olpercentage) / 100; //Serial.println(steps_per_shot_max_y);
+      steps_per_shot_max_x = Pan_AOV_steps  * (100 - olpercentage) / 100;
+      steps_per_shot_max_y = Tilt_AOV_steps * (100 - olpercentage) / 100;
       
       #if DEBUG_PANO
       Serial.print("steps_per_shot_max_x: "); Serial.println(steps_per_shot_max_x);
@@ -193,7 +192,7 @@ void button_actions_olpercentage()
       #endif
       
       lcd.empty();
-      draw(80, 1, 3); //lcd.at(1,3,"Overlap Set");
+      draw(80, 1, 3); // lcd.at(1,3,"Overlap Set");
       delay(prompt_time);
       progstep_forward();
       break;
@@ -207,12 +206,6 @@ void button_actions_olpercentage()
 
 void Set_PanoArrayType()
 {
-  /*
-    3x3,
-    7x3, 5x5 top third, 7x5 top third
-    int PanoArrayTypes=1; // 1 is 9 shot center, 2 is 25 shot center, 3 is SevenbyThree, 4 is NineByFive1, 5 is NineByFive2
-  */
-
   if (redraw)
   {
     lcd.empty();
@@ -231,8 +224,8 @@ void Set_PanoArrayType()
     total_pano_shots = total_shots_x * total_shots_y;
     camera_total_shots = total_pano_shots + 1; //set this to allow us to compare in main loops
     
-    redraw = false;
     delay(prompt_time);
+    redraw = false;
   }
 
   if ((millis() - NClastread) > NCdelay) {

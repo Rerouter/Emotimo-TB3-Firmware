@@ -134,7 +134,7 @@ void ShootMoveShoot()
     NunChuckProcessData();
     //if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged=true; // manual trigger
     //if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type>External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type > External_Trigger  && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
   }
 }
 
@@ -354,7 +354,7 @@ void ExternalTriggerLoop ()
     NunChuckRequestData();
     NunChuckProcessData();
     //if (HandleButtons() == CZ_Held && Trigger_Type == External_Trigger ) Interrupt_Fire_Engaged = true; // manual trigger
-    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type > External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
   }
 }
 
@@ -525,7 +525,7 @@ void PanoLoop ()
 
     // if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged=true; // manual trigger
     //if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type > External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-    if (HandleButtons() == CZ_Held && !Shot_Sequence_Started) Pano_Pause(); // Pause Panorama and be able to change settings
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started) Pano_Pause(); // Pause Panorama and be able to change settings
   }
 }
 
