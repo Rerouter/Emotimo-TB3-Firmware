@@ -25,7 +25,7 @@
 /*                                                                                                    */
 /*     on/off: display of characters, not backlight                                                   */
 /*                                                                                                    */
-/*     bright: backlight control, by GLOBAL.percentage                                                       */
+/*     bright: backlight control, by percentage                                                       */
 /*                                                                                                    */
 /*     scrolling: scrolling is slow because of the amount of time the LCD takes to redraw.            */
 /*     scrolling is persistant and moves the x-origin a single column at a time                       */

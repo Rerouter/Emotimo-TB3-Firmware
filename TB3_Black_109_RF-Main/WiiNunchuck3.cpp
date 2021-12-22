@@ -1,11 +1,11 @@
 /*
-  WiiNunchuck Library
-
-  This library (should) work with all official and third party nunchucks, including wireless ones.
-
-  Written by Grant Emsley - grant@emsley.ca - http://arduino.emsley.ca
-
-  Adapted from code at http://www.windmeadow.com/node/42
+* WiiNunchuck Library
+*
+* This library (should) work with all official and third party nunchucks, including wireless ones.
+*
+* Written by Grant Emsley - grant@emsley.ca - http://arduino.emsley.ca
+*
+* Adapted from code at http://www.windmeadow.com/node/42
 */
 
 #include <Arduino.h>

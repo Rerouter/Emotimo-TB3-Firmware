@@ -30,7 +30,7 @@ class WiiNunchuck3
 	public:
 		WiiNunchuck3(void);
 		bool getData(void);
-    void clearData(void);
+        void clearData(void);
 		void printData(void) const;
 		void init(bool);
 		bool zbutton(void) const;

@@ -60,9 +60,6 @@ void stopISR1 ()
 
 void Jogloop()
 {
-	//int32_t *ramValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
-	//int32_t *ramNotValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
-	
 	while (true) //short fast loop pull this out later
 	{
 		if (!nextMoveLoaded)		updateMotorVelocities2();
