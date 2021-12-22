@@ -24,10 +24,12 @@ unsigned int joy_x_lock_count = 0;
 
 uint8_t HandleButtons()
 {
+  static uint8_t held;
   static uint8_t last;
   switch (ButtonState)
   {
     case Released:
+      held = 0;
       last = Released;
       return Released;
       
@@ -40,10 +42,15 @@ uint8_t HandleButtons()
 
         case C_Pressed:
           last = C_Pressed;
-          return C_Held;
+          if (held < 250) held++;
+          if (held > HeldThreshold) return C_Held;
+          else                      return Read_Again;
 
         default:
+          held = 0;
+          last = C_Pressed;
           return Read_Again;
+          
       }
     case Z_Pressed:
       switch(last)
@@ -54,10 +61,15 @@ uint8_t HandleButtons()
 
         case Z_Pressed:
           last = Z_Pressed;
-          return Z_Held;
+          if (held < 250) held++;
+          if (held > HeldThreshold) return Z_Held;
+          else                      return Read_Again;
           
         default:
+          held = 0;
+          last = Z_Pressed;
           return Read_Again;
+          
       }
     case CZ_Pressed:
       switch(last)
@@ -68,9 +80,13 @@ uint8_t HandleButtons()
 
         case CZ_Pressed:
           last = CZ_Pressed;
-          return CZ_Held;
+          if (held < 250) held++;
+          if (held > HeldThreshold) return CZ_Held;
+          else                      return Read_Again;
 
        default:
+          held = 0;
+          last = CZ_Pressed;
           return Read_Again;
       }
     default:

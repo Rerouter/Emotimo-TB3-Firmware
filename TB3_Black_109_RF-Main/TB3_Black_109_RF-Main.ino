@@ -249,6 +249,7 @@ uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 65535;
 uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 65535;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
 boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
+uint8_t       HeldThreshold = 1; // Number of read events to recognise a button as held
 
 
 //control variable, no need to store in EEPROM - default and setup during shot
@@ -299,7 +300,7 @@ enum ButtonState : uint8_t {
 uint8_t ButtonState = Read_Again;
 
 uint32_t NClastread = 1000; //control variable for NC reads cycles
-uint32_t NCdelay = 5;       //milliseconds to wait before reading the joystick again
+uint32_t NCdelay = 10;       //milliseconds to wait before reading the joystick again
 
 //Stepper Setup
 uint32_t  feedrate_micros = 0;
@@ -585,6 +586,7 @@ void loop()
 
       case 250:  PanoLoop();                   break;  // loop for Pano
       case 290:  PanoEnd();                    break;  // finished up pano
+      case 299:  Pano_Paused_Menu();           break;
 
       //----------------------------------------------------------------------------------------------------------------------------
 
@@ -667,6 +669,8 @@ void loop()
 
       default:
         lcd.at(1, 2, "Menu Error");
+        delay(prompt_time);
+        progstep = 0;
     } //switch
   } // while
 } //loop

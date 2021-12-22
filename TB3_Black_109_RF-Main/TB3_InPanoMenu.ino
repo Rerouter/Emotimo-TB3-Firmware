@@ -29,21 +29,24 @@ uint16_t restore_progstep = 0;
 
 //In Program Menu Ordering
 
-#define PANO_OPTIONS  11
+#define PANO_OPTIONS  5
 enum panoprogtype : uint8_t {
-  PANO_RESUME       = 0,
-  PANO_GOTO_START   = 1,
-  PANO_GOTO_END     = 2,
-  PANO_GOTO_FRAME   = 3,
-  PANO_INTERVAL     = 4,
-  PANO_FOCUS_INT    = 5,
-  PANO_EXT_TRIGGER  = 6,
-  PANO_DETOUR       = 7,
-  PANO_AOV          = 8,
-  PANO_OVERLAP      = 9,
-  PANO_START_POINT  = 10,
-  PANO_END_POINT    = 11
+  PANO_RESUME,
+  PANO_GOTO_START,
+  PANO_GOTO_END,
+  PANO_GOTO_IMAGE,
+  PANO_SHUTTER_TIME,
+  //PANO_FOCUS_INT    = 5,
+  //PANO_EXT_TRIGGER  = 6,
+  //PANO_DETOUR       = 7,
+  //PANO_AOV          = 8,
+  //PANO_OVERLAP      = 9,
+  //PANO_START_POINT  = 10,
+  //PANO_END_POINT    = 11
 };
+
+static uint32_t intcamerafired;  // Internal variable to hold the current image in a panorama so we can edit it, and only apply it if we press throug
+static uint16_t intstatic_tm;    // Internal variable to hold the current image firing time.
 
 void Pano_Pause() //this runs once and is quick - not persistent
 {
@@ -77,100 +80,97 @@ void Pano_Paused_Menu()
     switch(panoprogtype)
     {
       case PANO_RESUME:
-        draw(86, 1, 6); //lcd.at(1,6,"Resume");
+        draw(86, 1, 5); //lcd.at(1,6,"Resume");
         break;
 
       case PANO_GOTO_START:
-        draw(87, 1, 6); //lcd.at(1,6,"Restart");
+        draw(87, 1, 5); //lcd.at(1,6,"Restart");
         break;
 
       case PANO_GOTO_END:
-        draw(89, 1, 5); //lcd.at(1,5,"Go to End");
+        draw(89, 1, 4); //lcd.at(1,5,"Go to End");
         break;
 
-      case PANO_GOTO_FRAME:
+      case PANO_GOTO_IMAGE:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
-        goto_shot = camera_fired;
-        DisplayGoToPanoShot();
+        intcamerafired = camera_fired;
+        DisplayGoToPanoShot(intcamerafired);
         break;
 
-      case PANO_INTERVAL:
-        //draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
-        Trigger_Type = interval / 100;  // Convert from milliseconds to 0.1 second increments
-        lcd.at(1, 1, "Intval:   .  sec");
-        DisplayInterval();
+      case PANO_SHUTTER_TIME:
+        draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
+        intstatic_tm = static_tm;
+        DisplayStatic_tm(intstatic_tm);
         break;
 
-      case PANO_FOCUS_INT:
-        lcd.at(1,1,"Change FocusTime");
-        break;
-
-      case PANO_EXT_TRIGGER:
-        lcd.at(1,1,"Change Ext_Trig");
-        break;
-
-      case PANO_DETOUR:
-        lcd.at(1,1,"Detour Mid Shot");
-        break;
-
-      case PANO_AOV:
-        lcd.at(1,1,"Change AOV");
-        break;
-
-      case PANO_OVERLAP:
-        lcd.at(1,1,"Change Overlap");
-        break;
-
-      case PANO_START_POINT:
-        lcd.at(1,1,"Change Start Pos");
-        break;
-
-      case PANO_END_POINT:
-        lcd.at(1,1,"Change End Pos");
-        break;
+//      case PANO_FOCUS_INT:
+//        lcd.at(1,1,"Change FocusTime");
+//        break;
+//
+//      case PANO_EXT_TRIGGER:
+//        lcd.at(1,1,"Change Ext_Trig");
+//        break;
+//
+//      case PANO_DETOUR:
+//        lcd.at(1,1,"Detour Mid Shot");
+//        break;
+//
+//      case PANO_AOV:
+//        lcd.at(1,1,"Change AOV");
+//        break;
+//
+//      case PANO_OVERLAP:
+//        lcd.at(1,1,"Change Overlap");
+//        break;
+//
+//      case PANO_START_POINT:
+//        lcd.at(1,1,"Change Start Pos");
+//        break;
+//
+//      case PANO_END_POINT:
+//        lcd.at(1,1,"Change End Pos");
+//        break;
 
       default:
         panoprogtype = 0;
     }
 
     lcd.at(2, 1, "UpDown  C-Select");
-    redraw = false;
     if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
     if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
     delay(prompt_time);
-
+    redraw = false;
   } //end first time
     
   switch(panoprogtype)
   {
-    case PANO_GOTO_FRAME:
+    case PANO_GOTO_IMAGE:
     {
       //read leftright values for the goto frames
-      uint32_t goto_shot_last = goto_shot;
+      uint32_t intcamerafired_last = intcamerafired;
   
-      goto_shot += joy_capture_x3();
-      if (goto_shot < 1) {
-        goto_shot = 1;
-        delay(prompt_time / 2);
-      }
-      else if (goto_shot > camera_total_shots) {
-        goto_shot = camera_total_shots;
-        delay(prompt_time / 2);
-      }
-      if (goto_shot_last != goto_shot) {
-        DisplayGoToPanoShot();
+      intcamerafired -= joy_capture_x3();
+      if (intcamerafired > 60000)                    { intcamerafired = camera_total_shots; }
+      else if (intcamerafired > camera_total_shots)  { intcamerafired = 0;  }
+
+      if (intcamerafired_last != intcamerafired) {
+        DisplayGoToPanoShot(intcamerafired);
+        delay(prompt_delay);
       }
       break;
     }
 
-    case PANO_INTERVAL:
+    case PANO_SHUTTER_TIME:
       //read leftright values for the goto frames
-      uint32_t Trigger_Type_last = Trigger_Type;
+      uint32_t intstatic_tm_last = intstatic_tm;
   
-      Trigger_Type += joy_capture_x3();
-      Trigger_Type = constrain(Trigger_Type, 5, 6000); //no limits, you can crunch static time
-      if (Trigger_Type_last != Trigger_Type) {
-        DisplayInterval();
+      intstatic_tm -= joy_capture_x3();
+      if (!intstatic_tm || intstatic_tm > 60000)  { intstatic_tm = max_shutter; }
+      else if (intstatic_tm > max_shutter)        { intstatic_tm = 1; }
+    
+      if (intstatic_tm_last != intstatic_tm) {
+        DisplayStatic_tm(intstatic_tm);
+        delay(prompt_delay);
       }
       break;
   }
@@ -185,7 +185,7 @@ void Pano_Paused_Menu()
     {
       case -1: // Up
         panoprogtype++;
-        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = (PANO_OPTIONS - 1);
+        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = 0;
         else
         {
           redraw = true;
@@ -194,7 +194,7 @@ void Pano_Paused_Menu()
   
       case 1: // Down
         panoprogtype--;
-        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = 0;
+        if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = (PANO_OPTIONS - 1);
         else
         {
           redraw = true;
@@ -202,109 +202,72 @@ void Pano_Paused_Menu()
         break;
     }
 
-     //button_actions_Pano_Paused_Menu();
+    button_actions_Pano_Paused_Menu();
   }
 }
 
 
-//void button_actions_Pano_Paused_Menu()
-//{
-//  switch (HandleButtons())
-//  {
-//    case C_Pressed:
-//      lcd.empty();
-//      switch(panoprogtype)
-//      {
-//        case PANO_RESUME:
-//          Pano_Resume();
-//          break;
-//
-//        case PANO_GOTO_START: //Return to restart the shot  - send to review screen of relative move
-//          REVERSE_PROG_ORDER = false;
-//          camera_fired = 0;
-//          lcd.bright(8);
-//          lcd.at(1, 2, "Going to Start");
-//          go_to_start_new();
-//          progstep_goto(206);
-//          break;
-//
-//        case PANO_GOTO_END:
-//          REVERSE_PROG_ORDER = true;
-//          camera_fired = 0;
-//          lcd.bright(8);
-//          lcd.at(1, 3, "Going to End");
-//          go_to_start_new();
-//          progstep_goto(206);
-//          break;
-//
-//        case PANO_GOTO_FRAME:
-//          FLAGS.redraw = true;
-//          lcd.at(1, 4, "Going to");
-//          lcd.at(2, 4, "Frame:");
-//          lcd.at(2, 11, GLOBAL.goto_shot);
-//          gotoposition(GLOBAL.goto_shot);
-//          panoprogtype = PANO_RESUME;
-//          break;
-//
-//        case PANO_FOCUS_INT:
-//          FLAGS.redraw = true;
-//          //look at current gap between interval and static time = available move time.
-//          uint32_t available_move_time = EEPROM_STORED.interval / 100 - EEPROM_STORED.static_tm; //this is the gap we keep interval isn't live
-//          //Serial.print("AMT:");Serial.println(available_move_time);
-//          if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-//          interval = intval * 100; //set the new ms timer for SMS
-//          if (intval > available_move_time)
-//          { //we can apply the gap
-//            //Serial.print("intval-available_move_time pos: ");Serial.println(EEPROM_STORED.intval-available_move_time);
-//            static_tm = EEPROM_STORED.intval - available_move_time;
-//            //Serial.print("static_tm= ");Serial.println(static_tm);
-//          }
-//          else  //squished it too much, go with minimum static time
-//          {
-//            EEPROM_STORED.static_tm = 1;
-//          }
-//          panoprogtype = PANO_RESUME;
-//          break;
-//  
-//        case PANO_EXT_TRIGGER:
-//          lcd.at(1,1,"Change Ext_Trig");
-//          break;
-//  
+void button_actions_Pano_Paused_Menu()
+{
+  switch (HandleButtons())
+  {
+    case C_Pressed:
+      lcd.empty();
+      switch(panoprogtype)
+      {
+        case PANO_RESUME:
+          Pano_Resume();
+          break;
+
+        case PANO_GOTO_START: //Return to restart the shot  - send to review screen of relative move
+          camera_fired = camera_total_shots;
+          lcd.at(1, 2, "Going to Start");
+          delay(prompt_time);
+          Pano_Resume();
+          break;
+
+        case PANO_GOTO_END:
+          camera_fired = camera_total_shots;
+          lcd.at(1, 3, "Going to End");
+          delay(prompt_time);
+          Pano_Resume();
+          break;
+
+        case PANO_GOTO_IMAGE:
+          redraw = true;
+          lcd.at(1, 4, "Going to");
+          lcd.at(2, 4, "Frame:");
+          lcd.at(2, 11, intcamerafired);
+          camera_fired = intcamerafired;
+          //move_motors_pano_accel();
+          panoprogtype = PANO_RESUME;
+          break;
+
+        case PANO_SHUTTER_TIME:
+          redraw = true;
+          lcd.at(1, 4, "Updated to");
+          lcd.at(2, 4, "Seconds:");
+          lcd.at(2, 9, intcamerafired/10);
+          static_tm = intstatic_tm;
+          panoprogtype = PANO_RESUME;
+          break;
+
 //        case PANO_DETOUR:
 //          lcd.at(1,1,"Detour Mid Shot");
 //          break;
-//  
-//        case PANO_AOV:
-//          Set_angle_of_view();
-//          break;
-//
-//        case PANO_OVERLAP:
-//          Set_angle_of_view();
-//          break;
-//  
-//        case PANO_START_POINT:
-//          lcd.at(1,1,"Change Start Pos");
-//          break;
-//  
-//        case PANO_END_POINT:
-//          lcd.at(1,1,"Change End Pos");
-//          break;
-//      }
-//      break;
-//    case Z_Pressed:
-//      //progtype=0;
-//      //progstep_goto(0);
-//      delay(1);
-//      break;
-//  }
-//}
+      }
+      break;
+    case Z_Pressed:
+      break;
+  }
+}
 
 
-void DisplayGoToPanoShot()
+void DisplayGoToPanoShot(uint32_t image_count)
 {
-  lcd.at(1, 13, goto_shot);
-  if      (goto_shot < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
-  else if (goto_shot < 10000) lcd.at(1, 16, "");    //clear extra if goes from 3 to 2 or 2 to 1
+  lcd.at(1, 13, image_count);
+  if      (image_count < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  else if (image_count < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
+  else if (image_count < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
+  else if (image_count < 10000) lcd.at(1, 16, "");    //clear extra if goes from 3 to 2 or 2 to 1
 }

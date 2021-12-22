@@ -444,7 +444,7 @@ void button_actions_move_x(uint8_t Point)
         if (progstep == 201 || progstep == 301)  set_position(0, 0, 0);
         break;
             
-    case C_Pressed:
+    case C_Held:
         //begin to stop the motors
         //this puts input to zero to allow a stop
         NunChuckClearData();
@@ -495,7 +495,7 @@ void button_actions_move_x(uint8_t Point)
         break;
      
 
-    case Z_Pressed:
+    case Z_Held:
         //this puts input to zero to allow a stop
         NunChuckClearData();
   
@@ -746,7 +746,7 @@ void Set_Static_Time()
     max_shutter = Trigger_Type - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
     if (Trigger_Type == External_Trigger) max_shutter = 600; //external trigger = 60.0 Seconds
     if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano modes = 3600.0 Seconds
-    DisplayStatic_tm();
+    DisplayStatic_tm(static_tm);
     redraw = false;
   }
 
@@ -757,11 +757,11 @@ void Set_Static_Time()
     NunChuckProcessData();
 
     static_tm += joy_capture3();
-    if (!static_tm || static_tm > 60000) { static_tm = 36000; }
-    else if (static_tm > 36000)          { static_tm = 1; }
+    if (!static_tm || static_tm > 60000) { static_tm = max_shutter; }
+    else if (static_tm > max_shutter)    { static_tm = 1; }
     
     if (static_tm_last != static_tm) {
-      DisplayStatic_tm();
+      DisplayStatic_tm(static_tm);
       delay(prompt_delay);
     }
     button_actions_stat_time();  //read buttons, look for c button press to set interval
@@ -769,39 +769,38 @@ void Set_Static_Time()
 }
 
 
-void DisplayStatic_tm()
+void DisplayStatic_tm(uint16_t static_time)
 {
   if (Trigger_Type == Video_Trigger)	draw(24, 1, 8); //lcd.at(1,8," Video   ");
 
-  else if (static_tm < 10)
+  else if (static_time < 10)
   {
-    lcd.at(1, 8, "  0.  ");
-    lcd.at(1, 10, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 8, " 0.   ");
+    lcd.at(1, 11, static_time % 10);
   }
   else if (static_tm < 100)
   {
-    lcd.at(1, 8, "   .  ");
-    lcd.at(1, 10, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 8, "  .   ");
+    lcd.at(1, 9, static_time / 10);
+    lcd.at(1, 11, static_time % 10);
   }
   else if (static_tm < 1000)
   {
     lcd.at(1, 8, "   .  ");
-    lcd.at(1, 9, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 9, static_time / 10);
+    lcd.at(1, 12, static_time % 10);
   }
   else if (static_tm < 10000)
   { 
-    lcd.at(1, 8, "   .  ");
-    lcd.at(1, 8, static_tm / 10);
-    lcd.at(1, 12, static_tm % 10);
+    lcd.at(1, 8, "    . ");
+    lcd.at(1, 9, static_tm / 10);
+    lcd.at(1, 13, static_tm % 10);
   }
   else
   {
     lcd.at(1, 8, "    . ");
-    lcd.at(1, 8, static_tm / 10);
-    lcd.at(1, 13, static_tm % 10);
+    lcd.at(1, 8, static_time / 10);
+    lcd.at(1, 13, static_time % 10);
   }
 }
 
@@ -820,6 +819,10 @@ void button_actions_stat_time()
 
     case Z_Pressed:
       progstep_backward();
+      break;
+
+    case CZ_Pressed:
+      static_tm = 1;
       break;
   }
 }
@@ -963,7 +966,7 @@ void DisplayLeadIn_LeadOut()
     
     lead_out += joy_capture3();
     if (!lead_out || lead_out > 60000) { lead_out = 5000; }
-    else if (lead_out > 5000)         { lead_out = 1;    }
+    else if (lead_out > 5000)          { lead_out = 1;    }
     delay(prompt_delay);
 
     lcd.at(1, 9, lead_out);

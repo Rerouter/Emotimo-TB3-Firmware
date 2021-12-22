@@ -88,7 +88,7 @@ const char setup_84[] PROGMEM = "Panorama";
 const char setup_85[] PROGMEM = "AuxDistance";
 const char setup_86[] PROGMEM = "Resume";
 const char setup_87[] PROGMEM = "Restart";
-const char setup_88[] PROGMEM = "Go to Frame";
+const char setup_88[] PROGMEM = "GoTo Frame:";
 const char setup_89[] PROGMEM = "Go to End";
 const char setup_90[] PROGMEM = "90";
 

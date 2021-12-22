@@ -95,8 +95,8 @@ void Set_angle_of_view()
     draw(76, 2, 2); //lcd.at(2,2,"C-Set, Z-Reset");
     delay(prompt_time);
     
-    current_steps.x = 0;
-    current_steps.y = 0;
+    current_steps.x = Pan_AOV_steps;
+    current_steps.y = Tilt_AOV_steps;
     
     lcd.empty();
     draw(77, 1, 1); //lcd.at(1,1,"Pan AOV: ");
