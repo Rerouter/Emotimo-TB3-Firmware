@@ -248,7 +248,7 @@ uint16_t      AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 
 uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 65535;
 uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 65535;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
-boolean       SERPENTINE; // 0=All rows start from same side, 1 = Rows alternate to minimise time
+boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
 
 
 //control variable, no need to store in EEPROM - default and setup during shot
@@ -382,16 +382,13 @@ volatile boolean nextMoveLoaded;  // Program flag for next move ready
 boolean maxVelLimit = false;      // Program Flag for motor speed limited
 uint8_t motorMoving = 0;          // Program Flag for motor moving
 
-
 //End of DFVars
-
 
 /*
 	=========================================
 	Setup functions
 	=========================================
 */
-
 
 void setup()
 {
@@ -507,25 +504,12 @@ void loop()
     switch (progstep)
     {
       //start of 2 point SMS/Video routine
-      case 0:   //
-        Choose_Program();
-        break;
-
-      case 1:   // Move to Start Point
-        Move_to_Startpoint(); //don't jump in this loop by accident
-        break;
-
-      case 2:   // Move to End Point
-        Move_to_Endpoint(); //don't jump in this loop by accident
-        break;
-
-      case 3: //  Set Camera Interval
-        Set_Cam_Interval();
-        break;
-
-      case 4: //
-        Set_Duration();
-        break;
+      
+      case 0:  Choose_Program();      break; 
+      case 1:  Move_to_Startpoint();  break;   // Move to Start Point
+      case 2:  Move_to_Endpoint();    break;  // Move to End Point
+      case 3:  Set_Cam_Interval();    break;  //  Set Camera Interval
+      case 4:  Set_Duration();        break;
 
       case 5: //  	    Static Time
         if (Trigger_Type == Video_Trigger) { //don't show this for video
@@ -535,9 +519,7 @@ void loop()
         else  Set_Static_Time(); //not needed for video
         break;
 
-      case 6: //
-        Set_Ramp();
-        break;
+      case 6:  Set_Ramp();            break;
 
       case 7: //  Lead in and lead out
         if (Trigger_Type == Video_Trigger) { //don't show this for video
@@ -560,53 +542,25 @@ void loop()
         else Set_Shot_Repeat();
         break;
 
-      case 9: //  review and confirm
-        Review_Confirm(); //also has the delay start options here
-        break;
+      case 9:  Review_Confirm();     break;  // review and confirm
+      
       //end of the two point move
 
       //-------------------------------------------------------------------------------------
 
       //start of the three point move
-      case 100:
-        Choose_Program();
-        break;
-
-      case 101:   // Move Point 0
-        Move_to_Point_X(0);
-        break;
-
-      case 102:   // Move Point 1
-        Move_to_Point_X(1);
-        break;
-
-      case 103:   // Move Point 2
-        Move_to_Point_X(2);
-        break;
-
-      case 104: //  Set Camera Interval
-        Set_Cam_Interval();
-        break;
-
-      case 105: //
-        Set_Duration();
-        break;
-
-      case 106: //
-        Set_Static_Time();
-        break;
-
-      case 107: //
-        Set_Ramp();
-        break;
-
-      case 108: //
-        Set_LeadIn_LeadOut();
-        break;
-
-      case 109: //  review and confirm
-        Review_Confirm();
-        break;
+      
+      case 100:  Choose_Program();      break;
+      case 101:  Move_to_Point_X(0);    break;  // Move Point 0
+      case 102:  Move_to_Point_X(1);    break;  // Move Point 1
+      case 103:  Move_to_Point_X(2);    break;  // Move Point 2
+      case 104:  Set_Cam_Interval();    break;  // Set Camera Interval
+      case 105:  Set_Duration();        break;
+      case 106:  Set_Static_Time();     break;
+      case 107:  Set_Ramp();            break;
+      case 108:  Set_LeadIn_LeadOut();  break;
+      case 109:  Review_Confirm();      break;  // review and confirm
+      
       //end of the three point move
 
       //----------------------------------------------------------------------------------------------------------------------
@@ -619,46 +573,18 @@ void loop()
       //Step 1 - Put a point in the upper right corner - set zeros, pan up and right to hit same point with lower left corner of viewfinder
       //Display values  - write to ram - use these values
 
-      case 200:  //
-        Choose_Program();
-        break;
-
-      case 201:  //
-        Move_to_Point_X(0); //move to sharp point
-        break;
-
-      case 202:  //
-        Set_angle_of_view();
-        break;
-
-      case 203:   //
-        Define_Overlap_Percentage();
-        break;
-
-      case 204:   //
-        Move_to_Point_X(0);
-        break;
-
-      case 205: //
-        Move_to_Point_X(1);
-        break;
-
-      case 206: //
-        Set_Static_Time();
-        break;
-
-      case 207: //
-        Pano_Review_Confirm();
-        break;
+      case 200:  Choose_Program();             break;
+      case 201:  Set_angle_of_view();          break;
+      case 202:  Define_Overlap_Percentage();  break;
+      case 203:  Move_to_Point_X(0);           break;
+      case 204:  Move_to_Point_X(1);           break;
+      case 205:  Set_Static_Time();            break;
+      case 206:  Pano_Review_Confirm();        break;
+      
       //end of Pano Mode
 
-      case 250:  // loop for Pano
-        PanoLoop();
-        break; //break 250
-
-      case 290: //  finished up pano
-        PanoEnd();
-        break;  // break 90
+      case 250:  PanoLoop();                   break;  // loop for Pano
+      case 290:  PanoEnd();                    break;  // finished up pano
 
       //----------------------------------------------------------------------------------------------------------------------------
 
@@ -670,116 +596,45 @@ void loop()
       //Step 1 - Put a point in the upper right corner - set zeros, pan up and right to hit same point with lower left corner of viewfinder
       //Display values  - write to ram - use these values
 
-      case 300:  //
-        Choose_Program();
-        break;
-
-      case 301:  //
-        Move_to_Point_X(0); //move to sharp point
-        break;
-
-      case 302:  //
-        Set_angle_of_view();
-        break;
-
-      case 303:   //
-        Define_Overlap_Percentage();
-        break;
-
-      case 304:   //
-        Move_to_Point_X(0);  //set subject point
-        break;
-
-      case 305: //
-        Set_PanoArrayType();   //this sets variable that define how we move camera - load the appropriate array.
-        break;
-
-      case 306: //
-        Set_Static_Time();
-        break;
-
-      case 307: //
-        Pano_Review_Confirm();
-        break;
+      case 300:  Choose_Program();             break;
+      case 301:  Set_angle_of_view();          break;
+      case 302:  Define_Overlap_Percentage();  break;
+      case 303:  Move_to_Point_X(0);           break;  // set subject point
+      case 304:  Set_PanoArrayType();          break;  // this sets variable that define how we move camera - load the appropriate array.
+      case 305:  Set_Static_Time();            break;
+      case 306:  Pano_Review_Confirm();        break;
+      
       //end of Pano Mode
 
       //------------------------------------------------------------------------------------------------------------------
 
       //start of entered distance on aux mode
-      case 400:   //
-        Choose_Program();
-        break;
-
-      case 401:   // Move to Start Point
-        Move_to_Startpoint();
-        break;
-
-      case 402:   // Move to End Point
-        Enter_Aux_Endpoint();
-        break;
-
-      case 403: //  Set Camera Interval
-        Set_Cam_Interval();
-        break;
-
-      case 404: //
-        Set_Duration();
-        break;
-
-      case 405: //
-        Set_Static_Time();
-        break;
-
-      case 406: //
-        Set_Ramp();
-        break;
-
-      case 407: //
-        Set_LeadIn_LeadOut();
-        break;
-
-      case 408: //  review and confirm
-        Review_Confirm();
-        break;
+      
+      case 400:  Choose_Program();        break;
+      case 401:  Move_to_Startpoint();    break;  // Move to Start Point
+      case 402:  Enter_Aux_Endpoint();    break;  // Move to End Point
+      case 403:  Set_Cam_Interval();      break;  // Set Camera Interval
+      case 404:  Set_Duration();          break;
+      case 405:  Set_Static_Time();       break;
+      case 406:  Set_Ramp();              break;
+      case 407:  Set_LeadIn_LeadOut();    break;
+      case 408:  Review_Confirm();        break;  // review and confirm
 
       //end entered distance mode
 
       //--------------------------------------------------------------------------------------------------------------
 
       //start of setup
-
-      case 901:   // AUX_ON
-        Setup_AUX_ON();
-        break;
-
-      case 902:   // PAUSE_ENABLED
-        Setup_PAUSE_ENABLED();
-        break;
-
-      case 903:   // POWERSAVE_PT
-        Setup_POWERSAVE_PT();
-        break;
-
-      case 904: //  POWERSAVE_AUX
-        Setup_POWERSAVE_AUX();
-        break;
-
-      case 905: //  LCD Bright
-        Setup_LCD_BRIGHTNESS_DURING_RUN();
-        break;
-
-      case 906: //  Aux Motor Max Speed
-        Setup_Max_AUX_Motor_Speed();
-        break;
-
-      case 907: //  LCD Bright
-        Setup_AUX_Motor_DIR();
-        break;
-
-      case 908: //  Exit
-        ReturnToMenu();
-        break;
-
+      
+      case 901:  Setup_AUX_ON();                     break;  // AUX_ON
+      case 902:  Setup_PAUSE_ENABLED();              break;  // PAUSE_ENABLED
+      case 903:  Setup_POWERSAVE_PT();               break;  // POWERSAVE_PT
+      case 904:  Setup_POWERSAVE_AUX();              break;  // POWERSAVE_AUX
+      case 905:  Setup_LCD_BRIGHTNESS_DURING_RUN();  break;  // LCD Bright
+      case 906:  Setup_Max_AUX_Motor_Speed();        break;  // Aux Motor Max Speed
+      case 907:  Setup_AUX_Motor_DIR();              break;  // LCD Bright
+      case 908:  ReturnToMenu();                     break;  // Exit
+      
       //end of setup
 
       //-----------------------------------------------------------------------------------------------------
@@ -814,4 +669,4 @@ void loop()
         lcd.at(1, 2, "Menu Error");
     } //switch
   } // while
-} //loop[
+} //loop

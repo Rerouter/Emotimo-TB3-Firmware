@@ -323,7 +323,6 @@ void go_to_origin_max_speed() // interrupt routine
 
 	synched3PtMove_max(0, 0, 0);
 
-
 	#if DEBUG_MOTOR
 	Serial.println("motors[0].position:" + motors[0].position);
 	Serial.println("motors[1].position:" + motors[1].position);
@@ -347,7 +346,6 @@ void go_to_origin_max_speed() // interrupt routine
 		}
 	}
 	while (motorMoving);
-	//delay(10000);
 	stopISR1 ();
 
 	//this is making sure position is keeping up and accurate with granular steps
@@ -398,7 +396,6 @@ void go_to_origin_slow() // interrupt routine
 		}
 	}
 	while (motorMoving);
-	//delay(10000);
 	stopISR1 ();
 
 	//this is making sure position is keeping up and accurate with granular steps

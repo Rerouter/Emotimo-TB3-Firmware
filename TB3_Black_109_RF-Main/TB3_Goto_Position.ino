@@ -98,27 +98,27 @@ void goto_position(uint32_t gotoshot_temp)
 
 		if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
 		{  //3 point moves
-			if (camera_fired<keyframe[1][1]) { //Lead In
+			if (camera_fired < keyframe[1][1]) { //Lead In
 				Move_State_3PT = LeadIn3PT;
 				percent = 0.0;
 				if (DEBUG_GOTO) Serial.print("LeadIn: " + String(percent));
 			}	   
-			else if (camera_fired<keyframe[1][2]) { //First Leg
+			else if (camera_fired < keyframe[1][2]) { //First Leg
 				Move_State_3PT = FirstLeg3PT;
 				percent = (camera_fired-keyframe[1][1]) / (keyframe[1][2] - keyframe[1][1]);
 				if (DEBUG_GOTO) Serial.print("Leg 1: " + String(percent));
 			}
-			else if (camera_fired<keyframe[1][3]) {  //Second Leg
+			else if (camera_fired < keyframe[1][3]) {  //Second Leg
 				Move_State_3PT = SecondLeg3PT;
 				percent = (camera_fired - keyframe[1][2]) / (keyframe[1][3] - keyframe[1][2]);
 				if (DEBUG_GOTO) Serial.print("Leg 2: " + String(percent));
 			}
-			//else if (camera_fired<keyframe[3]) {  //Third Leg
+			//else if (camera_fired < keyframe[3]) {  //Third Leg
 			// Move_State_3PT = ThirdLeg3PT;
 			// percent = (camera_fired - keyframe[2]) / keyframe[3] - keyframe[2];
 			//  if (DEBUG_GOTO) Serial.print("Leg 3: " + String(percent));
 			//}
-			else if (camera_fired<keyframe[1][4]) {  //Lead Out
+			else if (camera_fired < keyframe[1][4]) {  //Lead Out
 				Move_State_3PT = LeadOut3PT;
 				percent = 0;
 				if (DEBUG_GOTO) Serial.print("LeadOT: " + String(percent));
@@ -157,7 +157,7 @@ void goto_position(uint32_t gotoshot_temp)
 		//calculate feedrate - update this to be dynamic based on settle window
 
 		//VIDEO Loop
-		if ((progtype==REG2POINTMOVE || progtype==REV2POINTMOVE ||progtype==AUXDISTANCE) && (Trigger_Type==Video_Trigger)) { // must lock this down to be only 2point, not three
+		if ((progtype == REG2POINTMOVE || progtype == REV2POINTMOVE || progtype == AUXDISTANCE) && (Trigger_Type == Video_Trigger)) { // must lock this down to be only 2point, not three
 			feedrate_micros = calculate_feedrate_delay_video();
 			if (Move_State_2PT == Linear2PT) {
 				camera_fired += (keyframe[0][3] - keyframe[0][2]); //skip all the calcs mid motor move
@@ -215,7 +215,6 @@ void goto_position(uint32_t gotoshot_temp)
 		}
 	}
 	while (motorMoving);
-	//delay(10000);
 	stopISR1 ();
 
 	inprogtype=0; //set this to resume

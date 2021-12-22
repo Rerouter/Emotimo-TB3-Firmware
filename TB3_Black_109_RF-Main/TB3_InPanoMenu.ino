@@ -49,29 +49,29 @@ void Pano_Pause() //this runs once and is quick - not persistent
 {
   lcd.empty();
   lcd.at(1, 1, "Pausing");
-  delay(GLOBAL.prompt_time);
-  FLAGS.Program_Engaged = false; //toggle off the loop
-  if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
-  if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
+  delay(prompt_time);
+  Program_Engaged = false; //toggle off the loop
+  if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+  if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
   panoprogtype = 0;   //default this to the first option
-  restore_progstep = EEPROM_STORED.progstep; // Grab the progstep so we can mess with enums without needing to worry
+  restore_progstep = progstep; // Grab the progstep so we can mess with enums without needing to worry
   progstep_goto(299); //go to the Pano_Paused_Menu item and loop
 }
 
 
 void Pano_Resume() //this runs once and is quick - not persistent
 {
-  FLAGS.Program_Engaged = true; //toggle off the loop
+  Program_Engaged = true; //toggle off the loop
   lcd.empty();
   lcd.at(1, 1, "Resuming");
-  delay(GLOBAL.prompt_time);
+  delay(prompt_time);
   progstep_goto(restore_progstep); //send us back to the main Panorama Loop
 }
 
 
 void Pano_Paused_Menu()
 {
-  if (FLAGS.redraw)
+  if (redraw)
   {
     lcd.empty();
     switch(panoprogtype)
@@ -90,13 +90,13 @@ void Pano_Paused_Menu()
 
       case PANO_GOTO_FRAME:
         draw(88, 1, 1); //lcd.at(1,1,"GoTo Frame:");
-        GLOBAL.goto_shot = EEPROM_STORED.camera_fired;
-        DisplayGoToShot();
+        goto_shot = camera_fired;
+        DisplayGoToPanoShot();
         break;
 
       case PANO_INTERVAL:
         //draw(18,1,1);//lcd.at(1,1,"Intval:   .  sec"); //having issue with this command and some overflow issue??
-        EEPROM_STORED.intval = EEPROM_STORED.interval / 100;  // Convert from milliseconds to 0.1 second increments
+        Trigger_Type = interval / 100;  // Convert from milliseconds to 0.1 second increments
         lcd.at(1, 1, "Intval:   .  sec");
         DisplayInterval();
         break;
@@ -134,10 +134,10 @@ void Pano_Paused_Menu()
     }
 
     lcd.at(2, 1, "UpDown  C-Select");
-    FLAGS.redraw = false;
-    if (SETTINGS.POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
-    if (SETTINGS.POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-    delay(GLOBAL.prompt_time);
+    redraw = false;
+    if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+    if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
+    delay(prompt_time);
 
   } //end first time
     
@@ -146,40 +146,38 @@ void Pano_Paused_Menu()
     case PANO_GOTO_FRAME:
     {
       //read leftright values for the goto frames
-      uint32_t goto_shot_last = GLOBAL.goto_shot;
+      uint32_t goto_shot_last = goto_shot;
   
-      if (GLOBAL.goto_shot < 20) GLOBAL.joy_x_lock_count = 0;
-      GLOBAL.goto_shot += joy_capture_x3();
-      if (GLOBAL.goto_shot < 1) {
-        GLOBAL.goto_shot = 1;
-        delay(GLOBAL.prompt_time / 2);
+      goto_shot += joy_capture_x3();
+      if (goto_shot < 1) {
+        goto_shot = 1;
+        delay(prompt_time / 2);
       }
-      else if (GLOBAL.goto_shot > EEPROM_STORED.camera_total_shots) {
-        GLOBAL.goto_shot = EEPROM_STORED.camera_total_shots;
-        delay(GLOBAL.prompt_time / 2);
+      else if (goto_shot > camera_total_shots) {
+        goto_shot = camera_total_shots;
+        delay(prompt_time / 2);
       }
-      if (goto_shot_last != GLOBAL.goto_shot) {
-        DisplayGoToShot();
+      if (goto_shot_last != goto_shot) {
+        DisplayGoToPanoShot();
       }
       break;
     }
 
     case PANO_INTERVAL:
       //read leftright values for the goto frames
-      uint32_t intval_last = EEPROM_STORED.intval;
+      uint32_t Trigger_Type_last = Trigger_Type;
   
-      if (EEPROM_STORED.intval < 20) GLOBAL.joy_x_lock_count = 0;
-      EEPROM_STORED.intval += joy_capture_x3();
-      EEPROM_STORED.intval = constrain(EEPROM_STORED.intval, 5, 6000); //no limits, you can crunch static time
-      if (intval_last != EEPROM_STORED.intval) {
+      Trigger_Type += joy_capture_x3();
+      Trigger_Type = constrain(Trigger_Type, 5, 6000); //no limits, you can crunch static time
+      if (Trigger_Type_last != Trigger_Type) {
         DisplayInterval();
       }
       break;
   }
 
-  if ((millis() - GLOBAL.NClastread) > 50)
+  if ((millis() - NClastread) > 50)
   {
-    GLOBAL.NClastread = millis();
+    NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
     
@@ -190,7 +188,7 @@ void Pano_Paused_Menu()
         if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = (PANO_OPTIONS - 1);
         else
         {
-          FLAGS.redraw = true;
+          redraw = true;
         }
         break;
   
@@ -199,7 +197,7 @@ void Pano_Paused_Menu()
         if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = 0;
         else
         {
-          FLAGS.redraw = true;
+          redraw = true;
         }
         break;
     }
@@ -222,21 +220,21 @@ void Pano_Paused_Menu()
 //          break;
 //
 //        case PANO_GOTO_START: //Return to restart the shot  - send to review screen of relative move
-//          EEPROM_STORED.REVERSE_PROG_ORDER = false;
-//          EEPROM_STORED.camera_fired = 0;
+//          REVERSE_PROG_ORDER = false;
+//          camera_fired = 0;
 //          lcd.bright(8);
 //          lcd.at(1, 2, "Going to Start");
 //          go_to_start_new();
-//          progstep_goto(207);
+//          progstep_goto(206);
 //          break;
 //
 //        case PANO_GOTO_END:
-//          EEPROM_STORED.REVERSE_PROG_ORDER = true;
-//          EEPROM_STORED.camera_fired = 0;
+//          REVERSE_PROG_ORDER = true;
+//          camera_fired = 0;
 //          lcd.bright(8);
 //          lcd.at(1, 3, "Going to End");
 //          go_to_start_new();
-//          progstep_goto(207);
+//          progstep_goto(206);
 //          break;
 //
 //        case PANO_GOTO_FRAME:
@@ -254,12 +252,12 @@ void Pano_Paused_Menu()
 //          uint32_t available_move_time = EEPROM_STORED.interval / 100 - EEPROM_STORED.static_tm; //this is the gap we keep interval isn't live
 //          //Serial.print("AMT:");Serial.println(available_move_time);
 //          if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-//          EEPROM_STORED.interval = EEPROM_STORED.intval * 100; //set the new ms timer for SMS
-//          if (EEPROM_STORED.intval > available_move_time)
+//          interval = intval * 100; //set the new ms timer for SMS
+//          if (intval > available_move_time)
 //          { //we can apply the gap
 //            //Serial.print("intval-available_move_time pos: ");Serial.println(EEPROM_STORED.intval-available_move_time);
-//            EEPROM_STORED.static_tm = EEPROM_STORED.intval - available_move_time;
-//            //Serial.print("static_tm= ");Serial.println(EEPROM_STORED.static_tm);
+//            static_tm = EEPROM_STORED.intval - available_move_time;
+//            //Serial.print("static_tm= ");Serial.println(static_tm);
 //          }
 //          else  //squished it too much, go with minimum static time
 //          {
@@ -302,11 +300,11 @@ void Pano_Paused_Menu()
 //}
 
 
-void DisplayGoToShot()
+void DisplayGoToPanoShot()
 {
-  lcd.at(1, 13, GLOBAL.goto_shot);
-  if      (GLOBAL.goto_shot < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
-  else if (GLOBAL.goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
-  else if (GLOBAL.goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
-  else if (GLOBAL.goto_shot < 10000) lcd.at(1, 16, "");    //clear extra if goes from 3 to 2 or 2 to 1
+  lcd.at(1, 13, goto_shot);
+  if      (goto_shot < 10)    lcd.at(1, 14, "   "); //clear extra if goes from 3 to 2 or 2 to 1
+  else if (goto_shot < 100)   lcd.at(1, 15, "  ");  //clear extra if goes from 3 to 2 or 2 to 1
+  else if (goto_shot < 1000)  lcd.at(1, 16, " ");   //clear extra if goes from 3 to 2 or 2 to 1
+  else if (goto_shot < 10000) lcd.at(1, 16, "");    //clear extra if goes from 3 to 2 or 2 to 1
 }

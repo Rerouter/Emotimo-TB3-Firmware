@@ -396,7 +396,7 @@ void Move_to_Point_X(uint8_t Point)
       lcd.at(1, 2, "Set AOV Corner");
       set_position(0, 0, 0);
     }
-    else if (progstep == 304)
+    else if (progstep == 303)
     {
       lcd.at(1, 1, "Move to Subject ");
     }
@@ -441,7 +441,7 @@ void button_actions_move_x(uint8_t Point)
   switch (HandleButtons())
   {
     case CZ_Held:
-        if (progstep == 202)  set_position(0, 0, 0);
+        if (progstep == 201 || progstep == 301)  set_position(0, 0, 0);
         break;
             
     case C_Pressed:
@@ -473,31 +473,18 @@ void button_actions_move_x(uint8_t Point)
         Serial.print(motor_steps_pt[Point][2]); Serial.println();
   #endif
   
-        if (progstep != 201 && progstep != 301)
-        {
-          lcd.empty();
-          draw(63, 1, 3); //lcd.at(1,3,"Point X Set";);
-          if (!REVERSE_PROG_ORDER)  lcd.at(1, 9, (Point + 1)); //Normal
-          else //reverse programming
-          {
-            if (Point == 0) lcd.at(1, 9, "3");
-            else if (Point == 1) lcd.at(1, 9, "2");
-            else if (Point == 2) lcd.at(1, 9, "1");
-          }
-        }
-  
-        if (progstep == 202 || progstep == 302) //set angle of view UD050715
+        if (progstep == 201 || progstep == 301) //set angle of view UD050715
         {
           Pan_AOV_steps  = current_steps.x; //Serial.println(Pan_AOV_steps);
           Tilt_AOV_steps = current_steps.y; //Serial.println(Tilt_AOV_steps);
           lcd.empty();
           lcd.at (1, 5, "AOV Set");
         }
-        if (progstep == 205) //pano - calculate other values UD050715
+        if (progstep == 204) //pano - calculate other values UD050715
         {
           calc_pano_move();
         }
-        if (progstep == 304) // PORTRAITPANO Method UD050715
+        if (progstep == 303) // PORTRAITPANO Method UD050715
         {
           lcd.empty();
           lcd.at (1, 4, "Center Set");
@@ -757,8 +744,8 @@ void Set_Static_Time()
     draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     max_shutter = Trigger_Type - MIN_INTERVAL_STATIC_GAP; //max static is .3 seconds less than interval (leaves 0.3 seconds for move)
-    if (Trigger_Type == External_Trigger) max_shutter = 600; //external trigger
-    if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano mode - allows
+    if (Trigger_Type == External_Trigger) max_shutter = 600; //external trigger = 60.0 Seconds
+    if (progtype == PANOGIGA || progtype == PORTRAITPANO) max_shutter = 36000; //pano modes = 3600.0 Seconds
     DisplayStatic_tm();
     redraw = false;
   }
@@ -1118,12 +1105,11 @@ void Review_Confirm()
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
     delay(prompt_time);
-    lcd.empty();
-    redraw = false;
     display_last_tm = millis();
     DisplayReviewProg();
     reviewprog = 1;
     start_delay_sec = 0;
+    redraw = false;
   }
 
   if ((millis() - display_last_tm) > (prompt_time * 4))

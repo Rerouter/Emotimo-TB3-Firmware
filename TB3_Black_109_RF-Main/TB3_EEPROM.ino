@@ -242,7 +242,7 @@ void set_defaults_in_setup()
 	LCD_BRIGHTNESS_DURING_RUN = 3;       // Serial.println(LCD_BRIGHTNESS_DURING_RUN);
 	AUX_MAX_JOG_STEPS_PER_SEC = 15000;   // Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
 	AUX_REV = 0;                         // Serial.println(AUX_REV);
-  SERPENTINE = 1;
+  SERPENTINE = 1;                      // Serial.println(SERPENTINE);
 	
 	eeprom_write(1, build_version);
 	eeprom_write(96, POWERSAVE_PT);

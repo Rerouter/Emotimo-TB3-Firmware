@@ -625,7 +625,6 @@ void updateMotorVelocities()
  */
 void setPulsesPerSecond(uint8_t motorIndex, uint16_t pulsesPerSecond)
 {
-	if (pulsesPerSecond > 20000)	pulsesPerSecond = 20000;
 	if (pulsesPerSecond < 100)		pulsesPerSecond = 100;
 
 	//uint16_t itersPerSecond = 1000000L / TIME_CHUNK;

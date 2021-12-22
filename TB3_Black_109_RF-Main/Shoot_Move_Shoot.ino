@@ -8,7 +8,7 @@ boolean Shot_Sequence_Started       = false;
 uint8_t   PanoPostMoveDelay = 200;  // delay in microseconds after completing a move
 
 //Start of variables for Pano Mode
-boolean   move_with_acceleration = true; // false = no accel, true = accel
+boolean   move_with_acceleration = true; // false = no accel, true = accel, so far read only
 
 
 void ShootMoveShoot()
@@ -182,8 +182,9 @@ void VideoLoop ()
           do {
             NunChuckRequestData();
             NunChuckProcessData();
+            delay(NCdelay);
           }
-          while (HandleButtons() == CZ_Pressed);
+          while (HandleButtons() == CZ_Held);
           progstep = 9;
         }
       }
