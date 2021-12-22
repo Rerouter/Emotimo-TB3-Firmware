@@ -113,9 +113,11 @@ void Set_angle_of_view()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
+    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
+    Move_Engaged = false;
 
     lcd.at(1, 11, steps_to_deg_decimal(current_steps.x));
     lcd.at(2, 11, steps_to_deg_decimal(current_steps.y));
@@ -144,7 +146,7 @@ void Define_Overlap_Percentage()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    olpercentage += joy_capture3();
+    olpercentage += joy_capture3(1);
     if (!olpercentage || olpercentage > 200) { olpercentage = 99; }
     else if (olpercentage > 99)              { olpercentage = 1;  }
   
@@ -420,7 +422,7 @@ void Pano_DisplayReviewProg()
       lcd.at(1, 3, "Delay:");
       lcd.at(2, 2, "Press C Button");
 
-      start_delay_sec += joy_capture3();
+      start_delay_sec += joy_capture3(1);
       if (start_delay_sec > 60000)      { start_delay_sec = 1800; }
       else if (start_delay_sec > 1800)  { start_delay_sec = 0;    }
       delay(prompt_delay);
@@ -468,7 +470,6 @@ void move_motors_pano_basic()
 
   Serial.print("even_odd_row;"); Serial.println(even_odd_row);
 #endif
-
   set_target(x, y, 0); //we are in incremental mode to start abs is false
 
   dda_move(50);
@@ -519,7 +520,7 @@ void move_motors_pano_accel()
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-  //Move_Engaged=false; //clear move engaged flag
+  Move_Engaged = false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -584,8 +585,7 @@ void move_motors_accel_array()
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-
-  //Move_Engaged=false; //clear move engaged flag
+  Move_Engaged=false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -603,9 +603,7 @@ void Move_to_Origin()
   setupMotorMove(1, 0);
 
   updateMotorVelocities();
-
-  //Move_Engaged=false; //clear move engaged flag
-  return;
+  Move_Engaged=false; //clear move engaged flag
 }//end move motors accel
 
 

@@ -87,12 +87,12 @@ void ShootMoveShoot()
 
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
-    Move_Engaged = true; //move motors
 #if DEBUG_MOTOR
     Serial.print("MoveStart ");
     Serial.print(millis() - interval_tm);
     Serial.print(";");
 #endif
+    Move_Engaged = true; //move motors
     move_motors();
 #if DEBUG_MOTOR
     Serial.print("Moveend ");
@@ -312,12 +312,12 @@ void ExternalTriggerLoop ()
       ext_shutter_count = 0;
       //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
-      Move_Engaged = true; //move motors
 #if DEBUG_MOTOR
       Serial.print("MoveStart ");
       Serial.print(millis() - interval_tm);
       Serial.print(";");
 #endif
+      Move_Engaged = true; //move motors
       move_motors();
 #if DEBUG_MOTOR
       Serial.print("Moveend ");

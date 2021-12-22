@@ -139,7 +139,7 @@ char WiiNunchuck3::decode_byte (char x)
 }
 
 
-bool WiiNunchuck3::getData()
+uint8_t WiiNunchuck3::getData()
 {
   static uint8_t failcount = 0;
   static uint8_t last = 0;
@@ -159,17 +159,11 @@ bool WiiNunchuck3::getData()
   if (cnt >= WII_TELEGRAM_LEN && chksum != last) {
     send_zero();
     if(chksum !=0 && chksum != 255) {last = chksum;  failcount = 0;}
-    //else                            {failcount++; }
-    return 1;   // success
+    return 0;   // success
   }
 
-  if(failcount < 40)  failcount++;
-  else
-  {
-    clearData();
-    return 0; //failure
-  }
-  return 1;
+  if(failcount < 250) { failcount++; }
+  return failcount; //failure
 }
 
 

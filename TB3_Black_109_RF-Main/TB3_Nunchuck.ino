@@ -106,9 +106,10 @@ void calibrate_joystick(uint8_t tempx, uint8_t tempy)
 void NunChuckRequestData() //error correction and reinit on disconnect  - takes about 1050 microsecond
 {
   uint8_t NCReadStatus = 0; //control variable for NC error handling
+  uint8_t failcount;
   do
   {
-    Nunchuck.getData();
+    failcount = Nunchuck.getData();
 
     if (!Nunchuck.joyx() && !Nunchuck.joyy() )
     { //error condition //throw this out and read again
@@ -126,14 +127,8 @@ void NunChuckRequestData() //error correction and reinit on disconnect  - takes 
     else break;
   }
   while (NCReadStatus);
-}
-
-
-int8_t NunchuckDeadband(int8_t input, int8_t deadband)
-{
-  if      (input > deadband)  return input -= deadband;
-  else if (input < -deadband) return input += deadband;
-  else                        return 0;
+  if (failcount > 5   && Move_Engaged)  Nunchuck.clearData();
+  if (failcount > 250 && !Move_Engaged) Nunchuck.clearData();
 }
 
 
@@ -159,18 +154,26 @@ void NunChuckProcessData()
   //acc_y_axis = NunchuckDeadband(acc_y_axis, deadband2);
 
   //check for joystick y lock for more than one second
-  if (abs(joy_y_axis) > 80) {
-    if (joy_y_lock_count < 250) {joy_y_lock_count++;}
+  if (abs(joy_y_axis) > 50) {  
+    if (joy_y_lock_count < 250) { joy_y_lock_count++;   }
   }
-  else                                joy_y_lock_count = 0;
+  else                          { joy_y_lock_count = 0; }
 
   //check for joystick x lock for more than one second
-  if (abs(joy_x_axis) > 80) {
-    if (joy_x_lock_count < 250) {joy_x_lock_count++;}
+  if (abs(joy_x_axis) > 50) {
+    if (joy_x_lock_count < 250) { joy_x_lock_count++; }
   }
-  else                                joy_x_lock_count = 0;
+  else                          { joy_x_lock_count = 0; }
 
   ButtonState = (Nunchuck.zbutton() << 1) | Nunchuck.cbutton();
+}
+
+
+int8_t NunchuckDeadband(int8_t input, int8_t deadband)
+{
+  if      (input > deadband)  return input -= deadband;
+  else if (input < -deadband) return input += deadband;
+  else                        return 0;
 }
 
 
@@ -214,59 +217,50 @@ void nc_sleep()
 }
 
 
-int8_t joy_capture2() //captures joystick input
+int8_t joy_capture2(uint8_t axis) //captures joystick input
 {
-  prompt_delay = (500 - 5 * abs(joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
-  return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
+  uint8_t axisval;
+  switch (axis)
+  {
+    case 0:  axisval = joy_x_axis;  break;
+    case 1:  axisval = joy_y_axis;  break;
+    default: return 0;
+  }
+  prompt_delay = (500 - 5 * abs(axisval)); // The joystick is constrained to +-100 so this should never equal below 0
+  return -1 * map(axisval, -20, 20, -1, 1);
 }
 
 
-int8_t joy_capture3() //captures joystick input and conditions it for UI
+int8_t joy_capture3(uint8_t axis) //captures joystick input and conditions it for UI
 {
-  if (joy_y_lock_count > 245) { //really really fast
+  int8_t  axisval;
+  uint8_t axislock;
+  switch (axis)
+  {
+    case 0:  axisval = joy_x_axis;  axislock = joy_x_lock_count;  break;
+    case 1:  axisval = joy_y_axis;  axislock = joy_y_lock_count;  break;
+    default: return 0;
+  }
+  
+  if (axislock > 245 && abs(axisval > 90)) { //really really fast
     prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
+    return -1 * map(axisval, -55, 55, -40, 40);
   }
-  else if (joy_y_lock_count > 50) { //really fast
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
+  else if (axislock > 50 && abs(axisval > 75)) { //really fast
+    prompt_delay = (100 - abs(axisval));
+    return -1 * map(axisval, -100, 100, -10, 10);
   }
-  else if (joy_y_lock_count > 20) { //pretty fast
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
+  else if (axislock > 20) { //pretty fast
+    prompt_delay = (200 - 2 * abs(axisval));
+    return -1 * map(axisval, -100, 100, -5, 5);
   }
-  else if (abs(joy_y_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 5 * abs(joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
+  else if (abs(axislock) > 10) { //go variable add delay which we run later
+    prompt_delay = (500 - 5 * abs(axisval)); // The joystick is constrained to +-100 so this should never equal below 0
+    return -1 * map(axisval, -50, 50, -1, 1);
   }
   else { //null loop
     prompt_delay = 0;
-    return (0);
-  }
-}
-
-
-int8_t joy_capture_4() //captures joystick input and conditions it for UI
-{
-  if (joy_y_lock_count > 100) { //really really fast
-    prompt_delay = 0;
-    return -1 * map(joy_y_axis, -55, 55, -40, 40);
-  }
-  else if (joy_y_lock_count > 50) { //really fast
-    prompt_delay = 10;
-    return -1 * map(joy_y_axis, -100, 100, -10, 10);
-  }
-  else if (joy_y_lock_count > 20) { //pretty fast
-    prompt_delay = 70;
-    return -1 * map(joy_y_axis, -80, 80, -10, 10);
-  }
-  else if (abs(joy_y_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 5 * abs(joy_y_axis)); // The joystick is constrained to +-100 so this should never equal below 0
-    return -1 * constrain(map(joy_y_axis, -20, 20, -1, 2), -1, 1);
-  }
-  else { //null loop
-    prompt_delay = 0;
-    return (0);
+    return 0;
   }
 }
 
@@ -280,31 +274,6 @@ int joy_capture_x_map() //captures joystick input for left and right
 int8_t joy_capture_y_map() //captures joystick input for up down
 {
   return map(joy_y_axis, -85, 85, -1, 1);
-}
-
-
-int joy_capture_x3() //captures joystick input and conditions it for UI
-{
-  if (joy_x_lock_count > 245) { //really really fast
-    prompt_delay = 0;
-    return -1 * map(-joy_x_axis, -55, 55, -40, 40);
-  }
-  else if (joy_x_lock_count > 50) { //really fast
-    prompt_delay = 10;
-    return -1 * map(-joy_x_axis, -100, 100, -10, -10);
-  }
-  else if (joy_x_lock_count > 20) { //pretty fast
-    prompt_delay = 70;
-    return -1 * map(-joy_x_axis, -80, 80, -10, 10);
-  }
-  else if (abs(joy_x_axis) > 10) { //go variable add delay which we run later
-    prompt_delay = (500 - 5 * abs(joy_x_axis)); // The joystick is constrained to +-100 so this should never equal below 0
-    return -1 * constrain(map(-joy_x_axis, -20, 20, -1, 2), -1, 1);
-  }
-  else { //null loop
-    prompt_delay = 0;
-    return (0);
-  }
 }
 
 

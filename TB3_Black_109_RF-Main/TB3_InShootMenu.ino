@@ -97,13 +97,10 @@ void InProg_Select_Option()
       //read leftright values for the goto frames
       uint32_t goto_shot_last = goto_shot;
   
-      goto_shot += joy_capture_x3();
-      if (goto_shot < 1) {
-        goto_shot = 1;
-      }
-      else if (goto_shot > camera_total_shots) {
-        goto_shot = camera_total_shots;
-      }
+      goto_shot += joy_capture3(0);
+      if (!goto_shot || goto_shot > camera_total_shots + 100)  { goto_shot = camera_total_shots; }
+      else if (goto_shot > camera_total_shots)                 { goto_shot = 1; }
+
       if (goto_shot_last != goto_shot) {
         DisplayGoToShot();
         delay(prompt_delay);
@@ -115,8 +112,9 @@ void InProg_Select_Option()
       //read leftright values for the goto frames
       uint16_t Trigger_Type_last = Trigger_Type;
   
-      Trigger_Type += joy_capture_x3();
-      Trigger_Type = constrain(Trigger_Type, 5, 6000); //no limits, you can crunch static time
+      Trigger_Type += joy_capture3(0);
+      if (Trigger_Type < 5 || Trigger_Type > 6000 + 100)  { Trigger_Type = 6000; }
+      else if (Trigger_Type > 6000)                       { Trigger_Type = 5; }
       if (Trigger_Type_last != Trigger_Type) {
         DisplayInterval();
         delay(prompt_delay);

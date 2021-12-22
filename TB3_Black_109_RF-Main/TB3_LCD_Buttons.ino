@@ -248,9 +248,11 @@ void Move_to_Startpoint()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
+    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
+    Move_Engaged = false;
     button_actions_move_start(); //check buttons
   }
 } //end move to start point
@@ -320,9 +322,11 @@ void Move_to_Endpoint()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
+    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
+    Move_Engaged = false;
     button_actions_move_end(); //check buttons
   }
 }
@@ -428,9 +432,11 @@ void Move_to_Point_X(uint8_t Point)
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
+    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
+    Move_Engaged = false;
     button_actions_move_x(Point); //check buttons
   }
 }
@@ -536,7 +542,7 @@ void Set_Cam_Interval()
     NunChuckRequestData();
     NunChuckProcessData();
     
-    Trigger_Type += joy_capture3();
+    Trigger_Type += joy_capture3(1);
     if (Trigger_Type > 60000)       { Trigger_Type = 36000; }
     else if (Trigger_Type > 36000)  { Trigger_Type = 0;     }
     
@@ -655,7 +661,7 @@ void Set_Duration() //This is really setting frames
     if (Trigger_Type == Video_Trigger)
     { //video
       uint16_t overaldur_last = overaldur;
-      overaldur += joy_capture3();
+      overaldur += joy_capture3(1);
       if (!overaldur || overaldur > 60000) { overaldur = 10000; }
       else if (overaldur > 10000)          { overaldur = 1;  }
       
@@ -669,7 +675,7 @@ void Set_Duration() //This is really setting frames
     else
     { //sms
       uint32_t camera_moving_shots_last = camera_moving_shots;
-      camera_moving_shots += joy_capture3();
+      camera_moving_shots += joy_capture3(1);
       if (camera_moving_shots < 10 || camera_moving_shots > 60000) { camera_moving_shots = 10000; }
       else if (camera_moving_shots > 10000)                        { camera_moving_shots = 10;  }
       
@@ -756,7 +762,7 @@ void Set_Static_Time()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    static_tm += joy_capture3();
+    static_tm += joy_capture3(1);
     if (!static_tm || static_tm > 60000) { static_tm = max_shutter; }
     else if (static_tm > max_shutter)    { static_tm = 1; }
     
@@ -854,7 +860,7 @@ void Set_Ramp()
     NunChuckRequestData();
     NunChuckProcessData();
     
-    rampval += joy_capture3();
+    rampval += joy_capture3(1);
     if (!rampval || rampval > 60000) { rampval = 10000; }
     else if (rampval > 10000)        { rampval = 1;  }
   
@@ -942,7 +948,7 @@ void DisplayLeadIn_LeadOut()
   { //update lead in
     lcd.cursorOff();
     
-    lead_in += joy_capture3();
+    lead_in += joy_capture3(1);
     if (!lead_in || lead_in > 60000) { lead_in = 5000; }
     else if (lead_in > 5000)         { lead_in = 1;    }
     delay(prompt_delay);
@@ -964,7 +970,7 @@ void DisplayLeadIn_LeadOut()
   { //update leadout
     lcd.cursorOff();
     
-    lead_out += joy_capture3();
+    lead_out += joy_capture3(1);
     if (!lead_out || lead_out > 60000) { lead_out = 5000; }
     else if (lead_out > 5000)          { lead_out = 1;    }
     delay(prompt_delay);
@@ -1180,7 +1186,7 @@ void DisplayReviewProg()
         redraw2 = false;
       }
       // Clip it down to a uint16_t
-      start_delay_sec += joy_capture3();
+      start_delay_sec += joy_capture3(1);
       if (start_delay_sec > 60000)       { start_delay_sec = 36000; }
       else if (start_delay_sec > 36000)  { start_delay_sec = 0;     }
       delay(prompt_delay);
@@ -1645,7 +1651,7 @@ void Enter_Aux_Endpoint()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    aux_dist += joy_capture3();
+    aux_dist += joy_capture3(1);
     aux_dist = constrain(aux_dist, -MAX_AUX_MOVE_DISTANCE, MAX_AUX_MOVE_DISTANCE);
 
     //STEPS_PER_INCH_AUX

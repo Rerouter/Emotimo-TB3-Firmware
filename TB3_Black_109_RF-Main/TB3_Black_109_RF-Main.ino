@@ -300,7 +300,7 @@ enum ButtonState : uint8_t {
 uint8_t ButtonState = Read_Again;
 
 uint32_t NClastread = 1000; //control variable for NC reads cycles
-uint32_t NCdelay = 10;       //milliseconds to wait before reading the joystick again
+uint32_t NCdelay = 10;      //milliseconds to wait before reading the joystick again
 
 //Stepper Setup
 uint32_t  feedrate_micros = 0;

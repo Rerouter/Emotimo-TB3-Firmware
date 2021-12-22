@@ -149,7 +149,7 @@ void Pano_Paused_Menu()
       //read leftright values for the goto frames
       uint32_t intcamerafired_last = intcamerafired;
   
-      intcamerafired -= joy_capture_x3();
+      intcamerafired -= joy_capture3(0);
       if (intcamerafired > 60000)                    { intcamerafired = camera_total_shots; }
       else if (intcamerafired > camera_total_shots)  { intcamerafired = 0;  }
 
@@ -164,7 +164,7 @@ void Pano_Paused_Menu()
       //read leftright values for the goto frames
       uint32_t intstatic_tm_last = intstatic_tm;
   
-      intstatic_tm -= joy_capture_x3();
+      intstatic_tm -= joy_capture3(0);
       if (!intstatic_tm || intstatic_tm > 60000)  { intstatic_tm = max_shutter; }
       else if (intstatic_tm > max_shutter)        { intstatic_tm = 1; }
     
