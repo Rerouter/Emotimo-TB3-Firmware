@@ -156,20 +156,20 @@ uint16_t      Trigger_Type = 3;
 
 
 //TB3 section - Black or Orange Port Mapping for Step pins on Stepper Page
-#define MOTORS		  3
+#define MOTORS          3
 #define MOTOR0_STEP	5
 #define MOTOR1_STEP	6
 #define MOTOR2_STEP	7
 #define MOTOR0_DIR	8
 #define MOTOR1_DIR	9
 #define MOTOR2_DIR	10
-#define MOTOR_EN	  A3
-#define MOTOR_EN2	  11
-#define MS1		    	A1
-#define MS2			    A2
-#define MS3			    A2
-#define IO_2		    2 // drives middle of 2.5 mm connector on I/O port
-#define IO_3		    3 // drives tip of 2.5 mm connector on I/O port
+#define MOTOR_EN        A3
+#define MOTOR_EN2       11
+#define MS1             A1
+#define MS2             A2
+#define MS3             A2
+#define IO_2            2 // drives middle of 2.5 mm connector on I/O port
+#define IO_3            3 // drives tip of 2.5 mm connector on I/O port
 
 #define STEPS_PER_DEG  444.444 //160000 MS per 360 degees = 444.4444444
 
@@ -187,7 +187,7 @@ uint16_t      Trigger_Type = 3;
 //end TB3 section
 
 uint32_t      build_version         = 10952; // this value is compared against what is stored in EEPROM and resets EEPROM and setup values if it doesn't match
-//uint32_t      intval                = 2;     //0.1x Seconds  - used for the interval prompt and display
+//uint32_t    intval                = 2;     //0.1x Seconds  - used for the interval prompt and display
 uint32_t      interval              = 2000;  // calculated and is in ms
 uint32_t      camera_fired          = 0;     // number of shots fired
 uint32_t      camera_moving_shots   = 200;   // frames for new duration/frames prompt
@@ -261,7 +261,7 @@ boolean       redraw  = true; //variable to help with LCD dispay variable that n
 boolean       redraw2 = true;
 
 uint16_t      max_shutter; // Maximum shutter time in 0.1 second increments
-//unsigned int max_prefire;
+//unsigned int focus_prefire; // Time the focus pin should be held for before firing the camera
 uint32_t      interval_tm      = 0;  //mc time to help with interval comparison
 uint32_t      interval_tm_last = 0; //mc time to help with interval comparison
 
@@ -274,13 +274,13 @@ uint8_t       reviewprog = 1;
 uint32_t      start_delay_tm = 0;  //ms timestamp to help with delay comparison
 uint32_t      goto_shot = 0;
 
-uint8_t       sequence_repeat_type = 0; //Defaults - Run Once = 0, Continuous Loop = 1
+boolean       sequence_repeat_type = false; //Defaults - Run Once = 0, Continuous Loop = 1
 uint8_t       sequence_repeat_count = 0; //counter to hold variable for how many time we have repeated
 
 //remote and interface variables
 
 int8_t        joy_x_axis, joy_y_axis;
-int16_t       acc_x_axis, acc_y_axis;
+int8_t        acc_x_axis, acc_y_axis;
 
 int16_t       PanStepCount;
 int16_t       TiltStepCount;
@@ -300,7 +300,7 @@ enum ButtonState : uint8_t {
 uint8_t ButtonState = Read_Again;
 
 uint32_t NClastread = 1000; //control variable for NC reads cycles
-uint32_t NCdelay = 10;      //milliseconds to wait before reading the joystick again
+uint32_t NCdelay    = 10;      //milliseconds to wait before reading the joystick again
 
 //Stepper Setup
 uint32_t  feedrate_micros = 0;
@@ -322,8 +322,8 @@ LONG delta_steps;
 #define DFMOCO_VERSION_STRING "1.2.6"
 
 // supported boards
-#define ARDUINO			1
-#define ARDUINOMEGA		2
+#define ARDUINO.     1
+#define ARDUINOMEGA  2
 
 //eMotimo TB3 - Set this PINOUT_VERSION 3 for TB3 Orange (Uno)
 //eMotimo TB3 - Set this PINOUT_VERSION 4 for TB3 Black (MEGA)
@@ -381,7 +381,7 @@ LONG delta_steps;
 
 volatile boolean nextMoveLoaded;  // Program flag for next move ready
 boolean maxVelLimit = false;      // Program Flag for motor speed limited
-uint8_t motorMoving = 0;          // Program Flag for motor moving
+boolean motorMoving = false;      // Program Flag for motor moving
 
 //End of DFVars
 
@@ -395,17 +395,17 @@ void setup()
 {
   // setup motor pins
   pinMode(MOTOR0_STEP,	OUTPUT);
-  pinMode(MOTOR0_DIR,		OUTPUT);
+  pinMode(MOTOR0_DIR,	OUTPUT);
   
   pinMode(MOTOR1_STEP,	OUTPUT);
-  pinMode(MOTOR1_DIR,		OUTPUT);
+  pinMode(MOTOR1_DIR,	OUTPUT);
   
   pinMode(MOTOR2_STEP,	OUTPUT);
-  pinMode(MOTOR2_DIR,		OUTPUT);
+  pinMode(MOTOR2_DIR,	OUTPUT);
 
-  pinMode(MS1,			OUTPUT);
-  pinMode(MS2,			OUTPUT);
-  pinMode(MS3,			OUTPUT);
+  pinMode(MS1,		OUTPUT);
+  pinMode(MS2,		OUTPUT);
+  pinMode(MS3,		OUTPUT);
 
   digitalWrite(MS1, HIGH);
   digitalWrite(MS2, HIGH);
