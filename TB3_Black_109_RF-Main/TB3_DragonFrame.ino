@@ -219,8 +219,8 @@ struct Motor
   float		maxVelocity;			//Orig - delete later
   float		maxAcceleration;		//Orig - delete later
 
-  float		moveMaxVelocity;		//Pass this into calculator for synchronized moves
-  float		moveMaxAcceleration;  //Pass this into calculator for synchronized moves
+  float		moveMaxVelocity;		//Pass this into calculator for synchronized moves - needs to be float for now
+  float		moveMaxAcceleration;  //Pass this into calculator for synchronized moves - needs to be float for now
 
   float		jogMaxVelocity;		//replaced the original maxVelocity
   float		jogMaxAcceleration;   //replaced the original maxAcceleration
@@ -235,7 +235,7 @@ uint16_t	  velocityUpdateCounter;
 byte		  	sendPositionCounter;
 boolean			hardStopRequested;
 
-byte        sendPosition = 0;
+uint8_t     sendPosition = 0; // Bit array for the motors
 
 boolean     goMoReady;
 uint16_t    goMoDelayTime;

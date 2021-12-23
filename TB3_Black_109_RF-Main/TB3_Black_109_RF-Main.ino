@@ -1,6 +1,6 @@
 /*
-	(c) 2015 Brian Burling eMotimo INC - Original 109 Release
-  (c) 2021 Ryan Favelle - Modifications
+    (c) 2015 Brian Burling eMotimo INC - Original 109 Release
+    (c) 2021 Ryan Favelle - Modifications
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -183,13 +183,14 @@ uint32_t      camera_fired          = 0;     // number of shots fired
 uint32_t      camera_moving_shots   = 200;   // frames for new duration/frames prompt
 uint32_t      camera_total_shots    = 0;     // used at the end target for camera fired to compare against
 uint16_t      overaldur             = 20;    // seconds now for video only
-uint16_t      prefire_time          = 1;   // milliseconds, how long to power on the motors and focus the camera before taking a photo
+uint16_t      prefire_time          = 1;     // 0.1x Seconds how long to power on the motors and focus the camera before taking a photo
 uint16_t      rampval               = 50;
 uint16_t      static_tm             = 1;     // new variable
 uint16_t      lead_in               = 1;
 uint16_t      lead_out              = 1;
 uint16_t      start_delay_sec       = 0;
 float         total_pano_move_time  = 0;
+uint8_t       HeldThreshold         = 1;     // Number of read events to recognise a button as held
 
 //External Interrupt Variables
 volatile bool iostate               = false; //new variable for interrupt
@@ -240,7 +241,6 @@ uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 65535;
 uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 65535;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
 boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
-uint8_t       HeldThreshold = 1; // Number of read events to recognise a button as held
 
 
 //control variable, no need to store in EEPROM - default and setup during shot
@@ -252,7 +252,7 @@ boolean       redraw  = true; //variable to help with LCD dispay variable that n
 boolean       redraw2 = true;
 
 uint16_t      max_shutter; // Maximum shutter time in 0.1 second increments
-//unsigned int focus_prefire; // Time the focus pin should be held for before firing the camera
+//unsigned int max_prefire; // Maximum focus / motor wakeup time in 0.1 second increments
 uint32_t      interval_tm      = 0;  //mc time to help with interval comparison
 uint32_t      interval_tm_last = 0; //mc time to help with interval comparison
 
@@ -372,7 +372,7 @@ LONG delta_steps;
 
 volatile boolean nextMoveLoaded;  // Program flag for next move ready
 boolean maxVelLimit = false;      // Program Flag for motor speed limited
-boolean motorMoving = false;      // Program Flag for motor moving
+uint8_t motorMoving = 0;          // Program Flag bit array for motor moving
 
 //End of DFVars
 
@@ -394,9 +394,9 @@ void setup()
   pinMode(MOTOR2_STEP,	OUTPUT);
   pinMode(MOTOR2_DIR,	OUTPUT);
 
-  pinMode(MS1,		OUTPUT);
-  pinMode(MS2,		OUTPUT);
-  pinMode(MS3,		OUTPUT);
+  pinMode(MS1,	        OUTPUT);
+  pinMode(MS2,	        OUTPUT);
+  pinMode(MS3,	        OUTPUT);
 
   digitalWrite(MS1, HIGH);
   digitalWrite(MS2, HIGH);
