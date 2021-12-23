@@ -230,7 +230,7 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
   {
     lcd.empty();
     lcd.at(1, 1, "BkLite On Run: ");
-    lcd.at(1, 15, LCD_BRIGHTNESS_DURING_RUN);
+    lcd.at(1, 15, LCD_BRIGHTNESS_RUNNING);
     draw(65, 2, 1); //lcd.at(2,1,"UpDown  C-Select");
     redraw = false;
     delay(prompt_time);
@@ -243,16 +243,16 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     switch(joy_capture_y_map())
     {
       case -1: // Up
-        if (LCD_BRIGHTNESS_DURING_RUN == 8) { LCD_BRIGHTNESS_DURING_RUN = 1; }
-        else                                { LCD_BRIGHTNESS_DURING_RUN++;   }
-        lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
+        if (LCD_BRIGHTNESS_RUNNING == 8) { LCD_BRIGHTNESS_RUNNING = 1; }
+        else                             { LCD_BRIGHTNESS_RUNNING++; }
+        lcd.bright(LCD_BRIGHTNESS_RUNNING);
         redraw = true;
         break;
   
       case 1: // Down
-        if (LCD_BRIGHTNESS_DURING_RUN == 1) { LCD_BRIGHTNESS_DURING_RUN = 8; }
-        else                                { LCD_BRIGHTNESS_DURING_RUN--;   }
-        lcd.bright(LCD_BRIGHTNESS_DURING_RUN); //this seems to ghost press the C
+        if (LCD_BRIGHTNESS_RUNNING == 1) { LCD_BRIGHTNESS_RUNNING = 8; }
+        else                             { LCD_BRIGHTNESS_RUNNING--; }
+        lcd.bright(LCD_BRIGHTNESS_RUNNING); //this seems to ghost press the C
         redraw = true;
         break;
     }
@@ -260,14 +260,14 @@ void Setup_LCD_BRIGHTNESS_DURING_RUN()
     switch(HandleButtons())
     {
       case C_Pressed:
-        eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
-        lcd.bright(4);
+        eeprom_write(102, LCD_BRIGHTNESS_RUNNING);
+        lcd.bright(LCD_BRIGHTNESS_MENU);
         progstep_forward();
         break;
   
       case Z_Pressed:
-        eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
-        lcd.bright(4);
+        eeprom_write(102, LCD_BRIGHTNESS_RUNNING);
+        lcd.bright(LCD_BRIGHTNESS_MENU);
         progstep_backward();
         break;
     }

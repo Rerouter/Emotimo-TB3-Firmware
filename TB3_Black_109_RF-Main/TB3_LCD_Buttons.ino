@@ -224,7 +224,7 @@ void Move_to_Startpoint()
 {
   if (redraw) {
     lcd.empty();
-    lcd.bright(6);
+    lcd.bright(LCD_BRIGHTNESS_RUNNING);
     
     if (!REVERSE_PROG_ORDER) //normal programing, start first
     {
@@ -247,11 +247,9 @@ void Move_to_Startpoint()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
-    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
-    Move_Engaged = false;
     button_actions_move_start(); //check buttons
   }
 } //end move to start point
@@ -321,11 +319,9 @@ void Move_to_Endpoint()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
-    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
-    Move_Engaged = false;
     button_actions_move_end(); //check buttons
   }
 }
@@ -431,11 +427,9 @@ void Move_to_Point_X(uint8_t Point)
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
-    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
-    Move_Engaged = false;
     button_actions_move_x(Point); //check buttons
   }
 }
@@ -449,7 +443,7 @@ void button_actions_move_x(uint8_t Point)
         if (progstep == 201 || progstep == 301)  set_position(0, 0, 0);
         break;
             
-    case C_Held:
+    case C_Pressed:
         //begin to stop the motors
         //this puts input to zero to allow a stop
         NunChuckClearData();
@@ -599,7 +593,7 @@ void button_actions_intval()
   {
     case C_Pressed:
     {
-      switch (External_Trigger)
+      switch (Trigger_Type)
       {
         case External_Trigger:  interval = max_shutter * 100;  break;  // Hardcode this to 60 seconds are 1 shots per minute to allow for max shot selection
         case Video_Trigger:     interval = 100;                break;  // means video, set very small exposure time
@@ -1192,15 +1186,12 @@ void DisplayReviewProg()
       start_delay_sec += joy_capture3(1);
       uint16_t maxval = max_shutter;
       uint16_t overflowval = max(maxval + 100, 65400);
-      if (start_delay_sec > 60000)       { start_delay_sec = 36000; }
-      else if (start_delay_sec > 36000)  { start_delay_sec = 0;     }
+      if (start_delay_sec > overflowval) { start_delay_sec = 36000; }
+      else if (start_delay_sec > 36000)  { start_delay_sec = 0; }
       delay(prompt_delay);
 
       calc_time_remain_dur_sec (start_delay_sec);
       display_time(2, 1);
-      //lcd.at(1,11,start_delay_sec);
-      // if (start_delay_min <10)  lcd.at(1,8,"  ");  //clear extra if goes from 3 to 2 or 2 to  1
-      // if (start_delay_min <100)  lcd.at(1,9," ");  //clear extra if goes from 3 to 2 or 2 to  1
       break;
   }//end switch
 }
@@ -1259,7 +1250,7 @@ void button_actions_review()
         lcd.at(1, 1, "Waiting for Trig");
       }
       redraw = true;
-      lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
+      lcd.bright(LCD_BRIGHTNESS_RUNNING);
       break;
 
     case Z_Pressed:
@@ -1303,7 +1294,7 @@ void button_actions_end_of_program()
       if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
       //Program_Engaged=true;
       camera_fired = 0;
-      lcd.bright(8);
+      lcd.bright(LCD_BRIGHTNESS_MENU);
       if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
         go_to_start_new();
         progstep_goto(8);
@@ -1324,7 +1315,7 @@ void button_actions_end_of_program()
       if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
       //Program_Engaged=true;
       camera_fired = 0;
-      lcd.bright(8);
+      lcd.bright(LCD_BRIGHTNESS_MENU);
       if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
         go_to_start_new();
         progstep_goto(8);
@@ -1347,7 +1338,7 @@ void Auto_Repeat_Video()
   sequence_repeat_count++;
   REVERSE_PROG_ORDER = true;
   camera_fired = 0;
-  lcd.bright(8);
+  lcd.bright(LCD_BRIGHTNESS_RUNNING);
   if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
     go_to_start_new();
     //progstep_goto(8);
@@ -1403,7 +1394,7 @@ void Auto_Repeat_Video()
     }
   */
   redraw = true;
-  lcd.bright(LCD_BRIGHTNESS_DURING_RUN);
+  lcd.bright(LCD_BRIGHTNESS_RUNNING);
 }//end of 91
 
 

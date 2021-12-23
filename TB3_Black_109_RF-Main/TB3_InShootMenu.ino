@@ -104,7 +104,7 @@ void InProg_Select_Option()
       smscamerafired += joy_capture3(0);
       uint16_t maxval = camera_total_shots;
       uint16_t overflowval = max(maxval + 100, 65400);
-      if (!smscamerafired || smscamerafired > maxval)  { smscamerafired = maxval; }
+      if (!smscamerafired || smscamerafired > overflowval)  { smscamerafired = maxval; }
       else if (smscamerafired > maxval)                { smscamerafired = 1; }
 
       if (smscamerafired_last != smscamerafired) {
@@ -173,7 +173,7 @@ void button_actions_InProg_Select_Option()
       else if (inprogtype == INPROG_RTS) { //Return to restart the shot  - send to review screen of relative move
         REVERSE_PROG_ORDER = false;
         camera_fired = 0;
-        lcd.bright(8);
+        lcd.bright(LCD_BRIGHTNESS_MENU);
         lcd.at(1, 2, "Going to Start");
 
         if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
@@ -192,7 +192,7 @@ void button_actions_InProg_Select_Option()
       else if  (inprogtype == INPROG_GOTO_END) { //Go to end point - basically a reverse move setup from wherever we are.
         REVERSE_PROG_ORDER = true;
         camera_fired = 0;
-        lcd.bright(8);
+        lcd.bright(LCD_BRIGHTNESS_MENU);
         lcd.at(1, 3, "Going to End");
 
         if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE) {
@@ -222,11 +222,11 @@ void button_actions_InProg_Select_Option()
         uint32_t available_move_time = interval / 100 - static_tm; //this is the gap we keep interval isn't live
         //Serial.print("AMT:");Serial.println(available_move_time);
         if (available_move_time <= MIN_INTERVAL_STATIC_GAP) available_move_time = MIN_INTERVAL_STATIC_GAP; //enforce min gap between static and interval
-        interval = intstatic_tm * 100; //set the new ms timer for SMS
-        if (intstatic_tm > available_move_time)
+        interval = smsstatic_tm * 100; //set the new ms timer for SMS
+        if (smsstatic_tm > available_move_time)
         { //we can apply the gap
           //Serial.print("Trigger_Type-available_move_time pos: ");Serial.println(Trigger_Type-available_move_time);
-          static_tm = intstatic_tm - available_move_time;
+          static_tm = smsstatic_tm - available_move_time;
           //Serial.print("static_tm= ");Serial.println(static_tm);
         }
         else  //squished it too much, go with minimum static time

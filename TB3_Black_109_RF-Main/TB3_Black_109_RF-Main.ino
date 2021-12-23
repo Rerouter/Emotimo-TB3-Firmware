@@ -141,20 +141,25 @@ uint16_t      Trigger_Type = 3;
 
 
 //TB3 section - Black or Orange Port Mapping for Step pins on Stepper Page
-#define MOTORS          3
+#define MOTORS      3
+
 #define MOTOR0_STEP	5
 #define MOTOR1_STEP	6
 #define MOTOR2_STEP	7
+
 #define MOTOR0_DIR	8
 #define MOTOR1_DIR	9
 #define MOTOR2_DIR	10
-#define MOTOR_EN        A3
-#define MOTOR_EN2       11
-#define MS1             A1
-#define MS2             A2
-#define MS3             A2
-#define IO_2            2 // drives middle of 2.5 mm connector on I/O port
-#define IO_3            3 // drives tip of 2.5 mm connector on I/O port
+
+#define MOTOR_EN    A3
+#define MOTOR_EN2   11
+
+#define MS1         A1
+#define MS2         A2
+#define MS3         A2
+
+#define IO_2        2 // drives middle of 2.5 mm connector on I/O port
+#define IO_3        3 // drives tip of 2.5 mm connector on I/O port
 
 #define STEPS_PER_DEG  444.444 //160000 MS per 360 degees = 444.4444444
 
@@ -178,7 +183,7 @@ uint32_t      camera_fired          = 0;     // number of shots fired
 uint32_t      camera_moving_shots   = 200;   // frames for new duration/frames prompt
 uint32_t      camera_total_shots    = 0;     // used at the end target for camera fired to compare against
 uint16_t      overaldur             = 20;    // seconds now for video only
-uint16_t      prefire_time          = 1;     // 0.1x Seconds currently hardcoded here to .1 second - this powers up motor early for the shot
+uint16_t      prefire_time          = 1;   // milliseconds, how long to power on the motors and focus the camera before taking a photo
 uint16_t      rampval               = 50;
 uint16_t      static_tm             = 1;     // new variable
 uint16_t      lead_in               = 1;
@@ -228,7 +233,8 @@ boolean       AUX_ON;  //1=Aux Enabled, 0=Aux disabled
 boolean       PAUSE_ENABLED;  //1=Pause Enabled, 0=Pause disabled
 boolean       REVERSE_PROG_ORDER; //Program ordering 0=normal, start point first. 1=reversed, set end point first to avoid long return to start
 boolean       MOVE_REVERSED_FOR_RUN;
-uint8_t       LCD_BRIGHTNESS_DURING_RUN;  //0 is off 8 is max
+uint8_t       LCD_BRIGHTNESS_RUNNING; //0 is off 8 is max
+uint8_t       LCD_BRIGHTNESS_MENU;    //0 is off 8 is max
 uint16_t      AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 steps per second.
 uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 65535;
 uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 65535;
@@ -421,7 +427,11 @@ void setup()
   draw(1, 2, 1); // Version Number
   lcd.contrast(50);
   lcd.cursorOff();
-  lcd.bright(4);
+  // To make sure we handle cases where its been set to 0,
+  // 1 = backlight off
+  // 2 = minimum backlight on
+  if (LCD_BRIGHTNESS_MENU) {lcd.bright(LCD_BRIGHTNESS_MENU);}
+  else lcd.bright(2); {LCD_BRIGHTNESS_MENU = 2;} 
 
   delay(prompt_time * 2);
   lcd.empty();

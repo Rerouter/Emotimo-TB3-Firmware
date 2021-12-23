@@ -114,11 +114,9 @@ void Set_angle_of_view()
   if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
-    Move_Engaged = true;
     NunChuckRequestData();
     NunChuckProcessData();
     updateMotorVelocities2();
-    Move_Engaged = false;
 
     lcd.at(1, 11, steps_to_deg_decimal(current_steps.x));
     lcd.at(2, 11, steps_to_deg_decimal(current_steps.y));
@@ -364,7 +362,7 @@ void pano_button_actions_review()
       Program_Engaged = true; //leave this for pano
       Interrupt_Fire_Engaged = true; //just to start off first shot immediately
       redraw = true;
-      lcd.bright(20);
+      lcd.bright(LCD_BRIGHTNESS_RUNNING);
       if (move_with_acceleration)
       {
         interrupts();
@@ -513,7 +511,7 @@ void move_motors_pano_accel()
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-  Move_Engaged = false; //clear move engaged flag
+  //Move_Engaged = false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -578,7 +576,7 @@ void move_motors_accel_array()
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-  Move_Engaged=false; //clear move engaged flag
+  // Move_Engaged=false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -596,7 +594,7 @@ void Move_to_Origin()
   setupMotorMove(1, 0);
 
   updateMotorVelocities();
-  Move_Engaged=false; //clear move engaged flag
+  // Move_Engaged=false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -634,10 +632,10 @@ void button_actions290()
       camera_fired = 0;
       current_steps.x = motors[0].position; //get our motor position variable synced
       current_steps.y = motors[1].position; //get our motor position variable synced
-      //noInterrupts(); //turn this off while programming for now
-      lcd.bright(100);
-      if      (progtype == PANOGIGA)     progstep = 205; //  move to the main program at the interval setting - UD050715
-      else if (progtype == PORTRAITPANO) progstep = 305; //  move to the main program at the interval setting UD050715
+
+      lcd.bright(LCD_BRIGHTNESS_RUNNING);
+      if      (progtype == PANOGIGA)     progstep = 206; //  move to the main program at the interval setting - UD050715
+      else if (progtype == PORTRAITPANO) progstep = 306; //  move to the main program at the interval setting UD050715
       redraw = true;
       break;
   }

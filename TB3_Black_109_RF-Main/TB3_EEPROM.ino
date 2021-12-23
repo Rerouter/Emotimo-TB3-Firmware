@@ -227,7 +227,7 @@ void set_defaults_in_ram()
 	//POWERSAVE_AUX = 3;                 // Serial.println(POWERSAVE_AUX);
 	//AUX_ON = 3;                        // Serial.println(AUX_ON);
 	//PAUSE_ENABLED = 3;                 // Serial.println(PAUSE_ENABLED);
-	//LCD_BRIGHTNESS_DURING_RUN = 3;     // Serial.println(LCD_BRIGHTNESS_DURING_RUN);
+	//LCD_BRIGHTNESS_RUNNING = 3;     // Serial.println(LCD_BRIGHTNESS_RUNNING);
 	//AUX_MAX_JOG_STEPS_PER_SEC = 15000; // Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
 	//AUX_REV = 2;                       // Serial.println(AUX_REV);
 }
@@ -239,7 +239,8 @@ void set_defaults_in_setup()
 	POWERSAVE_AUX = 3;                   // Serial.println(POWERSAVE_AUX);
 	AUX_ON = 1;                          // Serial.println(AUX_ON);
 	PAUSE_ENABLED = 1;                   // Serial.println(PAUSE_ENABLED);
-	LCD_BRIGHTNESS_DURING_RUN = 3;       // Serial.println(LCD_BRIGHTNESS_DURING_RUN);
+	LCD_BRIGHTNESS_RUNNING = 3;       // Serial.println(LCD_BRIGHTNESS_RUNNING);
+  LCD_BRIGHTNESS_MENU = 5;
 	AUX_MAX_JOG_STEPS_PER_SEC = 15000;   // Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
 	AUX_REV = 0;                         // Serial.println(AUX_REV);
   SERPENTINE = 1;                      // Serial.println(SERPENTINE);
@@ -249,7 +250,7 @@ void set_defaults_in_setup()
 	eeprom_write(98, POWERSAVE_AUX);
 	eeprom_write(100, AUX_ON);
 	eeprom_write(101, PAUSE_ENABLED);
-	eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
+	eeprom_write(102, LCD_BRIGHTNESS_RUNNING);
 	eeprom_write(104, AUX_MAX_JOG_STEPS_PER_SEC);
 	eeprom_write(106, AUX_REV);
 }
@@ -302,7 +303,7 @@ void write_all_ram_to_eeprom()
 	//eeprom_write(98, POWERSAVE_AUX);
 	//eeprom_write(100, AUX_ON);
 	//eeprom_write(101, PAUSE_ENABLED);
-	//eeprom_write(102, LCD_BRIGHTNESS_DURING_RUN);
+	//eeprom_write(102, LCD_BRIGHTNESS_RUNNING);
 	//eeprom_write(104, AUX_MAX_JOG_STEPS_PER_SEC);
 	//eeprom_write(106, AUX_REV);
 }
@@ -350,7 +351,7 @@ void restore_from_eeprom_memory()
 	eeprom_read(98, POWERSAVE_AUX);
 	eeprom_read(100, AUX_ON);
 	eeprom_read(101, PAUSE_ENABLED);
-	eeprom_read(102, LCD_BRIGHTNESS_DURING_RUN);
+	eeprom_read(102, LCD_BRIGHTNESS_RUNNING);
 	eeprom_read(104, AUX_MAX_JOG_STEPS_PER_SEC);
 	eeprom_read(106, AUX_REV);
 }
@@ -396,6 +397,6 @@ void review_RAM_Contents()
 	Serial.println(POWERSAVE_AUX);
 	Serial.println(AUX_ON);
 	Serial.println(PAUSE_ENABLED);
-	Serial.println(LCD_BRIGHTNESS_DURING_RUN);
+	Serial.println(LCD_BRIGHTNESS_RUNNING);
 	Serial.println(AUX_MAX_JOG_STEPS_PER_SEC);
 }

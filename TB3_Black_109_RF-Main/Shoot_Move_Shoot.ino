@@ -16,7 +16,9 @@ void ShootMoveShoot()
   // //Step 1 if internal interval.Kick off the shot sequence. This happens once per camera shot.
   if ( (Trigger_Type > Video_Trigger) && Program_Engaged && !(Shot_Sequence_Started) && ((millis() - interval_tm) > interval) )
   {
+#if DEBUG
     interval_tm_last = interval_tm; //just used for shot timing comparison
+#endif
     interval_tm = millis(); //start the clock on our shot sequence
 
 #if DEBUG
@@ -76,14 +78,11 @@ void ShootMoveShoot()
   //If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
   //move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
 
-  //if (Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time*100+static_tm*100)) ) {
+  //if (Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) {
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) )
   { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
     Flag_Camera_Triggers_In_Use = false; //IO Engaged is off
-    //digitalWrite(IO_2, LOW); //Use this as the iterrupt
-    //digitalWrite(IO_3, LOW);  //Turn off Pin 3
-    //Serial.print("IO3_off"); //Serial.println(millis()-interval_tm);
 
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
@@ -134,7 +133,7 @@ void ShootMoveShoot()
     NunChuckProcessData();
     //if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged=true; // manual trigger
     //if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type>External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type >= External_Trigger  && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
   }
 }
 
@@ -378,13 +377,14 @@ void EndOfProgramLoop ()
   }
 }
 
-
 void PanoLoop ()
 {
   //Kick off the shot sequence!!!  This happens once per camera shot.
-  if ( (Trigger_Type > Video_Trigger ) && Program_Engaged && !Shot_Sequence_Started && ((millis() - interval_tm) > interval) )
+  if (Trigger_Type > Video_Trigger && Program_Engaged && !Shot_Sequence_Started && ((millis() - interval_tm) > interval) )
   {
+#if DEBUG
     interval_tm_last = interval_tm; //just used for shot timing comparison
+#endif
     interval_tm = millis(); //start the clock on our shot sequence
 
 #if DEBUG
@@ -393,19 +393,20 @@ void PanoLoop ()
     Serial.print(";");
 #endif
 
-    Interrupt_Fire_Engaged      = false; //clear this flag to avoid re-entering this routine
+    Interrupt_Fire_Engaged      = false; // clear this flag to avoid re-entering this routine
     Shot_Sequence_Started       = true;  //
-    Flag_Prefire_Focus_Enabled  = true; //
-    Flag_Camera_Triggers_In_Use = true; //
+    Flag_Prefire_Focus_Enabled  = true;  //
+    Flag_Camera_Triggers_In_Use = true;  //
     
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    //if (POWERSAVE_PT < PWR_MOVEONLY_ON)              enable_PanTilt();  //don't power on for shot for high power saving
-    //if (AUX_ON && POWERSAVE_AUX < PWR_MOVEONLY_ON)   enable_AUX();  //don't power on for shot for high power saving
+    // if (POWERSAVE_PT < PWR_MOVEONLY_ON)            enable_PanTilt(); // don't power on for shot for high power saving
+    // if (AUX_ON && POWERSAVE_AUX < PWR_MOVEONLY_ON) enable_AUX();     // don't power on for shot for high power saving
     enable_PanTilt();
   }
-  //End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
-  //If so set prefire flag off, static flag on, fire camera for static time value, update the display
+  
+  // End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
+  // If so set prefire flag off, static flag on, fire camera for static time value, update the display
 
   if (Shot_Sequence_Started && Flag_Prefire_Focus_Enabled  && ((millis() - interval_tm) > prefire_time * 100)) {
     Flag_Prefire_Focus_Enabled = false;
@@ -429,9 +430,6 @@ void PanoLoop ()
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
     Flag_Camera_Triggers_In_Use = false; //IO Engaged is off
-    //digitalWrite(IO_2, LOW); //Use this as the iterrupt
-    //digitalWrite(IO_3, LOW);  //Turn off Pin 3
-    //Serial.print("IO3_off"); //Serial.println(millis()-interval_tm);
 
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
     Move_Engaged = true; //move motors
@@ -463,8 +461,8 @@ void PanoLoop ()
 #endif
 
     //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-    //if (POWERSAVE_PT >  PWR_PROGRAM_ON)   disable_PT();
-    //if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
+    // if (POWERSAVE_PT >  PWR_PROGRAM_ON)   disable_PT();
+    // if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
 
     if (!move_with_acceleration)
     {
@@ -506,6 +504,7 @@ void PanoLoop ()
 #endif
     }
   }
+  
   if ( camera_moving_shots && camera_fired >= camera_total_shots) {  //end of program
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
@@ -523,11 +522,11 @@ void PanoLoop ()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    // if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged=true; // manual trigger
-    //if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type > External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
-    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started) Pano_Pause(); // Pause Panorama and be able to change settings
+    // if (HandleButtons() == C_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged = true; // manual trigger
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) Pano_Pause();        // Pause Panorama and be able to change settings
   }
 }
+
 
 void PanoEnd ()
 {
