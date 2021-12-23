@@ -1,22 +1,7 @@
 /*
-	(c) 2015 Brian Burling eMotimo INC
+	(c) 2015 Brian Burling eMotimo INC - Original 109 Release
+  (c) 2021 Ryan Favelle - Modifications
 
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
-
-/*
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -322,7 +307,7 @@ LONG delta_steps;
 #define DFMOCO_VERSION_STRING "1.2.6"
 
 // supported boards
-#define ARDUINO.     1
+#define ARDUINO      1
 #define ARDUINOMEGA  2
 
 //eMotimo TB3 - Set this PINOUT_VERSION 3 for TB3 Orange (Uno)

@@ -1,29 +1,21 @@
 /*
+  (c) 2015 Brian Burling eMotimo INC - Original 109 Release
+  (c) 2021 Ryan Favelle - Modifications
 
-  (c) 2015 Brian Burling eMotimo INC
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
 
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
 
-  This program is free software: you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation, either version 3 of the License, or
-  (at your option) any later version.
-
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
-
-  You should have received a copy of the GNU General Public License
-  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-/*
-  void Program_Engaged_Toggle() {  //used for pausing
-    ButtonState = ReadAgain; //to prevent entry into this method until CZ button release again
-    FLAGS.Program_Engaged=!FLAGS.Program_Engaged; //toggle off the loop
-  }
-*/
 uint16_t panoprogtype = 0;
 uint16_t restore_progstep = 0;
 
