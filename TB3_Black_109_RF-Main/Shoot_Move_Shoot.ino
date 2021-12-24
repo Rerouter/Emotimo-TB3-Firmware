@@ -425,11 +425,13 @@ void PanoLoop ()
 
   // ------ End of state machine ------
 
-  if (panoState == 1 && camera_fired >= camera_total_shots ) {  // end of program
+  if (!CameraShutter() && camera_fired >= camera_total_shots ) {  // end of program
+    panoState = 1;
+    panoFlag = 0;
     lcd.empty();
     draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
     Program_Engaged = false;
-    if (POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
+    if (POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT();
     delay(prompt_time);
     progstep = 290;
     redraw = true;
