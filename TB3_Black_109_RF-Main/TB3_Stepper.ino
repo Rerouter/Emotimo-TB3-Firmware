@@ -75,7 +75,7 @@ void dda_move(long micro_delay)
 {
   //enable our steppers
   if (AUX_ON) enable_AUX();
-  enable_PanTilt();
+  enable_PT();
 
   //figure out our deltas
   max_delta = max(delta_steps.x, delta_steps.y);
@@ -340,7 +340,7 @@ void disable_AUX()
 }
 
 
-void enable_PanTilt()
+void enable_PT()
 {
   digitalWrite(MOTOR_EN, LOW);
 }

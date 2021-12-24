@@ -564,7 +564,7 @@ void go_to_start_old()
 	motors[1].position = current_steps.y;
 	motors[2].position = current_steps.z;
 
-	enable_PanTilt();
+	enable_PT();
 	enable_AUX();
 	go_to_origin_max_speed();
 }
@@ -572,7 +572,7 @@ void go_to_start_old()
 
 void go_to_start_new() // interrupt routine
 {
-	enable_PanTilt();
+	enable_PT();
 	enable_AUX();
 	//Add Section to allow for reverse Stuff.
 

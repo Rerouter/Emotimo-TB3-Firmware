@@ -403,7 +403,7 @@ void DFSetup()
 	*/ //comment variable redefinition out as this is setup on start.
 
 	//turn on the motors
-	enable_PanTilt();
+	enable_PT();
 	enable_AUX();
 
 	// setup serial connection

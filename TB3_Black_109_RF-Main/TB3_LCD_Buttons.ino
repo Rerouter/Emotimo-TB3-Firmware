@@ -309,7 +309,7 @@ void Move_to_Endpoint()
     }
 
     startISR1 ();
-    enable_PanTilt();
+    enable_PT();
     if (AUX_ON) enable_AUX();  //
     delay(prompt_time);
     redraw = false;
@@ -1226,11 +1226,11 @@ void button_actions_review()
         }
       }
 
-      enable_PanTilt();
+      enable_PT();
       if (AUX_ON) enable_AUX();  //
 
       Program_Engaged = true;
-      Interrupt_Fire_Engaged = true; //just to start off first shot immediately
+      Flag_Wait_For_Trigger = true; //just to start off first shot immediately
       interval_tm = 0; //set this to 0 to immediately trigger the first shot
       sequence_repeat_count = 0; //this is zeroed out every time we start a new shot
 
@@ -1365,14 +1365,14 @@ void Auto_Repeat_Video()
      }
     }
   */
-  enable_PanTilt();
+  enable_PT();
   enable_AUX();  //
 
   draw(49, 1, 1); //lcd.at(1,1,"Program Running");
   //delay(prompt_time/3);
 
   Program_Engaged = true;
-  Interrupt_Fire_Engaged = true; //just to start off first shot immediately
+  Flag_Wait_For_Trigger = true; //just to start off first shot immediately
 
   interval_tm = 0; //set this to 0 to immediately trigger the first shot
 

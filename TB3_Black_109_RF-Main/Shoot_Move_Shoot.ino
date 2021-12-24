@@ -1,11 +1,7 @@
 //Program Status Flags
-boolean Flag_Camera_Triggers_In_Use = false;
 boolean Flag_Prefire_Focus_Enabled  = false;
 boolean Flag_Shot_Timer_Active      = false;
 boolean Shot_Sequence_Started       = false;
-
-//Local Variables
-uint8_t   PanoPostMoveDelay = 200;  // delay in microseconds after completing a move
 
 //Start of variables for Pano Mode
 boolean   move_with_acceleration = true; // false = no accel, true = accel, so far read only
@@ -14,7 +10,7 @@ boolean   move_with_acceleration = true; // false = no accel, true = accel, so f
 void ShootMoveShoot()
 {
   // //Step 1 if internal interval.Kick off the shot sequence. This happens once per camera shot.
-  if ( (Trigger_Type > Video_Trigger) && Program_Engaged && !(Shot_Sequence_Started) && ((millis() - interval_tm) > interval) )
+  if ( Trigger_Type >= External_Trigger && Program_Engaged && !(Shot_Sequence_Started) && ((millis() - interval_tm) > interval) )
   {
 #if DEBUG
     interval_tm_last = interval_tm; //just used for shot timing comparison
@@ -26,18 +22,17 @@ void ShootMoveShoot()
     Serial.print(interval_tm - interval_tm_last);
     Serial.print(";");
 #endif
-    Interrupt_Fire_Engaged = false; //clear this flag to avoid rentering this routine
+    Flag_Wait_For_Trigger = false; //clear this flag to avoid rentering this routine
     Shot_Sequence_Started = true; //
     Flag_Prefire_Focus_Enabled = true; //
-    Flag_Camera_Triggers_In_Use = true; //
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    if (POWERSAVE_PT < PWR_MOVEONLY_ON)              enable_PanTilt(); //don't power on for shot for high power saving
+    if (POWERSAVE_PT < PWR_MOVEONLY_ON)              enable_PT(); //don't power on for shot for high power saving
     if (AUX_ON && POWERSAVE_AUX < PWR_MOVEONLY_ON)   enable_AUX(); //don't power on for shot for high power saving
   }
 
   //Step 1 if external triggering. This happens once per camera shot.
-  if ( Program_Engaged && !(Shot_Sequence_Started) && (Trigger_Type == External_Trigger) && Interrupt_Fire_Engaged )
+  if ( Program_Engaged && !(Shot_Sequence_Started) && (Trigger_Type == External_Trigger) && Flag_Wait_For_Trigger )
   {
     interval_tm_last = interval_tm; //just used for shot timing comparison
     interval_tm = millis(); //start the clock on our shot sequence
@@ -47,14 +42,13 @@ void ShootMoveShoot()
     Serial.print(interval_tm - interval_tm_last);
     Serial.print(";");
 #endif
-    Interrupt_Fire_Engaged = false; //clear this flag to avoid rentering this routine
+    Flag_Wait_For_Trigger = false; //clear this flag to avoid rentering this routine
 
     Shot_Sequence_Started = true; //
     Flag_Prefire_Focus_Enabled = true; //
-    Flag_Camera_Triggers_In_Use = true; //
     CameraFocus(true); //for longer shot interval, wake up the camera
 
-    if (POWERSAVE_PT < PWR_MOVEONLY_ON)              enable_PanTilt(); //don't power on for shot for high power saving
+    if (POWERSAVE_PT < PWR_MOVEONLY_ON)              enable_PT(); //don't power on for shot for high power saving
     if (AUX_ON && POWERSAVE_AUX < PWR_MOVEONLY_ON)   enable_AUX(); //don't power on for shot for high power saving
   }
 
@@ -82,7 +76,6 @@ void ShootMoveShoot()
   if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) )
   { //removed requirement for Program Engaged for external interrupt
     Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
-    Flag_Camera_Triggers_In_Use = false; //IO Engaged is off
 
     //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
@@ -106,7 +99,7 @@ void ShootMoveShoot()
     if (Trigger_Type != External_Trigger ) display_status(); //update after shot complete to avoid issues with pausing
 
     Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
-    Interrupt_Fire_Engaged = false;
+    Flag_Wait_For_Trigger = false;
     //InterruptAction_Reset(); //enable the external interrupts to start a new shot
 #if DEBUG
     Serial.println("EOL");
@@ -131,7 +124,7 @@ void ShootMoveShoot()
     NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-    //if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged=true; // manual trigger
+    //if (HandleButtons() == CZ_Held && Trigger_Type==External_Trigger ) Flag_Wait_For_Trigger=true; // manual trigger
     //if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type>External_Trigger  && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
     if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type >= External_Trigger  && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
   }
@@ -259,10 +252,6 @@ void VideoLoop ()
 
 void ExternalTriggerLoop ()
 {
-#if DEBUG
-  uint32_t shuttertimer_open;
-  uint32_t shuttertimer_close;
-#endif
 
   //New interrupt Flag Checks
   if (changehappened)
@@ -271,20 +260,11 @@ void ExternalTriggerLoop ()
     if (!iostate) //The trigger is active, start recording the time
     {
       ext_shutter_open = true;
-#if DEBUG
-      shuttertimer_open = micros(); //turn on the led / shutter
-      Serial.print("shuttertimer_a="); Serial.print(shuttertimer_open);
-#endif
     }
     else //shutter closed - sense pin goes back high - stop the clock and report
     {
       ext_shutter_open = false;
       ext_shutter_count++;
-#if DEBUG
-      shuttertimer_close = micros(); //turn on the led / shutter
-      Serial.print(" ext_shutter_count="); Serial.print(ext_shutter_count);
-      Serial.print(" shuttertimer_b="); Serial.print(shuttertimer_close); Serial.print("diff="); Serial.println(shuttertimer_close - shuttertimer_open);
-#endif
     }
   }
   //end interrupt check and flagging
@@ -294,11 +274,7 @@ void ExternalTriggerLoop ()
     Shot_Sequence_Started = true; //
   }
   if ( Program_Engaged && (Shot_Sequence_Started) && !CameraShutter() && (ext_shutter_open) ) { //fire the camera can happen more than once in a shot sequence with HDR
-#if DEBUG
-    Serial.print("Startshot_at:");
-    Serial.print(millis());
-    Serial.println(";");
-#endif
+
     //Fire the Camera without a timer, just turn on the focus and shutter pins - and stop when the shot is done.
     CameraFocus(true); //Fire without a timer
     CameraShutter(true);
@@ -311,18 +287,8 @@ void ExternalTriggerLoop ()
       ext_shutter_count = 0;
       //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
 
-#if DEBUG_MOTOR
-      Serial.print("MoveStart ");
-      Serial.print(millis() - interval_tm);
-      Serial.print(";");
-#endif
       Move_Engaged = true; //move motors
       move_motors();
-#if DEBUG_MOTOR
-      Serial.print("Moveend ");
-      Serial.print(millis() - interval_tm);
-      Serial.print(";");
-#endif
 
       //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
       if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
@@ -352,7 +318,7 @@ void ExternalTriggerLoop ()
     NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-    //if (HandleButtons() == CZ_Held && Trigger_Type == External_Trigger ) Interrupt_Fire_Engaged = true; // manual trigger
+    //if (HandleButtons() == CZ_Held && Trigger_Type == External_Trigger ) Flag_Wait_For_Trigger = true; // manual trigger
     if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) Pause_Prog(); //pause an SMS program
   }
 }
@@ -379,151 +345,103 @@ void EndOfProgramLoop ()
 
 void PanoLoop ()
 {
-  //Kick off the shot sequence!!!  This happens once per camera shot.
-  if (Trigger_Type > Video_Trigger && Program_Engaged && !Shot_Sequence_Started && ((millis() - interval_tm) > interval) )
+  static uint8_t panoState = 1; // Start out with the first shot
+  static uint8_t panoFlag  = 0; // Start out with an invalid flag
+  switch(panoState) {
+    case 0: // Idle State, waiting for flag conditions to advance
+      break;
+      
+    case 1: // Setup State, prefocuses the camera and enables the motors
+      panoFlag = 1;
+      if (Trigger_Type != External_Trigger ) display_status();
+      interval_tm = millis(); // Start the clock for out image
+      CameraFocus(true); // Wake up the camera and begin focusing in the prefire time
+      if (POWERSAVE_PT <= PWR_PROGRAM_ON)   enable_PT(); // Turn on power to the motors if not move only
+      break;
+
+    case 2:
+      panoFlag = 2;
+      if (POWERSAVE_PT == PWR_SHOOTMOVE_ON)   enable_PT(); // Turn on power to the motors if shoot only
+      CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
+      camera_fired++;
+      break;
+
+    case 3:
+      panoFlag = 3; // Set motors moving to the next position
+      if (POWERSAVE_PT == PWR_MOVEONLY_ON)   enable_PT(); // Turn on power to the motors if move only
+      if (progtype == PANOGIGA) {
+        if (move_with_acceleration) move_motors_pano_accel();                    
+      }
+      else if (progtype == PORTRAITPANO) {
+        move_motors_accel_array();
+        delay (200); // delay in milliseconds after completing a move
+      }
+      break;
+
+    case 4:
+      if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+      if (!motorMoving) {  // motors completed the move
+        if (POWERSAVE_PT >= PWR_SHOOTMOVE_ON)   disable_PT();
+        if( Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) panoFlag = 5;
+        else                                                                    panoFlag = 4;
+      }
+      break;
+      
+    case 5:
+      if (changehappened)
+      {
+        changehappened = false;
+        if (!iostate) {  //The trigger is active, start recording the time
+         panoFlag = 4;
+        }
+      }
+      break;
+  }
+
+  switch(panoFlag)
   {
-#if DEBUG
-    interval_tm_last = interval_tm; //just used for shot timing comparison
-#endif
-    interval_tm = millis(); //start the clock on our shot sequence
-
-#if DEBUG
-    Serial.print("trueinterval: ");
-    Serial.print(interval_tm - interval_tm_last);
-    Serial.print(";");
-#endif
-
-    Interrupt_Fire_Engaged      = false; // clear this flag to avoid re-entering this routine
-    Shot_Sequence_Started       = true;  //
-    Flag_Prefire_Focus_Enabled  = true;  //
-    Flag_Camera_Triggers_In_Use = true;  //
-    
-    CameraFocus(true); //for longer shot interval, wake up the camera
-
-    // if (POWERSAVE_PT < PWR_MOVEONLY_ON)            enable_PanTilt(); // don't power on for shot for high power saving
-    // if (AUX_ON && POWERSAVE_AUX < PWR_MOVEONLY_ON) enable_AUX();     // don't power on for shot for high power saving
-    enable_PanTilt();
-  }
-  
-  // End our prefire - check that we are in program active,shot cycle engaged, and prefire engaged and check against our prefire time
-  // If so set prefire flag off, static flag on, fire camera for static time value, update the display
-
-  if (Shot_Sequence_Started && Flag_Prefire_Focus_Enabled  && ((millis() - interval_tm) > prefire_time * 100)) {
-    Flag_Prefire_Focus_Enabled = false;
-    
-#if DEBUG
-    Serial.print("PreDoneAt ");
-    Serial.print(millis() - interval_tm);
-    Serial.print(";");
-#endif
-    Flag_Shot_Timer_Active = true;
-    //Fire Camera
-    CameraShoot((uint32_t)static_tm * 100); //start shutter sequence
-    camera_fired++;
+    case 0: // Idle State, waiting for external trigger to advance
+      break;
+    case 1: // Wait for prefire time to elapse
+      if((millis() - interval_tm) > (prefire_time * 100)) panoState = 2; // Fire Camera
+      else panoState = 0;
+      break;
+    case 2:  // Wait for exposure time to elapse
+      if((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) panoState = 3; // Prepare motors
+      else panoState = 0;
+      break;
+    case 3: // Wait for camera shutter and focus to release
+      if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100 + prefire_time * 100 + static_tm * 100)) panoState = 4; // Move Motors
+      else panoState = 0;
+      break;
+    case 4: // Jump Back to Start
+      panoState = 1;
+      break;
+    case 5: // Wait for external trigger
+      panoState = 5; 
+      panoFlag = 0; // To stop assignment of progtype each loop
+      break;
   }
 
-  //End out static time - check that we are in an program active and static time,  Shutter not engaged, check shot cycle time against prefire+statictime
-  //If so remove flags from Static Time Engaged and IO engaged, Turn off I/O port, set flags for motors moving, move motors
-  //move motors - figure out delays.   Long delays mean really slow - choose the minimum of the calculated or a good feedrate that is slow
+  // ------ End of state machine ------
 
-  //if (Program_Engaged && Shot_Sequence_Started && Flag_Shot_Timer_Active && !Shutter_Signal_Engaged && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) {
-  if (Shot_Sequence_Started && Flag_Shot_Timer_Active && !CameraShutter() && ((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) ) { //removed requirement for Program Engaged for external interrupt
-    Flag_Shot_Timer_Active = false; //Static Time Engaged is OFF
-    Flag_Camera_Triggers_In_Use = false; //IO Engaged is off
-
-    //Move the motors - each motor move is calculated by where we are in the sequence - we still call this for lead in and lead out - motors just don't move
-    Move_Engaged = true; //move motors
-#if DEBUG_MOTOR
-    Serial.print("MoveStart ");
-    Serial.print(millis() - interval_tm);
-    Serial.print(";");
-#endif
-#if DEBUG_PANO
-    Serial.print("progtype "); Serial.println(progtype);
-#endif
-    if (progtype == PANOGIGA) //regular pano
-    {
-      if (move_with_acceleration) move_motors_pano_accel();
-      else                        move_motors_pano_basic();                       
-    }
-    else if (progtype == PORTRAITPANO) //PORTRAITPANO method array load
-    {
-#if DEBUG_PANO
-      Serial.print("entered PORTRAITPANO loop");
-#endif
-      move_motors_accel_array();
-      delay (PanoPostMoveDelay);
-    }
-#if DEBUG_MOTOR
-    Serial.print("Moveend ");
-    Serial.print(millis() - interval_tm);
-    Serial.print(";");
-#endif
-
-    //Turn off the motors if we have selected powersave 3 and 4 are the only ones we want here
-    // if (POWERSAVE_PT >  PWR_PROGRAM_ON)   disable_PT();
-    // if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
-
-    if (!move_with_acceleration)
-    {
-#if DEBUG
-      Serial.println("finished basic move");
-#endif
-      if (Trigger_Type != External_Trigger ) display_status(); //update after shot complete to avoid issues with pausing
-      Move_Engaged = false;
-      Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
-      Interrupt_Fire_Engaged = false;
-      //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-      Serial.println("EOL");
-#endif
-    }
-  } //end test
-
-  //just have this repeat like we are in loop
-  if (move_with_acceleration) //acceleration profiles
-  {
-    if (!nextMoveLoaded)
-    {
-      updateMotorVelocities();  //finished up the interrupt routine
-      //Print_Motor_Params(2);
-    }
-    //test for completed move
-    if (Shot_Sequence_Started && Move_Engaged && !motorMoving) //motors completed the move
-    {
-#if DEBUG
-      Serial.println("finished accel move");
-#endif
-      if (Trigger_Type != External_Trigger ) display_status(); //update after shot complete to avoid issues with pausing
-      Move_Engaged = false;
-      Shot_Sequence_Started = false; //Shot sequence engaged flag is is off - we are ready for our next
-      Interrupt_Fire_Engaged = false;
-      //InterruptAction_Reset(); //enable the external interrupts to start a new shot
-#if DEBUG
-      Serial.println("EOL");
-#endif
-    }
-  }
-  
-  if ( camera_moving_shots && camera_fired >= camera_total_shots) {  //end of program
+  if (panoState == 1 && camera_fired >= camera_total_shots ) {  // end of program
     lcd.empty();
-    draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
+    draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
     Program_Engaged = false;
     if (POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT(); //  low, standard, high, we power down at the end of program
-    if (POWERSAVE_AUX > PWR_ALWAYS_ON)  disable_AUX(); // low, standard, high, we power down at the end of program
     delay(prompt_time);
     progstep = 290;
     redraw = true;
   }
-  //updateMotorVelocities();  //uncomment this for DF Loop
 
-  if ((millis() - NClastread) > NCdelay) {
+  if ((millis() - NClastread) > NCdelay) { // Nunchuck update for button events
     NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
 
-    // if (HandleButtons() == C_Held && Trigger_Type==External_Trigger ) Interrupt_Fire_Engaged = true; // manual trigger
-    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) Pano_Pause();        // Pause Panorama and be able to change settings
+    if (panoFlag == 5 && HandleButtons() == C_Held && Trigger_Type == Button_Trigger ) panoState = 1; // Trigger advance with the button
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) Pano_Pause();         // Pause Panorama and be able to change settings
   }
 }
 

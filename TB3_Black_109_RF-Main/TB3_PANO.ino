@@ -360,7 +360,7 @@ void pano_button_actions_review()
   
       camera_fired = 0; //reset the counter
       Program_Engaged = true; //leave this for pano
-      Interrupt_Fire_Engaged = true; //just to start off first shot immediately
+      Flag_Wait_For_Trigger = true; //just to start off first shot immediately
       redraw = true;
       lcd.bright(LCD_BRIGHTNESS_RUNNING);
       if (move_with_acceleration)

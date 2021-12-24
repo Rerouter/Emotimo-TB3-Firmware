@@ -184,9 +184,10 @@ uint32_t      camera_fired          = 0;     // number of shots fired
 uint32_t      camera_moving_shots   = 200;   // frames for new duration/frames prompt
 uint32_t      camera_total_shots    = 0;     // used at the end target for camera fired to compare against
 uint16_t      overaldur             = 20;    // seconds now for video only
+uint16_t      static_tm             = 1;     // 0.1x Seconds exposure time of an image
 uint16_t      prefire_time          = 1;     // 0.1x Seconds how long to power on the motors and focus the camera before taking a photo
+uint16_t      postfire_time         = 1;     // 0.1x Seconds how long to wait after an image to begin moving again
 uint16_t      rampval               = 50;
-uint16_t      static_tm             = 1;     // new variable
 uint16_t      lead_in               = 1;
 uint16_t      lead_out              = 1;
 uint16_t      start_delay_sec       = 0;
@@ -210,7 +211,7 @@ int32_t       ramp_params_steps [MOTORS]; //This is to calc the steps at the end
 //Program Status Flags
 boolean       Program_Engaged =        false;
 boolean       Move_Engaged =           false;
-boolean       Interrupt_Fire_Engaged = false;
+boolean       Flag_Wait_For_Trigger = false;
 
 //New Powersave flags
 /*Power Save explanation

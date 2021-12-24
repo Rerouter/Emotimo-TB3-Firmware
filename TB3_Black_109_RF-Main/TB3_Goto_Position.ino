@@ -41,7 +41,7 @@ void goto_position(uint32_t gotoshot_temp)
 	//end reset the move
 
 	//enable the motors
-	enable_PanTilt();
+	enable_PT();
 	enable_AUX();
 
 	//start the for loop here;
