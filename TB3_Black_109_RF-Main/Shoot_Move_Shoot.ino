@@ -413,11 +413,16 @@ void PanoLoop ()
       break;
 
     case 2:
-      panoFlag = 2;
       if (POWERSAVE_PT == PWR_SHOOTMOVE_ON)   enable_PT(); // Turn on power to the motors if shoot only
-      CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
-      camera_fired++;
-      display_status();
+      if ( Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) {
+        panoFlag = 5; // Wait for external trigger
+      }
+      else {
+        panoFlag = 2;
+        CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
+        camera_fired++;
+        display_status();
+      }
       break;
 
     case 3:
@@ -436,19 +441,16 @@ void PanoLoop ()
       if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
       if (!motorMoving) {  // motors completed the move
         if (POWERSAVE_PT >= PWR_SHOOTMOVE_ON)   disable_PT();
-        if( Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) panoFlag = 5;
-        else                                                                    panoFlag = 4;
+        panoFlag = 4;
       }
       break;
       
     case 5:
       if (changehappened)
       {
-        if (POWERSAVE_PT == PWR_SHOOTMOVE_ON)   enable_PT(); // Turn on power to the motors if shoot only
         changehappened = false;
         if (!iostate) {  //The trigger is active, fire the camera
          panoFlag = 6;
-         CameraFocus(true);
          CameraShutter(true); // Fire the camera immediatly
         }
       }
@@ -458,10 +460,11 @@ void PanoLoop ()
       {
         changehappened = false;
         if (iostate) {  //The trigger is released, stop the camera
-         panoFlag = 6;
+         panoFlag = 2;
          CameraShutter(false); // Fire the camera immediatly
-         CameraFocus(false);
+         CameraFocus(false);   // Release the camera focus
          camera_fired++;
+         interval_tm = millis();
          display_status();
         }
       }
@@ -476,11 +479,14 @@ void PanoLoop ()
       else panoState = 0;
       break;
     case 2:  // Wait for exposure time to elapse
-      if((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) panoState = 3; // Prepare motors
+      if(!CameraShutter() && (millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) panoState = 3; // Prepare motors
       else panoState = 0;
       break;
     case 3: // Wait for camera shutter and focus to release
       if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100 + prefire_time * 100 + static_tm * 100)) panoState = 4; // Move Motors
+      else if (Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) {
+        if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100)) panoState = 4;
+      }
       else panoState = 0;
       break;
     case 4: // Jump Back to Start
@@ -488,14 +494,11 @@ void PanoLoop ()
       break;
     case 5: // Wait for external trigger
       panoState = 5; 
-      panoFlag = 0; // To stop assignment of progtype each loop
+      panoFlag = 0;
       break;
     case 6: // Handle external trigger
       panoState = 6;
       panoFlag = 0;
-      break;
-    case 7: // Return from external trigger
-      panoState = 3;
       break;
   }
 
