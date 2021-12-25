@@ -1,36 +1,36 @@
- /*
+/*
   DFMoco version 1.2.6
-  
+
   Multi-axis motion control.
   For use with the Arc motion control system in Dragonframe 3.
   Generates step and direction signals, which can be sent to stepper motor drivers.
-   
+
   Control up to four axes with an Uno or Duemilanove board.
   Control up to eight axes with a Mega or Mega 2560, chipKit MAX32 or LeafLabs Maple.
 
   Version History
-  
+
   Version 1.2.6 Add PINOUT_VERSION option to use older pinout.
   Version 1.2.5 Fix jogging with low pulse rate.
   Version 1.2.4 Fix pin assignments
   Version 1.2.3 New Position command
   Version 1.2.2 Jog and Inch commands
   Version 1.2.1 Moved step/direction pins for motions 5-8.
-				Detects board type automatically.
+		 		Detects board type automatically.
   Version 1.2.0 Basic go-motion capabilities
   Version 1.1.2 Smooth transitions when changing direction
   Version 1.1.1 Save/restore motor position
-  Version 1.1.0 Major rework 
+  Version 1.1.0 Major rework
   Version 1.0.2 Moved pulses into interrupt handler
-  Version 1.0.1 Added delay for pulse widths  
+  Version 1.0.1 Added delay for pulse widths
   Version 1.0.0 Initial public release.
 
   Pin configuration for TB3 Orange:
 
   #define MOTOR0_STEP	5   //Pin 5 is PORTD B00100000
-  #define MOTOR0_DIR	8 
+  #define MOTOR0_DIR	8
   #define MOTOR1_STEP	6   //Pin 6 is PORTD B01000000
-  #define MOTOR1_DIR	9 
+  #define MOTOR1_DIR	9
   #define MOTOR2_STEP	7   //Pin 7 is PORTD B10000000
   #define MOTOR2_DIR	10
 
@@ -46,17 +46,17 @@
   Pin configuration for TB3 Black:
 
   #define MOTOR0_STEP	5   //Pin 5 is PORTE B00001000 PE3
-  #define MOTOR0_DIR	8 
+  #define MOTOR0_DIR	8
   #define MOTOR1_STEP	6   //Pin 6 is PORTH B00001000 PH3
-  #define MOTOR1_DIR	9 
+  #define MOTOR1_DIR	9
   #define MOTOR2_STEP	7   //Pin 7 is PORTH B00010000 PH4
   #define MOTOR2_DIR	10
   #define MOTOR3_STEP	30  //Pin 30 is PC7 PORTC B10000000
   #define MOTOR3_DIR	31
-  
+
   #define MOTOR_EN		A3
   #define MOTOR_EN_2	11
-  
+
   #define MS1		   A1
   #define MS2		   A2
   #define MS3		   A2

@@ -112,7 +112,7 @@ void dda_move(long micro_delay)
         x_counter -= max_delta;
 
         if (x_direction)	current_steps.x++;
-        else                current_steps.x--;
+        else              current_steps.x--;
       }
     }
 
@@ -150,7 +150,7 @@ void dda_move(long micro_delay)
 
     //wait for next step.
     if (milli_delay > 0)	delay(milli_delay);
-    else					delayMicroseconds(micro_delay);
+    else                  delayMicroseconds(micro_delay);
   }
 
   while (x_can_step || y_can_step || z_can_step);
@@ -183,6 +183,14 @@ void set_target(int32_t x, int32_t y, int32_t z)
   motors[2].destination = z;
 
   calculate_deltas();
+  Serial.print  ("  current_steps.x:" + String(current_steps.x));
+  Serial.print  ("  current_steps.y:" + String(current_steps.y));
+  Serial.print  ("  current_steps.z:" + String(current_steps.z));
+
+  Serial.print  ("  target_steps.x:" + String(target_steps.x));
+  Serial.print  ("  target_steps.y:" + String(target_steps.y));
+  Serial.println("  target_steps.z:" + String(target_steps.z));
+  
 }
 
 
@@ -223,49 +231,31 @@ long calculate_feedrate_delay_1()
   long master_steps = 0;
 
   //find the dominant axis.
-  if (delta_steps.x > delta_steps.y)
-  {
+  if (delta_steps.x > delta_steps.y)  {
     if (delta_steps.z > delta_steps.x)	master_steps = delta_steps.z;
-    else								master_steps = delta_steps.x;
+    else                                master_steps = delta_steps.x;
   }
-  else
-  {
+  else  {
     if (delta_steps.z > delta_steps.y)	master_steps = delta_steps.z;
-    else								master_steps = delta_steps.y;
+    else                                master_steps = delta_steps.y;
   }
-
-#if DEBUG_MOTOR
-  Serial.print("master_steps= ");
-  Serial.print(master_steps);
-  Serial.print(";");
-#endif
-  if (Trigger_Type == Video_Trigger)
-  {
+  Serial.print("  Delta_X: ");
+  Serial.print(delta_steps.x);
+  Serial.print("  Delta_Y: ");
+  Serial.print(delta_steps.y);
+  Serial.print("  Delta_Z: ");
+  Serial.print(delta_steps.z);
+  Serial.print("  master_steps: ");
+  Serial.println(master_steps);
+  if (Trigger_Type == Video_Trigger)  {
     //return ((interval*(1000L))/master_steps); //   Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds
-#if DEBUG_MOTOR
-    Serial.print("feedratedelay_1_vid= ");
-    Serial.print((interval * (1000L)) / master_steps);
-    Serial.print(";");
-#endif
     return ((interval * (1000L)) / master_steps); //  This is the issue - intervla
   }
-  else if (Trigger_Type == External_Trigger)
-  {
-#if DEBUG_MOTOR
-    Serial.print("feedratedelay_1_StopMo= ");
-    Serial.print((((Trigger_Type - static_tm) * 100000) / master_steps) * 0.5);
-    Serial.print(";");
-#endif
+  else if (Trigger_Type == External_Trigger)  {
     return ((((10L) * 100000L) / master_steps) * 0.5); //  Use half available time to move for stills
   }
-  else
-  {
-#if DEBUG_MOTOR
-    Serial.print("feedratedelay_1_SMS=");
-    Serial.print((((Trigger_Type - static_tm - prefire_time) * 100000L) / master_steps) * 0.5);
-    Serial.print(";");
-#endif
-    return (abs((((Trigger_Type - static_tm - prefire_time) * 100000L) / master_steps) * 0.5)); //  Use half available time to move for stills
+  else  {
+    return abs(((Trigger_Type - static_tm - prefire_time) * 50000.0) / master_steps); //  Use half available time to move for stills
   }
 }
 

@@ -235,7 +235,11 @@ void button_actions_Pano_Paused_Menu()
           lcd.at(2, 4, "Frame:");
           lcd.at(2, 11, intcamerafired);
           camera_fired = intcamerafired;
-          //move_motors_pano_accel();
+          move_motors_pano_accel();
+          do {
+            if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          }
+          while (motorMoving);
           panoprogtype = PANO_RESUME;
           break;
 

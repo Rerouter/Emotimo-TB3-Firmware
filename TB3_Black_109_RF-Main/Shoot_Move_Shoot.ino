@@ -9,40 +9,56 @@ boolean   move_with_acceleration = true; // false = no accel, true = accel, so f
 
 void ShootMoveShoot()
 {
-/*
-  static uint8_t panoState = 1; // Start out with the first shot
-  static uint8_t panoFlag  = 0; // Start out with an invalid flag
-  switch(panoState) {
+  static uint8_t smsState = 1; // Start out with the first shot
+  static uint8_t smsFlag  = 0; // Start out with an invalid flag
+  Serial.print("smsState: ");
+  Serial.print(smsState);
+  Serial.print("  smsFlag: ");
+  Serial.print(smsFlag);
+  Serial.print("  TriggerType: ");
+  Serial.print(Trigger_Type);
+  Serial.print("  progtype: ");
+  Serial.println(progtype);
+  
+  switch(smsState) {
     case 0: // Idle State, waiting for flag conditions to advance
       break;
       
     case 1: // Setup State, prefocuses the camera and enables the motors
-      panoFlag = 1;
-      if (Trigger_Type != External_Trigger ) display_status();
+      smsFlag = 1;
       interval_tm = millis(); // Start the clock for out image
       CameraFocus(true); // Wake up the camera and begin focusing in the prefire time
-      if (POWERSAVE_PT <= PWR_PROGRAM_ON)   enable_PT(); // Turn on power to the motors if not move only
+      if (POWERSAVE_PT <= PWR_PROGRAM_ON)   enable_AUX(); // Turn on power to the motors if not move only
+      if (AUX_ON && POWERSAVE_AUX <= PWR_PROGRAM_ON)   enable_AUX(); // Turn on power to the motors if not move only
       break;
 
     case 2:
-      panoFlag = 2;
       if (POWERSAVE_PT == PWR_SHOOTMOVE_ON)   enable_PT(); // Turn on power to the motors if shoot only
-      CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
-      camera_fired++;
+      if (AUX_ON && POWERSAVE_AUX <= PWR_SHOOTMOVE_ON)   enable_AUX(); // Turn on power to the motors if not move only
+      if ( Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) {
+        smsFlag = 5; // Wait for external trigger
+      }
+      else {
+        smsFlag = 2;
+        CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
+        camera_fired++;
+        display_status();
+      }
       break;
 
     case 3:
-      panoFlag = 3; // Set motors moving to the next position
+      smsFlag = 3; // Set motors moving to the next position
       if (POWERSAVE_PT == PWR_MOVEONLY_ON)   enable_PT(); // Turn on power to the motors if move only
-      move_motors();
+      if (AUX_ON && POWERSAVE_AUX <= PWR_MOVEONLY_ON)   enable_AUX(); // Turn on power to the motors if not move only
+      move_motors_test();
       break;
 
     case 4:
-      if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+      //if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
       if (!motorMoving) {  // motors completed the move
         if (POWERSAVE_PT >= PWR_SHOOTMOVE_ON)   disable_PT();
-        if( Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) panoFlag = 5;
-        else                                                                    panoFlag = 4;
+        if (AUX_ON && POWERSAVE_AUX <= PWR_SHOOTMOVE_ON)  disable_AUX();
+        smsFlag = 4;
       }
       break;
       
@@ -50,40 +66,86 @@ void ShootMoveShoot()
       if (changehappened)
       {
         changehappened = false;
-        if (!iostate) {  //The trigger is active, start recording the time
-         panoFlag = 4;
+        if (!iostate) {  //The trigger is active, fire the camera
+         smsFlag = 6;
+         CameraShutter(true); // Fire the camera immediatly
+        }
+      }
+      break;
+    case 6: // External Trigger Handling
+      if (changehappened)
+      {
+        changehappened = false;
+        if (iostate) {  //The trigger is released, stop the camera
+         smsFlag = 2;
+         CameraShutter(false); // Fire the camera immediatly
+         CameraFocus(false);   // Release the camera focus
+         camera_fired++;
+         interval_tm = millis();
+         display_status();
         }
       }
       break;
   }
 
-  switch(panoFlag)
+  switch(smsFlag)
   {
     case 0: // Idle State, waiting for external trigger to advance
       break;
     case 1: // Wait for prefire time to elapse
-      if((millis() - interval_tm) > (prefire_time * 100)) panoState = 2; // Fire Camera
-      else panoState = 0;
+      if((millis() - interval_tm) > (prefire_time * 100)) smsState = 2; // Fire Camera
+      else smsState = 0;
       break;
     case 2:  // Wait for exposure time to elapse
-      if((millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) panoState = 3; // Prepare motors
-      else panoState = 0;
+      if(!CameraShutter() && (millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) smsState = 3; // Prepare motors
+      else if (!CameraShutter() && (Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger)) smsState = 3;
+      else smsState = 0;
       break;
     case 3: // Wait for camera shutter and focus to release
-      if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100 + prefire_time * 100 + static_tm * 100)) panoState = 4; // Move Motors
-      else panoState = 0;
+      if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100 + prefire_time * 100 + static_tm * 100)) smsState = 4; // Move Motors
+      else if (Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger) {
+        if(!CameraShutter() && (millis() - interval_tm) > (postfire_time * 100)) smsState = 4;
+      }
+      else smsState = 0;
       break;
     case 4: // Jump Back to Start
-      panoState = 1;
+      smsState = 1;
       break;
     case 5: // Wait for external trigger
-      panoState = 5; 
-      panoFlag = 0; // To stop assignment of progtype each loop
+      smsState = 5; 
+      smsFlag = 0;
+      break;
+    case 6: // Handle external trigger
+      smsState = 6;
+      smsFlag = 0;
       break;
   }
 
+  // ------ End of state machine ------ //
 
-*/  
+  if (!CameraShutter() && camera_fired >= camera_total_shots ) {  // end of program
+    smsState = 1;
+    smsFlag = 0;
+    lcd.empty();
+    draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
+    Program_Engaged = false;
+    if (POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT();
+    if (AUX_ON && POWERSAVE_AUX > PWR_ALWAYS_ON)   disable_AUX();
+    delay(prompt_time);
+    progstep = 90;
+    redraw = true;
+  }
+
+  if ((millis() - NClastread) > NCdelay) { // Nunchuck update for button events
+    NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+
+    if (smsFlag == 5 && HandleButtons() == C_Held && Trigger_Type == Button_Trigger ) smsState = 1; // Trigger advance with the button
+    if (PAUSE_ENABLED && HandleButtons() == CZ_Held && !Shot_Sequence_Started ) SMS_In_Shoot_Paused_Menu();         // Pause Panorama and be able to change settings
+  }
+}
+/* 
   // //Step 1 if internal interval.Kick off the shot sequence. This happens once per camera shot.
   if (!(Shot_Sequence_Started) && Trigger_Type >= External_Trigger && Program_Engaged && ((millis() - interval_tm) > interval) )
   {
@@ -176,6 +238,7 @@ void ShootMoveShoot()
     if (PAUSE_ENABLED && HandleButtons() == CZ_Held && Trigger_Type >= External_Trigger  && !Shot_Sequence_Started) SMS_In_Shoot_Paused_Menu(); //jump into shooting menu
   }
 }
+*/
 
 void VideoLoop ()
 {
@@ -395,12 +458,6 @@ void PanoLoop ()
   static uint8_t panoState = 1; // Start out with the first shot
   static uint8_t panoFlag  = 0; // Start out with an invalid flag
 
-  if(Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger)
-  {
-    if (POWERSAVE_PT <= PWR_PROGRAM_ON)   enable_PT(); // Turn on power to the motors if not move only
-    panoState = 5;
-  }
-  
   switch(panoState) {
     case 0: // Idle State, waiting for flag conditions to advance
       break;
@@ -421,7 +478,6 @@ void PanoLoop ()
         panoFlag = 2;
         CameraShoot((uint32_t)static_tm * 100); // Set the camera to take an image x milliseconds long
         camera_fired++;
-        display_status();
       }
       break;
 
@@ -433,8 +489,8 @@ void PanoLoop ()
       }
       else if (progtype == PORTRAITPANO) {
         move_motors_accel_array();
-        delay (200); // delay in milliseconds after completing a move
       }
+      display_status(); // Image is complete, update display
       break;
 
     case 4:
@@ -465,8 +521,8 @@ void PanoLoop ()
          CameraFocus(false);   // Release the camera focus
          camera_fired++;
          interval_tm = millis();
-         display_status();
         }
+        break;
       }
   }
 
@@ -480,6 +536,7 @@ void PanoLoop ()
       break;
     case 2:  // Wait for exposure time to elapse
       if(!CameraShutter() && (millis() - interval_tm) > (prefire_time * 100 + static_tm * 100)) panoState = 3; // Prepare motors
+      else if (!CameraShutter() && (Trigger_Type == External_Trigger || Trigger_Type == Button_Trigger)) panoState = 3;
       else panoState = 0;
       break;
     case 3: // Wait for camera shutter and focus to release
@@ -504,7 +561,7 @@ void PanoLoop ()
 
   // ------ End of state machine ------ //
 
-  if (!CameraShutter() && camera_fired >= camera_total_shots ) {  // end of program
+  if (panoState == 4 && camera_fired >= camera_total_shots ) {  // end of program
     panoState = 1;
     panoFlag = 0;
     lcd.empty();
@@ -531,8 +588,8 @@ void PanoEnd ()
 {
   if (redraw)
   {
+    delay(prompt_time);
     lcd.empty();
-    stopISR1();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     draw(59, 2, 1); //lcd.at(2,1," Repeat Press C");
     redraw = false;
@@ -546,3 +603,23 @@ void PanoEnd ()
     button_actions290();  //read buttons, look for c button press to start run
   }
 }
+
+//void EndOfProgramLoop ()
+//{
+//  if (redraw) {
+//    lcd.empty();
+//    lcd.at(1, 4, "Repeat - C");
+//    lcd.at(2, 4, "Reverse - Z");
+//    redraw = true;
+//    delay(prompt_time);
+//  }
+//
+//  //This portion always runs in empty space of loop.
+//
+//  if ((millis() - NClastread) > NCdelay) {
+//    NClastread = millis();
+//    NunChuckRequestData();
+//    NunChuckProcessData();
+//    button_actions_end_of_program();
+//  }
+//}

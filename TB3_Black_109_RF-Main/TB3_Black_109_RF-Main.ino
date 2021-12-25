@@ -239,8 +239,8 @@ boolean       MOVE_REVERSED_FOR_RUN;
 uint8_t       LCD_BRIGHTNESS_RUNNING; //0 is off 8 is max
 uint8_t       LCD_BRIGHTNESS_MENU;    //0 is off 8 is max
 uint16_t      AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 steps per second.
-uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 65535;
-uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 65535;
+uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 32000;
+uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 32000;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
 boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
 

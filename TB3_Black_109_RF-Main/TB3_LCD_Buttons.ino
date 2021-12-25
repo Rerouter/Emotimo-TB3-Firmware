@@ -536,7 +536,7 @@ void Set_Cam_Interval()
     NunChuckProcessData();
     
     Trigger_Type += joy_capture3(1);
-    uint16_t maxval = max_shutter;
+    uint16_t maxval = 9000; // 15 minutes for now
     uint16_t overflowval = max(maxval + 100, 65400);
     if (!Trigger_Type || Trigger_Type > overflowval) { Trigger_Type = maxval; }
     else if (Trigger_Type > maxval)                  { Trigger_Type = 1; }
@@ -842,7 +842,6 @@ void Set_Ramp()
       camera_moving_shots = 147; //allow for up to 49 % ramp
       lcd.at(1, 10, "Percent");
     }
-
     draw(3, 2, 1); //lcd.at(2,1,CZ1);
     DisplayRampval();
     redraw = false;
@@ -1429,12 +1428,11 @@ void display_status()
     redraw = false;
   }
   //update upper left camera fired/total shots
-  unsigned int camera_fired_display = camera_fired + 1;
-  if      (camera_fired_display < 10)    lcd.at(1, 5, camera_fired_display);
-  else if (camera_fired_display < 100)   lcd.at(1, 4, camera_fired_display);
-  else if (camera_fired_display < 1000)  lcd.at(1, 3, camera_fired_display);
-  else if (camera_fired_display < 10000) lcd.at(1, 2, camera_fired_display);
-  else								                   lcd.at(1, 1, camera_fired_display);
+  if      (camera_fired < 10)    lcd.at(1, 5, camera_fired);
+  else if (camera_fired < 100)   lcd.at(1, 4, camera_fired);
+  else if (camera_fired < 1000)  lcd.at(1, 3, camera_fired);
+  else if (camera_fired < 10000) lcd.at(1, 2, camera_fired);
+  else								           lcd.at(1, 1, camera_fired);
 
   lcd.at(1, 7, camera_total_shots);
 
@@ -1443,50 +1441,28 @@ void display_status()
   if (progtype == REG2POINTMOVE || progtype == REV2POINTMOVE || progtype == AUXDISTANCE) {
     switch (Move_State_2PT)
     {
-      case LeadIn2PT:
-        draw(51, 1, 11); //lcd.at(1,11,"LeadIn");
-        break;
-      case RampUp2PT:
-        draw(52, 1, 11); //lcd.at(1,11,"RampUp");
-        break;
-      case Linear2PT:
-        draw(53, 1, 11); //lcd.at(1,11,"Linear");
-        break;
-      case RampDown2PT:
-        draw(54, 1, 11); //lcd.at(1,11,"RampDn");
-        break;
-      case LeadOut2PT:
-        draw(55, 1, 11); //lcd.at(1,11,"LeadOT");
-        break;
-      case Finished2PT:
-        draw(56, 1, 11); //lcd.at(1,11,"Finish");
-        break;
+      case LeadIn2PT:    draw(51, 1, 11);  break;  // lcd.at(1,11,"LeadIn");
+      case RampUp2PT:    draw(52, 1, 11);  break;  // lcd.at(1,11,"RampUp");
+      case Linear2PT:    draw(53, 1, 11);  break;  // lcd.at(1,11,"Linear");
+      case RampDown2PT:  draw(54, 1, 11);  break;  // lcd.at(1,11,"RampDn");
+      case LeadOut2PT:   draw(55, 1, 11);  break;  // lcd.at(1,11,"LeadOT");
+      case Finished2PT:  draw(56, 1, 11);  break;  // lcd.at(1,11,"Finish");
     }
   }
 
-  if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
+  else if (progtype == REG3POINTMOVE || progtype == REV3POINTMOVE)
   {
     switch (Move_State_3PT)
     {
-      case LeadIn3PT: //3PT Lead In
-        draw(51, 1, 11); //lcd.at(1,11,"LeadIn");
-        break;
-      case FirstLeg3PT: //3PT leg 1
-        lcd.at(1, 11, "Leg 1 ");
-        break;
-      case SecondLeg3PT: //3PT leg 2
-        lcd.at(1, 11, "Leg 2 ");
-        break;
-      case LeadOut3PT: //3PT Lead Out
-        draw(55, 1, 11); //lcd.at(1,11,"LeadOT");
-        break;
-      case Finished3PT: //3PT Finish
-        draw(56, 1, 11); //lcd.at(1,11,"Finish");
-        break;
+      case LeadIn3PT:    draw(51, 1, 11);  break;  // lcd.at(1,11,"LeadIn");
+      case FirstLeg3PT:  lcd.at(1, 11, "Leg 1 ");  break;
+      case SecondLeg3PT: lcd.at(1, 11, "Leg 2 ");  break;
+      case LeadOut3PT:   draw(55, 1, 11);  break;  // lcd.at(1,11,"LeadOT");
+      case Finished3PT:  draw(56, 1, 11);  break;  // lcd.at(1,11,"Finish");
     }
   }
 
-  if (progtype == PANOGIGA || progtype == PORTRAITPANO) {
+  else if (progtype == PANOGIGA || progtype == PORTRAITPANO) {
     lcd.at(1, 11, "  Pano");
   }
 

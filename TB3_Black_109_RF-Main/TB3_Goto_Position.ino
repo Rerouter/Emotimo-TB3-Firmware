@@ -162,7 +162,6 @@ void goto_position(uint32_t gotoshot_temp)
 			if (Move_State_2PT == Linear2PT) {
 				camera_fired += (keyframe[0][3] - keyframe[0][2]); //skip all the calcs mid motor move
 			}
-			if (DEBUG_GOTO) Serial.print("Feedrate:" + String(feedrate_micros) + ";");
 			// pull this from the actual move, reset with just adding deltas to the dda_move(feedrate_micros);
 
 			current_steps.x = x;

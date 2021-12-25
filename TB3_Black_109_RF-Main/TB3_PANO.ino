@@ -92,19 +92,19 @@ void Set_angle_of_view()
     AUX_ON = false; // turn off Aux as only PT Needed for this step
 
     lcd.empty();
-    draw(75, 1, 1); //lcd.at(1,1,"Set Angle o'View");
-    draw(76, 2, 2); //lcd.at(2,2,"C-Set, Z-Reset");
+    draw(75, 1, 1); //lcd.at(1, 1, "Set Angle o'View");
+    draw(76, 2, 2); //lcd.at(2, 2, "C-Set, Z-Reset");
     delay(prompt_time);
     
     current_steps.x = Pan_AOV_steps;
     current_steps.y = Tilt_AOV_steps;
     
     lcd.empty();
-    draw(77, 1, 1); //lcd.at(1,1,"Pan AOV: ");
+    draw(77, 1, 1); //lcd.at(1, 1, "Pan AOV: ");
     lcd.at(1, 11, steps_to_deg_decimal(0));
-    draw(78, 2, 1); //lcd.at(2,1,"Tilt AOV: ");
+    draw(78, 2, 1); //lcd.at(2, 1, "Tilt AOV: ");
     lcd.at(2, 11, steps_to_deg_decimal(0));
-    
+
     //   Velocity Engine update
     DFSetup(); //setup the ISR
     redraw = false;
@@ -404,8 +404,8 @@ void Pano_DisplayReviewProg()
 
     case 3:   //
       lcd.empty();
-      draw(47, 1, 6); //lcd.at(1,6,"Ready?");
-      draw(48, 2, 2); //lcd.at(2,2,"Press C Button");
+      draw(47, 1, 6); // lcd.at(1,6,"Ready?");
+      draw(48, 2, 2); // lcd.at(2,2,"Press C Button");
       break;
 
     case 4:   //
@@ -419,7 +419,6 @@ void Pano_DisplayReviewProg()
       delay(prompt_delay);
       lcd.at(1, 10, start_delay_sec);
       break;
-
   }//end switch
 }
 
@@ -444,30 +443,12 @@ void move_motors_pano_basic()
   int32_t x = motor_steps_pt[1][0] - step_per_pano_shot_x * index_x;
   int32_t y = motor_steps_pt[1][1] - step_per_pano_shot_y * index_y;
 
-#if DEBUG_PANO
-  Serial.print("camera_fired;"); Serial.println(camera_fired);
-  Serial.print("x_mod_pass_1;"); Serial.println(x_mod_pass_1);
-
-  Serial.print("slope_adjustment;"); Serial.println(slope_adjustment);
-
-  Serial.print("Motor Steps X;"); Serial.println(motor_steps_pt[1][0]);
-  Serial.print("Motor Steps Y;"); Serial.println(motor_steps_pt[1][1]);
-
-  Serial.print("index_x;"); Serial.println(index_x);
-  Serial.print("index_y;"); Serial.println(index_y);
-
-  Serial.print("x;"); Serial.println(x);
-  Serial.print("y;"); Serial.println(y);
-
-  Serial.print("even_odd_row;"); Serial.println(even_odd_row);
-#endif
   set_target(x, y, 0); //we are in incremental mode to start abs is false
 
   dda_move(50);
-  Move_Engaged = false; //clear move engaged flag
 
   return;
-} //end move motors basic
+} // end move motors basic
 
 
 void move_motors_pano_accel()
@@ -490,28 +471,12 @@ void move_motors_pano_accel()
   int32_t x = motor_steps_pt[1][0] - (step_per_pano_shot_x * index_x);
   int32_t y = motor_steps_pt[1][1] - (step_per_pano_shot_y * index_y);
 
-#if DEBUG_PANO
-  Serial.print("camera_fired;"); Serial.println(camera_fired);
-  Serial.print("x_mod_pass_1;"); Serial.println(x_mod_pass_1);
-  Serial.print("even_odd_row;"); Serial.println(even_odd_row);
-  Serial.print("slope_adjustment;"); Serial.println(slope_adjustment);
-
-  Serial.print("motor_steps_pt"); Serial.println(motor_steps_pt[1][1]);
-  
-  Serial.print("index_x;"); Serial.println(index_x);
-  Serial.print("index_y;"); Serial.println(index_y);
-
-  Serial.print("x;"); Serial.println(x);
-  Serial.print("y;"); Serial.println(y);
-#endif
-
   setPulsesPerSecond(0, PAN_MAX_JOG_STEPS_PER_SEC); //this is now pusing through d
   setPulsesPerSecond(1, TILT_MAX_JOG_STEPS_PER_SEC);
   setupMotorMove(0, x);
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-  //Move_Engaged = false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -519,9 +484,6 @@ void move_motors_accel_array()
 { //this is for the PORTRAITPANO array method
 
   //Figure out which row we are in program
-#if DEBUG_PANO
-  Serial.print("camera_fired;"); Serial.println(camera_fired);
-#endif
   //load from array
 
   int32_t x = 0;
@@ -565,18 +527,12 @@ void move_motors_accel_array()
       break;
   }
 
-#if DEBUG_PANO
-  Serial.print("x;"); Serial.println(x);
-  Serial.print("y;"); Serial.println(y);
-#endif
-
   setPulsesPerSecond(0, PAN_MAX_JOG_STEPS_PER_SEC);
   setPulsesPerSecond(1, TILT_MAX_JOG_STEPS_PER_SEC);
   setupMotorMove(0, x);
   setupMotorMove(1, y);
 
   updateMotorVelocities();
-  // Move_Engaged=false; //clear move engaged flag
 }//end move motors accel
 
 
@@ -620,6 +576,7 @@ void calc_pano_move() //pano - calculate other values
   step_per_pano_shot_x = current_steps.x / int32_t(total_shots_x - 1);
   step_per_pano_shot_y = current_steps.y / int32_t(total_shots_y - 1);
 }
+
 
 void button_actions290()
 { //repeat

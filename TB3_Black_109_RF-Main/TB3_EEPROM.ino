@@ -180,7 +180,7 @@ void eeprom_read( uint16_t pos, byte& val, byte len )
 	for(uint8_t i = 0; i < len; i++) 
 		*p++ = EEPROM.read(pos++);
 }
-	
+
 
 void set_defaults_in_ram()
 {
