@@ -92,8 +92,8 @@ void Set_angle_of_view()
     AUX_ON = false; // turn off Aux as only PT Needed for this step
 
     lcd.empty();
-    draw(75, 1, 1); //lcd.at(1, 1, "Set Angle o'View");
-    draw(76, 2, 2); //lcd.at(2, 2, "C-Set, Z-Reset");
+    draw(75, 1, 1); // lcd.at(1, 1, "Set Angle o'View");
+    draw(76, 2, 2); // lcd.at(2, 2, "C-Set, Z-Reset");
     delay(prompt_time);
     
     current_steps.x = Pan_AOV_steps;
@@ -550,7 +550,7 @@ void Move_to_Origin()
   setupMotorMove(1, 0);
 
   updateMotorVelocities();
-  // Move_Engaged=false; //clear move engaged flag
+  //Move_Engaged = false; //clear move engaged flag
 }//end move motors accel
 
 

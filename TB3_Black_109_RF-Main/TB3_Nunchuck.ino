@@ -189,10 +189,12 @@ void NunChuckClearData()
 void applyjoymovebuffer_exponential()  //exponential stuff
 {
   //scale based on read frequency  base is 500 reads per second  - now 20 reads per second = 25x
+  int32_t z;
+  int32_t x = current_steps.x + ((int32_t(joy_x_axis) * joy_x_axis * joy_x_axis) >> 8);
+  int32_t y = current_steps.y + ((int32_t(joy_y_axis) * joy_y_axis * joy_y_axis) >> 8);
+  if (AUX_ON) z = current_steps.z + ((int32_t(acc_x_axis) * acc_x_axis * acc_x_axis) >> 8);
+  else        z = current_steps.z;
 
-  int32_t x = current_steps.x + ((int32_t(joy_x_axis) * joy_x_axis * joy_x_axis) >> 4);
-  int32_t y = current_steps.y + ((int32_t(joy_y_axis) * joy_y_axis * joy_y_axis) >> 4);
-  int32_t z = current_steps.z + ((int32_t(acc_x_axis) * acc_x_axis * acc_x_axis) >> 4);
   set_target(x, y, z);
   feedrate_micros = calculate_feedrate_delay_2();
 }

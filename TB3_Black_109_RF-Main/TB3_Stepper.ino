@@ -60,8 +60,7 @@ long z_counter;
 bool x_can_step;
 bool y_can_step;
 bool z_can_step;
-uint16_t milli_delay;
-
+int milli_delay;
 
 void init_steppers()
 {
@@ -91,7 +90,7 @@ void dda_move(long micro_delay)
   bool y_can_step = 0;
   bool z_can_step = 0;
 
-  if (micro_delay >= 16383)	milli_delay = micro_delay / 1000;
+  if (micro_delay >= 16383) milli_delay = micro_delay / 1000;
   else                      milli_delay = 0;
 
   //do our DDA line!
@@ -111,8 +110,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR0_STEP_PORT, MOTOR0_STEP_PIN);
         x_counter -= max_delta;
 
-        if (x_direction)	current_steps.x++;
-        else              current_steps.x--;
+        if (x_direction) current_steps.x++;
+        else             current_steps.x--;
       }
     }
 
@@ -125,8 +124,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR1_STEP_PORT, MOTOR1_STEP_PIN);
         y_counter -= max_delta;
 
-        if (y_direction)	current_steps.y++;
-        else                current_steps.y--;
+        if (y_direction) current_steps.y++;
+        else             current_steps.y--;
       }
     }
 
@@ -139,8 +138,8 @@ void dda_move(long micro_delay)
         PIN_ON(MOTOR2_STEP_PORT, MOTOR2_STEP_PIN);
         z_counter -= max_delta;
 
-        if (z_direction)	current_steps.z++;
-        else                current_steps.z--;
+        if (z_direction) current_steps.z++;
+        else             current_steps.z--;
       }
     }
 
@@ -149,8 +148,8 @@ void dda_move(long micro_delay)
     PIN_OFF(MOTOR2_STEP_PORT, MOTOR2_STEP_PIN);
 
     //wait for next step.
-    if (milli_delay > 0)	delay(milli_delay);
-    else                  delayMicroseconds(micro_delay);
+    if (milli_delay > 0) delay(milli_delay);
+    else                 delayMicroseconds(micro_delay);
   }
 
   while (x_can_step || y_can_step || z_can_step);
@@ -231,13 +230,13 @@ long calculate_feedrate_delay_1()
   long master_steps = 0;
 
   //find the dominant axis.
-  if (delta_steps.x > delta_steps.y)  {
-    if (delta_steps.z > delta_steps.x)	master_steps = delta_steps.z;
-    else                                master_steps = delta_steps.x;
+  if (delta_steps.x > delta_steps.y) {
+    if (delta_steps.z > delta_steps.x) master_steps = delta_steps.z;
+    else                               master_steps = delta_steps.x;
   }
-  else  {
-    if (delta_steps.z > delta_steps.y)	master_steps = delta_steps.z;
-    else                                master_steps = delta_steps.y;
+  else {
+    if (delta_steps.z > delta_steps.y) master_steps = delta_steps.z;
+    else                               master_steps = delta_steps.y;
   }
   Serial.print("  Delta_X: ");
   Serial.print(delta_steps.x);
@@ -247,14 +246,14 @@ long calculate_feedrate_delay_1()
   Serial.print(delta_steps.z);
   Serial.print("  master_steps: ");
   Serial.println(master_steps);
-  if (Trigger_Type == Video_Trigger)  {
-    //return ((interval*(1000L))/master_steps); //   Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds
-    return ((interval * (1000L)) / master_steps); //  This is the issue - intervla
+  if (Trigger_Type == Video_Trigger) {
+    //return ((interval * (1000L)) / master_steps); // Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds
+    return ((interval * (1000L)) / master_steps); // This is the issue - intervla
   }
-  else if (Trigger_Type == External_Trigger)  {
+  else if (Trigger_Type == External_Trigger) {
     return ((((10L) * 100000L) / master_steps) * 0.5); //  Use half available time to move for stills
   }
-  else  {
+  else {
     return abs(((Trigger_Type - static_tm - prefire_time) * 50000.0) / master_steps); //  Use half available time to move for stills
   }
 }
@@ -266,15 +265,13 @@ long calculate_feedrate_delay_video()
   long current_feedrate = 0;
 
   //find the dominant axis.
-  if (delta_steps.z > delta_steps.x)
-  {
-    if (delta_steps.y > delta_steps.z)	master_steps = delta_steps.y;
-    else								master_steps = delta_steps.z;
+  if (delta_steps.z > delta_steps.x) {
+    if (delta_steps.y > delta_steps.z) master_steps = delta_steps.y;
+    else                               master_steps = delta_steps.z;
   }
-  else
-  {
-    if (delta_steps.y > delta_steps.x)	master_steps = delta_steps.y;
-    else								master_steps = delta_steps.x;
+  else {
+    if (delta_steps.y > delta_steps.x) master_steps = delta_steps.y;
+    else                               master_steps = delta_steps.x;
   }
 #if DEBUG_MOTOR
   Serial.print("master_steps= ");
@@ -284,8 +281,8 @@ long calculate_feedrate_delay_video()
 
   //return ((interval*(1000L))/master_steps); //
 
-  if (Move_State_2PT == Linear2PT)  current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR) * long(keyframe[0][3] - keyframe[0][2])) / master_steps); //  total move for all linear
-  else                              current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
+  if (Move_State_2PT == Linear2PT) current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR) * long(keyframe[0][3] - keyframe[0][2])) / master_steps); //  total move for all linear
+  else                             current_feedrate = ((interval * (VIDEO_FEEDRATE_NUMERATOR)) / master_steps); //  Use the full time for video - hardcoded to 1000 *50 mc or 50000us or 0.050 seconds or 20hz
 
 #if DEBUG_MOTOR
   Serial.print("feedratedelay_1_vid= ");
@@ -301,42 +298,23 @@ long calculate_feedrate_delay_2() //used for real time moves
   long master_steps = 0;
 
   //find the dominant axis.
-  if (delta_steps.x > delta_steps.y)
-  {
+  if (delta_steps.x > delta_steps.y) {
     if (delta_steps.z > delta_steps.x) master_steps = delta_steps.z;
-    else							   master_steps = delta_steps.x;
+    else                               master_steps = delta_steps.x;
   }
-  else
-  {
+  else {
     if (delta_steps.z > delta_steps.y) master_steps = delta_steps.z;
     else                               master_steps = delta_steps.y;
   }
-  //Serial.print("master_steps="); Serial.println(master_steps);
-  long fr = 10000L / master_steps;
-  //Serial.print("fr="); Serial.println(fr);
-  return (fr); // read about every 42 ms (24 times a second)
+  //if (DEBUG_MOTOR) {Serial.print("master_steps="); Serial.println(master_steps);}
+
+  return ((42000L) / master_steps); // read about every 42 ms (24 times a second)
+  //if (DEBUG_MOTOR) {Serial.print("feedratedelay_2="); Serial.println(5000/master_steps);}
 }
 
 
-void disable_PT()
-{
-  digitalWrite(MOTOR_EN, HIGH);
-}
+void enable_PT()  { digitalWrite(MOTOR_EN, LOW); }
+void disable_PT() { digitalWrite(MOTOR_EN, HIGH); }
 
-
-void disable_AUX()
-{
-  digitalWrite(MOTOR_EN2, HIGH);
-}
-
-
-void enable_PT()
-{
-  digitalWrite(MOTOR_EN, LOW);
-}
-
-
-void enable_AUX()
-{
-  digitalWrite(MOTOR_EN2, LOW);
-}
+void enable_AUX()  { digitalWrite(MOTOR_EN2, LOW); }
+void disable_AUX() { digitalWrite(MOTOR_EN2, HIGH);}

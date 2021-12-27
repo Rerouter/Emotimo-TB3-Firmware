@@ -27,34 +27,34 @@
 
 class WiiNunchuck3
 {
-	public:
-		WiiNunchuck3(void);
-		uint8_t  getData(void);
+  public:
+    WiiNunchuck3(void);
+    uint8_t  getData(void);
     void     clearData(void);
-		void     printData(void) const;
-		void     init(bool);
-		bool     zbutton(void) const;
-		bool     cbutton(void) const;
-		uint8_t  joyx(void) const;
-		uint8_t  joyy(void) const;
-		uint16_t accelx(void) const;
-		uint16_t accely(void) const;
-		uint16_t accelz(void) const;
-		int      vibration(void);
-		void     calibrate(void);
-		int8_t   digitalx(int8_t threshold = JOYSTICK_THRESHOLD) const;
-		int8_t   digitaly(int8_t threshold = JOYSTICK_THRESHOLD) const;
-	private:
-		uint8_t  cnt;
-		uint8_t  centeredJoyX;
-		uint8_t  centeredJoyY;
-		uint8_t  nunchuck_buf[6];
+    void     printData(void) const;
+    void     init(bool);
+    bool     zbutton(void) const;
+    bool     cbutton(void) const;
+    uint8_t  joyx(void) const;
+    uint8_t  joyy(void) const;
+    uint16_t accelx(void) const;
+    uint16_t accely(void) const;
+    uint16_t accelz(void) const;
+    int      vibration(void);
+    void     calibrate(void);
+    int8_t   digitalx(int8_t threshold = JOYSTICK_THRESHOLD) const;
+    int8_t   digitaly(int8_t threshold = JOYSTICK_THRESHOLD) const;
+  private:
+    uint8_t  cnt;
+    uint8_t  centeredJoyX;
+    uint8_t  centeredJoyY;
+    uint8_t  nunchuck_buf[6];
 
-		static void send_zero(void);
-		static void clearTwiInputBuffer(void);
-		static void setpowerpins(void);
-		static void send_request(void);
-		char decode_byte(char);
+    static void send_zero(void);
+    static void clearTwiInputBuffer(void);
+    static void setpowerpins(void);
+    static void send_request(void);
+    char decode_byte(char);
 };
 
 #endif

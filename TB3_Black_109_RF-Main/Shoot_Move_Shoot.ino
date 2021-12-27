@@ -11,14 +11,14 @@ void ShootMoveShoot()
 {
   static uint8_t smsState = 1; // Start out with the first shot
   static uint8_t smsFlag  = 0; // Start out with an invalid flag
-  Serial.print("smsState: ");
-  Serial.print(smsState);
-  Serial.print("  smsFlag: ");
-  Serial.print(smsFlag);
-  Serial.print("  TriggerType: ");
-  Serial.print(Trigger_Type);
-  Serial.print("  progtype: ");
-  Serial.println(progtype);
+//  Serial.print("smsState: ");
+//  Serial.print(smsState);
+//  Serial.print("  smsFlag: ");
+//  Serial.print(smsFlag);
+//  Serial.print("  TriggerType: ");
+//  Serial.print(Trigger_Type);
+//  Serial.print("  progtype: ");
+//  Serial.println(progtype);
   
   switch(smsState) {
     case 0: // Idle State, waiting for flag conditions to advance
@@ -50,7 +50,7 @@ void ShootMoveShoot()
       smsFlag = 3; // Set motors moving to the next position
       if (POWERSAVE_PT == PWR_MOVEONLY_ON)   enable_PT(); // Turn on power to the motors if move only
       if (AUX_ON && POWERSAVE_AUX <= PWR_MOVEONLY_ON)   enable_AUX(); // Turn on power to the motors if not move only
-      move_motors_test();
+      move_motors();
       break;
 
     case 4:
@@ -562,13 +562,11 @@ void PanoLoop ()
   // ------ End of state machine ------ //
 
   if (panoState == 4 && camera_fired >= camera_total_shots ) {  // end of program
+    delay(prompt_time); // Just so you can see the last image completed
     panoState = 1;
     panoFlag = 0;
-    lcd.empty();
-    draw(58, 1, 1); // lcd.at(1,1,"Program Complete");
     Program_Engaged = false;
     if (POWERSAVE_PT > PWR_ALWAYS_ON)   disable_PT();
-    delay(prompt_time);
     progstep = 290;
     redraw = true;
   }
@@ -588,7 +586,6 @@ void PanoEnd ()
 {
   if (redraw)
   {
-    delay(prompt_time);
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
     draw(59, 2, 1); //lcd.at(2,1," Repeat Press C");

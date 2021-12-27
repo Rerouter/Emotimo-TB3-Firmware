@@ -33,55 +33,55 @@
 /******************************************************************************************************/
 
 class NHDLCD9 : public SoftwareSerial {
-private:
-	uint8_t _bv[10];
-	uint8_t _ro[5];
-	void command(uint8_t);
-  void command(uint8_t,uint8_t);
-  
-  enum _bv : uint8_t {
-  PINOUT       = 0,
-  POSBASE      = 1,
-  BOUNCE       = 2,
-  NUMROWS      = 3,
-  NUMCOLS      = 4,
-  LASTROW      = 5,
-  LASTCOL      = 6,
-  LASTBRIGHT   = 8,
-  BOUNCEMicros = 9
-};
+  private:
+    uint8_t _bv[10];
+    uint8_t _ro[5];
+    void command(uint8_t);
+    void command(uint8_t, uint8_t);
 
-public:
-	NHDLCD9 ( uint8_t pin, uint8_t numRows, uint8_t numCols, uint8_t posBase=1 );
-   void setup ( uint8_t brightPcnt=100, boolean startEmpty=true );
+    enum _bv : uint8_t {
+      PINOUT       = 0,
+      POSBASE      = 1,
+      BOUNCE       = 2,
+      NUMROWS      = 3,
+      NUMCOLS      = 4,
+      LASTROW      = 5,
+      LASTCOL      = 6,
+      LASTBRIGHT   = 8,
+      BOUNCEMicros = 9
+    };
 
-   void on ();
-   void off ();
-   void empty ();
+  public:
+    NHDLCD9 ( uint8_t pin, uint8_t numRows, uint8_t numCols, uint8_t posBase = 1 );
+    void setup ( uint8_t brightPcnt = 100, boolean startEmpty = true );
 
-   //void scrollLeft ();
-   //void scrollRight ();
+    void on ();
+    void off ();
+    void empty ();
 
-   void bright ( uint8_t pcnt );
-   void oldbright ( uint8_t pcnt );
-   void contrast ( uint8_t contrastval );
-   void pos ( uint8_t row, uint8_t col );
+    //void scrollLeft ();
+    //void scrollRight ();
 
-   void cursorUnderline();
-   void cursorBlock();
-   void cursorOff ();
+    void bright ( uint8_t pcnt );
+    void oldbright ( uint8_t pcnt );
+    void contrast ( uint8_t contrastval );
+    void pos ( uint8_t row, uint8_t col );
 
-	// shortcuts for printing at particular positions
-   void at ( uint8_t row, uint8_t col, char );
-   void at ( uint8_t row, uint8_t col, const char[] );
-   void at ( uint8_t row, uint8_t col, int8_t );
-   void at ( uint8_t row, uint8_t col, uint8_t );
-   void at ( uint8_t row, uint8_t col, int16_t );
-   void at ( uint8_t row, uint8_t col, uint16_t );
-   void at ( uint8_t row, uint8_t col, int32_t );
-   void at ( uint8_t row, uint8_t col, uint32_t );
-   void at ( uint8_t row, uint8_t col, int32_t, int16_t );
-   void at ( uint8_t row, uint8_t col, String );
+    void cursorUnderline();
+    void cursorBlock();
+    void cursorOff ();
+
+    // shortcuts for printing at particular positions
+    void at ( uint8_t row, uint8_t col, char );
+    void at ( uint8_t row, uint8_t col, const char[] );
+    void at ( uint8_t row, uint8_t col, int8_t );
+    void at ( uint8_t row, uint8_t col, uint8_t );
+    void at ( uint8_t row, uint8_t col, int16_t );
+    void at ( uint8_t row, uint8_t col, uint16_t );
+    void at ( uint8_t row, uint8_t col, int32_t );
+    void at ( uint8_t row, uint8_t col, uint32_t );
+    void at ( uint8_t row, uint8_t col, int32_t, int16_t );
+    void at ( uint8_t row, uint8_t col, String );
 };
 
 

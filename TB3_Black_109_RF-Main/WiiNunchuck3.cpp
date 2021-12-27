@@ -300,14 +300,14 @@ int16_t WiiNunchuck3::vibration()
     uint16_t y = accely();
     uint16_t z = accelz();
 
-    if (x < accelerometers[0][0])	accelerometers[0][0] = x;
-    if (x > accelerometers[0][1])	accelerometers[0][1] = x;
+    if (x < accelerometers[0][0]) accelerometers[0][0] = x;
+    if (x > accelerometers[0][1]) accelerometers[0][1] = x;
 
-    if (y < accelerometers[1][0])	accelerometers[1][0] = y;
-    if (y > accelerometers[1][1])	accelerometers[1][1] = y;
+    if (y < accelerometers[1][0]) accelerometers[1][0] = y;
+    if (y > accelerometers[1][1]) accelerometers[1][1] = y;
 
-    if (z < accelerometers[2][0])	accelerometers[2][0] = z;
-    if (z > accelerometers[2][1])	accelerometers[2][1] = z;
+    if (z < accelerometers[2][0]) accelerometers[2][0] = z;
+    if (z > accelerometers[2][1]) accelerometers[2][1] = z;
   }
   int16_t xdiff = accelerometers[0][1] - accelerometers[0][0];
   int16_t ydiff = accelerometers[1][1] - accelerometers[1][0];
@@ -351,7 +351,7 @@ int8_t WiiNunchuck3::digitaly(int8_t threshold) const
     return 1;
   } else if (calibratedjoyy > threshold) {
     return -1;
-  } else 	{
+  } else  {
     return 0;
   }
 }

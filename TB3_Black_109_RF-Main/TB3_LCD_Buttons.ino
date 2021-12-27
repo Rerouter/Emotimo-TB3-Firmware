@@ -57,27 +57,27 @@ void Choose_Program()
     switch (progtype)
     {
       case REG2POINTMOVE:
-        draw(66, 1, 1);  //lcd.at(1,1,"New   Point Move");
+        draw(66, 1, 1); //lcd.at(1, 1, "New   Point Move");
         lcd.at(1, 5, "2");
         break;
 
       case REV2POINTMOVE:
-        draw(81, 1, 1);  //lcd.at(1,1,"Rev   Point Move");
+        draw(81, 1, 1); //lcd.at(1, 1, "Rev   Point Move");
         lcd.at(1, 5, "2");
         break;
 
       case REG3POINTMOVE:
-        draw(66, 1, 1);  //lcd.at(1,1,"New   Point Move");
+        draw(66, 1, 1); //lcd.at(1, 1, "New   Point Move");
         lcd.at(1, 5, "3");
         break;
 
       case REV3POINTMOVE:
-        draw(81, 1, 1);  //lcd.at(1,1,"Rev   Point Move");
+        draw(81, 1, 1); //lcd.at(1, 1, "Rev   Point Move");
         lcd.at(1, 5, "3");
         break;
 
       case DFSLAVE:
-        draw(82, 1, 2);  //lcd.at(1,2,"DF Slave Mode");
+        draw(82, 1, 2); //lcd.at(1, 2, "DF Slave Mode");
         break;
 
       case SETUPMENU:
@@ -225,11 +225,10 @@ void Move_to_Startpoint()
   if (redraw) {
     lcd.empty();
     lcd.bright(LCD_BRIGHTNESS_RUNNING);
-    
     if (!REVERSE_PROG_ORDER) //normal programing, start first
     {
-      draw(8, 1, 1); //lcd.at(1,1,"Move to Start Pt");
-      draw(14, 2, 6); //lcd.at(2,6,"C-Next");
+      draw(8, 1, 1); //lcd.at(1, 1, "Move to Start Pt");
+      draw(14, 2, 6); //lcd.at(2, 6, "C-Next");
     }
     else
     {
@@ -238,19 +237,19 @@ void Move_to_Startpoint()
     }
     delay(prompt_time);
 
-    //   Velocity Engine update
-    DFSetup(); //setup the ISR
+	  prev_joy_x_reading = 0; //prevents buffer from moving axis from previous input
+    prev_joy_y_reading = 0;
     redraw = false;
   } //end of first time
 
-  //Velocity Engine update
-  if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
+  if ((millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-    updateMotorVelocities2();
-    button_actions_move_start(); //check buttons
+    applyjoymovebuffer_exponential();
+    dda_move(feedrate_micros);
+    button_actions_move_start(); //read buttons, look for home set on c
   }
 } //end move to start point
 
@@ -260,18 +259,6 @@ void button_actions_move_start()
   switch (HandleButtons())
   {
     case C_Pressed:
-      //this puts input to zero to allow a stop
-      NunChuckClearData();
-
-      do //run this loop until the motors stop
-      {
-        //Serial.print("motorMoving:");Serial.println(motorMoving);
-        if (!nextMoveLoaded)
-        {
-          updateMotorVelocities2();
-        }
-      } while (motorMoving);
-
       lcd.empty();
       set_position(0, 0, 0); //sets current steps to 0
 #if DEBUG
@@ -279,8 +266,8 @@ void button_actions_move_start()
       Serial.print("current_steps_start.y: "); Serial.println(current_steps.y);
       Serial.print("current_steps_start.z: "); Serial.println(current_steps.z);
 #endif
-      if (!REVERSE_PROG_ORDER) draw(9, 1, 3);  //lcd.at(1,3,"Start Pt. Set");
-      else					           draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
+      if (!REVERSE_PROG_ORDER) draw(9, 1, 3); //lcd.at(1,3,"Start Pt. Set");
+      else                     draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
       delay(prompt_time);
       progstep_forward();
       break;
@@ -291,38 +278,64 @@ void button_actions_move_start()
   }
 }
 
+
 void Move_to_Endpoint()
 {
-  if (redraw) {
+  if (redraw)
+  {
+    prev_joy_x_reading = 0; //prevents buffer from moving axis from previous input
+    prev_joy_y_reading = 0;
 
-    lcd.empty();
+    if ( reset_prog == 0 ) {
+      lcd.empty();
+      draw(11, 1, 1);//lcd.at(1, 1, "Moving to stored");
+      draw(12, 2, 4);//lcd.at(2, 4, "end point");
 
-    if (!REVERSE_PROG_ORDER) //mormal programming, end point last
-    {
-      draw(15, 1, 1); //lcd.at(1,1,"Move to End Pt.");
-      draw(3, 2, 1); //lcd.at(2,1,CZ1);
+      int32_t x = motor_steps_pt[2][0];
+      int32_t y = motor_steps_pt[2][1];
+      int32_t z;
+      if (AUX_ON) z = motor_steps_pt[2][2];
+      else z = 0.0;
+
+      set_target(x, y, z);
+      if (AUX_ON) dda_move(10); //send the motors home
+      else dda_move(30);
+
+      lcd.empty();
+      draw(13, 1, 1);//lcd.at(1, 1, "Confirm or Move");
+      draw(3, 2, 1);//lcd.at(2, 1, CZ1);
+
+      delay(prompt_time);
+      redraw = false;
     }
-    else //reverse programing, start last
-    {
-      draw(8, 1, 1); //lcd.at(1,1,"Move to Start Pt");
-      draw(14, 2, 6); //lcd.at(2,6,"C-Next");
-    }
+    else { //routine for just moving to end point if nothing was stored.
+      lcd.empty();
+      if (!REVERSE_PROG_ORDER) //mormal programming, end point last
+      {
+        draw(15, 1, 1);//lcd.at(1, 1, "Move to End Pt.");
+        draw(3, 2, 1);//lcd.at(2, 1, CZ1);
+      }
 
-    startISR1 ();
-    enable_PT();
-    if (AUX_ON) enable_AUX();  //
-    delay(prompt_time);
-    redraw = false;
+      if (REVERSE_PROG_ORDER) //reverse programing, start last
+      {
+        draw(8, 1, 1);//lcd.at(1, 1, "Move to Start Pt");
+        draw(14, 2, 6);//lcd.at(2, 6, "C-Next");
+      }
+      delay(prompt_time);
+      enable_PT();
+      if (AUX_ON) enable_AUX();  //
+      redraw = false;
+    }
   }
-  
-  //Velocity Engine update
-  if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
+
+  if ((millis() - NClastread) > NCdelay)
   {
     NClastread = millis();
     NunChuckRequestData();
     NunChuckProcessData();
-    updateMotorVelocities2();
-    button_actions_move_end(); //check buttons
+    applyjoymovebuffer_exponential();
+    dda_move(feedrate_micros);
+    button_actions_move_end();  //read buttons, look for home set on c
   }
 }
 
@@ -332,31 +345,6 @@ void button_actions_move_end()
   switch (HandleButtons())
   {
     case C_Pressed:
-      //begin to stop the motors
-      //this puts input to zero to allow a stop
-      NunChuckClearData();
-      do //run this loop until the motors stop
-      {
-        //Serial.print("motorMoving:");Serial.println(motorMoving);
-        if (!nextMoveLoaded)
-        {
-          updateMotorVelocities2();
-        }
-      }
-      while (motorMoving);
-
-      //end stop the motors
-
-      motors[0].position = current_steps.x;
-      motors[1].position = current_steps.y;
-      motors[2].position = current_steps.z;
-
-#if DEBUG
-      Serial.print("motors[0].position:"); Serial.println( motors[0].position);
-      Serial.print("motors[1].position:"); Serial.println( motors[1].position);
-      Serial.print("motors[2].position:"); Serial.println( motors[2].position);
-#endif
-
       motor_steps_pt[2][0] = current_steps.x; //now signed storage
       motor_steps_pt[2][1] = current_steps.y;
       motor_steps_pt[2][2] = current_steps.z;
@@ -370,8 +358,8 @@ void button_actions_move_end()
 
       lcd.empty();
 
-      if (!REVERSE_PROG_ORDER) draw(16, 1, 3); //lcd.at(1,3,"End Point Set");
-      else                     draw(9, 1, 3); //lcd.at(1,3,"Start Pt. Set");
+      if (!REVERSE_PROG_ORDER) draw(16, 1, 3); //lcd.at(1, 3, "End Point Set");
+      else                     draw(9, 1, 3); //lcd.at(1, 3, "Start Pt. Set");
 
       delay(prompt_time);
       progstep_forward();
@@ -459,7 +447,7 @@ void button_actions_move_x(uint8_t Point)
         while (motorMoving);
         //end stop the motors
   
-        if (Point == 0) set_position(0, 0, 0);		 //reset for home position
+        if (Point == 0) set_position(0, 0, 0); //reset for home position
   
         motor_steps_pt[Point][0] = current_steps.x; //now signed storage
         motor_steps_pt[Point][1] = current_steps.y;
@@ -519,15 +507,14 @@ void Set_Cam_Interval()
   if (redraw)
   {
     lcd.empty();
-    draw(17, 1, 1); //lcd.at(1,1,"Set Sht Interval");
+    draw(17, 1, 1); //lcd.at(1, 1, "Set Sht Interval");
     delay(prompt_time);
     lcd.empty();
-    draw(18, 1, 1); //lcd.at(1,1,"Intval:   .  sec");
-    draw(3, 2, 1); //lcd.at(2,1,CZ1);
+    draw(18, 1, 1); //lcd.at(1, 1, "Intval:   .  sec");
+    draw(3, 2, 1); //lcd.at(2, 1, CZ1);
     DisplayInterval(Trigger_Type);
     redraw = false;
   }
-
 
   if ((millis() - NClastread) > NCdelay) {
     uint16_t Trigger_Type_last = Trigger_Type;
@@ -647,8 +634,8 @@ void Set_Duration() //This is really setting frames
     NunChuckRequestData();
     NunChuckProcessData();
 
-    if (Trigger_Type == Video_Trigger)
-    { //video
+    if (Trigger_Type == Video_Trigger) // video
+    {
       uint16_t overaldur_last = overaldur;
       overaldur += joy_capture3(1);
       uint16_t maxval = 10000;
@@ -663,8 +650,8 @@ void Set_Duration() //This is really setting frames
         delay(prompt_delay);
       }
     }
-    else
-    { //sms
+    else // sms
+    {
       uint32_t camera_moving_shots_last = camera_moving_shots;
       camera_moving_shots += joy_capture3(1);
       uint16_t maxval = 10000;
@@ -811,7 +798,7 @@ void button_actions_stat_time()
   switch (HandleButtons())
   {
     case C_Pressed:
-      //if (Trigger_Type!=3)  camera_exp_tm=(long)static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
+      //if (Trigger_Type != 3)  camera_exp_tm = (long)static_tm*100; //want to get to ms, but this is already multipled by 10 // 3 is used for video mode - this is likely obsolete-remove later
       lcd.empty();
       draw(25, 1, 1); //lcd.at(1,1,"Static Time Set"); // try this to push correct character
       delay(prompt_time);
@@ -940,10 +927,9 @@ void DisplayLeadIn_LeadOut()
 {
   if (cursorpos == cursorright) lcd.pos(1, 13);
 
-  if (cursorpos == cursorleft)
-  { //update lead in
+  if (cursorpos == cursorleft) { //update lead in
     lcd.cursorOff();
-    
+
     lead_in += joy_capture3(1);
     uint16_t maxval = 5000;
     uint16_t overflowval = max(maxval + 100, 65400);
@@ -953,7 +939,7 @@ void DisplayLeadIn_LeadOut()
     
     lcd.at(1, 1, lead_in);
 
-    if (lead_in < 10)   {
+    if (lead_in < 10)  {
       lcd.at(1, 2, "   ");
     }
     else if (lead_in < 100)  {
@@ -1004,18 +990,18 @@ void button_actions_lead_in_out()
       /*		//start  of code block to be moved from LeadinLeadOut.  Replaced with Calculate_Shot()
         camera_total_shots=camera_moving_shots+lead_in+lead_out;
 
-        if (Trigger_Type==Video_Trigger) {
-      	//if (Trigger_Type==Video_Trigger) camera_moving_shots=(overaldur*1000L)/interval; //figure out moving shots based on duration for video only
-      	//camera_moving_shots=video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
-      	//camera_moving_shots=100; //new method to allow for easy ramp %
-      	//interval = overaldur * 1000L / camera_moving_shots;   //This gives us ms
-      	camera_total_shots = camera_moving_shots + lead_in + lead_out; //good temp variable for display
+        if (Trigger_Type == Video_Trigger) {
+      	  //if (Trigger_Type == Video_Trigger) camera_moving_shots=(overaldur*1000L)/interval; //figure out moving shots based on duration for video only
+      	  //camera_moving_shots = video_segments; //hardcode this and back into proper interval - this is XXX segments per sequence
+      	  //camera_moving_shots = 100; //new method to allow for easy ramp %
+      	  //interval = overaldur * 1000L / camera_moving_shots;   //This gives us ms
+      	  camera_total_shots = camera_moving_shots + lead_in + lead_out; //good temp variable for display
         }
 
         //fix issues with ramp that is too big
-        if( rampval*3 > camera_moving_shots )
+        if( rampval * 3 > camera_moving_shots )
         {	// we have an issue where the ramp is to big can be 2/3 of total move, but not more.
-        rampval = camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
+          rampval = camera_moving_shots / 3; //set to 1/3 up and 1/3 down (2/3) of total move)
         }
 
         //Set keyframe points for program to help with runtime calcs
@@ -1027,9 +1013,9 @@ void button_actions_lead_in_out()
         keyframe[0][5]=lead_in+camera_moving_shots+lead_out; //end of leadout, end of program
 
         if (DEBUG_MOTOR) {
-      	for (int i=0; i < 6; i++){
+      	  for (int i=0; i < 6; i++){
       		Serial.print("Keyframe");Serial.print(i);Serial.print("_");Serial.println(keyframe[0][i]);
-      	}
+      	  }
         }
 
         //go_to_origin_slow();
@@ -1040,8 +1026,8 @@ void button_actions_lead_in_out()
         if (DEBUG) review_RAM_Contents();
 
         //delay(prompt_time);
-        if (POWERSAVE_PT>PWR_PROGRAM_ON)   disable_PT();
-        if (POWERSAVE_AUX>PWR_PROGRAM_ON)   disable_AUX();
+        if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+        if (POWERSAVE_AUX > PWR_PROGRAM_ON)   disable_AUX();
       */  //end of code block to be moved from LeadinLeadOut
 
       progstep_forward();
@@ -1154,8 +1140,8 @@ void DisplayReviewProg()
       lcd.empty();
       draw(43, 1, 1); //lcd.at(1,1,"Pan Steps:");
       draw(44, 2, 1); //lcd.at(2,1,"Tilt Steps:");
-      lcd.at(1, 12, (int)linear_steps_per_shot[0]);
-      lcd.at(2, 12, (int)linear_steps_per_shot[1]);
+      lcd.at(1, 12, linear_steps_per_shot[0]);
+      lcd.at(2, 12, linear_steps_per_shot[1]);
       break;
 
     case 2:   //

@@ -272,6 +272,9 @@ uint8_t       sequence_repeat_count = 0; //counter to hold variable for how many
 
 //remote and interface variables
 
+uint32_t      prev_joy_x_reading = 0; //prevents buffer from moving axis from previous input
+uint32_t      prev_joy_y_reading = 0;
+
 int8_t        joy_x_axis, joy_y_axis;
 int8_t        acc_x_axis, acc_y_axis;
 
@@ -504,8 +507,10 @@ void loop()
       //start of 2 point SMS/Video routine
       
       case 0:  Choose_Program();      break; 
-      case 1:  Move_to_Startpoint();  break;   // Move to Start Point
-      case 2:  Move_to_Endpoint();    break;  // Move to End Point
+//      case 1:  Move_to_Startpoint();  break;  // Move to Start Point
+//      case 2:  Move_to_Endpoint();    break;  // Move to End Point
+      case 1:  Move_to_Point_X(0);    break;  // Move Point 0
+      case 2:  Move_to_Point_X(1);    break;  // Move Point 1
       case 3:  Set_Cam_Interval();    break;  //  Set Camera Interval
       case 4:  Set_Duration();        break;
 
