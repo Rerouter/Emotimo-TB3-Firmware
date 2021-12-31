@@ -16,7 +16,7 @@
   Version 1.2.3 New Position command
   Version 1.2.2 Jog and Inch commands
   Version 1.2.1 Moved step/direction pins for motions 5-8.
-				Detects board type automatically.
+                Detects board type automatically.
   Version 1.2.0 Basic go-motion capabilities
   Version 1.1.2 Smooth transitions when changing direction
   Version 1.1.1 Save/restore motor position
@@ -27,47 +27,46 @@
 
   Pin configuration for TB3 Orange:
 
-  #define MOTOR0_STEP	5   //Pin 5 is PORTD B00100000
-  #define MOTOR0_DIR	8 
-  #define MOTOR1_STEP	6   //Pin 6 is PORTD B01000000
-  #define MOTOR1_DIR	9 
-  #define MOTOR2_STEP	7   //Pin 7 is PORTD B10000000
-  #define MOTOR2_DIR	10
+  #define MOTOR0_STEP  5   //Pin 5 is PORTD B00100000
+  #define MOTOR0_DIR  8 
+  #define MOTOR1_STEP 6   //Pin 6 is PORTD B01000000
+  #define MOTOR1_DIR  9 
+  #define MOTOR2_STEP 7   //Pin 7 is PORTD B10000000
+  #define MOTOR2_DIR  10
 
-  #define MOTOR_EN		17
-  #define MOTOR_EN_2	11
+  #define MOTOR_EN    17
+  #define MOTOR_EN_2  11
 
-  #define MS1			15
-  #define MS2_3			16
+  #define MS1     15
+  #define MS2_3     16
 
-  #define CAMERA_PIN	12 // drives tip of 2.5 mm connector
-  #define FOCUS_PIN		13 // drives  middle of 2.5 connector
+  #define CAMERA_PIN  12 // drives tip of 2.5 mm connector
+  #define FOCUS_PIN   13 // drives  middle of 2.5 connector
 
   Pin configuration for TB3 Black:
 
-  #define MOTOR0_STEP	5   //Pin 5 is PORTE B00001000 PE3
-  #define MOTOR0_DIR	8 
-  #define MOTOR1_STEP	6   //Pin 6 is PORTH B00001000 PH3
-  #define MOTOR1_DIR	9 
-  #define MOTOR2_STEP	7   //Pin 7 is PORTH B00010000 PH4
-  #define MOTOR2_DIR	10
-  #define MOTOR3_STEP	30  //Pin 30 is PC7 PORTC B10000000
-  #define MOTOR3_DIR	31
+  #define MOTOR0_STEP 5   //Pin 5 is PORTE B00001000 PE3
+  #define MOTOR0_DIR  8 
+  #define MOTOR1_STEP 6   //Pin 6 is PORTH B00001000 PH3
+  #define MOTOR1_DIR  9 
+  #define MOTOR2_STEP 7   //Pin 7 is PORTH B00010000 PH4
+  #define MOTOR2_DIR  10
+  #define MOTOR3_STEP 30  //Pin 30 is PC7 PORTC B10000000
+  #define MOTOR3_DIR  31
   
-  #define MOTOR_EN		A3
-  #define MOTOR_EN_2	11
+  #define MOTOR_EN    A3
+  #define MOTOR_EN_2  11
   
-  #define MS1		   A1
-  #define MS2		   A2
-  #define MS3		   A2
+  #define MS1      A1
+  #define MS2      A2
+  #define MS3      A2
 
   #define CAMERA_PIN  12 // drives tip of 2.5 mm connector
   #define FOCUS_PIN   13 // drives  middle of 2.5 connector
 */
 
-
 /*
-  Serial output specialization
+ * Serial output specialization
 */
 #if defined(UBRRH)
 #define TX_UCSRA UCSRA
@@ -92,25 +91,25 @@ char *txBufPtr;
 #define MSG_STATE_DONE  100
 
 /*
-  Command codes from user
-*/
+ * Command codes from user
+ */
 #define USER_CMD_ARGS 40
 
-#define CMD_NONE    0
-#define CMD_HI      10
-#define CMD_MS      30
-#define CMD_NP      31
-#define CMD_MM      40 // move motor
-#define CMD_PR      41 // pulse rate
-#define CMD_SM      42 // stop motor
-#define CMD_MP      43 // motor position
-#define CMD_ZM      44 // zero motor
-#define CMD_SA      50 // stop all (hard)
-#define CMD_BF      60 // blur frame
-#define CMD_GO      61 // go!
+#define CMD_NONE       0
+#define CMD_HI         10
+#define CMD_MS         30
+#define CMD_NP         31
+#define CMD_MM         40 // move motor
+#define CMD_PR         41 // pulse rate
+#define CMD_SM         42 // stop motor
+#define CMD_MP         43 // motor position
+#define CMD_ZM         44 // zero motor
+#define CMD_SA         50 // stop all (hard)
+#define CMD_BF         60 // blur frame
+#define CMD_GO         61 // go!
 
-#define CMD_JM      70 // jog motor
-#define CMD_IM      71 // inch motor
+#define CMD_JM         70 // jog motor
+#define CMD_IM         71 // inch motor
 
 #define MSG_HI 01
 #define MSG_MM 02
@@ -133,9 +132,9 @@ struct UserCmd
 } ;
 
 /*
-   Message state machine variables.
+ * Message state machine variables.
 */
-byte   lastUserData;
+byte     lastUserData;
 uint8_t  msgState;
 int8_t   msgNumberSign;
 UserCmd userCmd;
@@ -157,37 +156,61 @@ TxMsgBuffer txMsgBuffer;
 
 
 /*
-  Motor data.
+ * Motor data.
 */
 
-uint16_t	motorAccumulator0;
-uint16_t	motorAccumulator1;
-uint16_t	motorAccumulator2;
-uint16_t	motorAccumulator3;
-
-uint16_t*   motorAccumulator[MOTOR_COUNT] =
+uint16_t           motorAccumulator0;
+uint16_t           motorAccumulator1;
+uint16_t           motorAccumulator2;
+uint16_t           motorAccumulator3;
+#if MOTOR_COUNT > 4
+uint16_t           motorAccumulator4;
+uint16_t           motorAccumulator5;
+uint16_t           motorAccumulator6;
+uint16_t           motorAccumulator7;
+#endif
+uint16_t*          motorAccumulator[MOTOR_COUNT] =
 {
   &motorAccumulator0, &motorAccumulator1, &motorAccumulator2, &motorAccumulator3,
+#if MOTOR_COUNT > 4
+  &motorAccumulator4, &motorAccumulator5, &motorAccumulator6, &motorAccumulator7
+#endif
 };
 
-uint16_t	motorMoveSteps0;
-uint16_t	motorMoveSteps1;
-uint16_t	motorMoveSteps2;
-uint16_t	motorMoveSteps3;
-
-uint16_t*   motorMoveSteps[MOTOR_COUNT] =
+uint16_t           motorMoveSteps0;
+uint16_t           motorMoveSteps1;
+uint16_t           motorMoveSteps2;
+uint16_t           motorMoveSteps3;
+#if MOTOR_COUNT > 4
+uint16_t           motorMoveSteps4;
+uint16_t           motorMoveSteps5;
+uint16_t           motorMoveSteps6;
+uint16_t           motorMoveSteps7;
+#endif
+uint16_t*          motorMoveSteps[MOTOR_COUNT] =
 {
   &motorMoveSteps0, &motorMoveSteps1, &motorMoveSteps2, &motorMoveSteps3,
+#if MOTOR_COUNT > 4
+  &motorMoveSteps4, &motorMoveSteps5, &motorMoveSteps6, &motorMoveSteps7
+#endif
 };
 
-uint16_t	motorMoveSpeed0;
-uint16_t	motorMoveSpeed1;
-uint16_t	motorMoveSpeed2;
-uint16_t	motorMoveSpeed3;
-
-uint16_t	* motorMoveSpeed[MOTOR_COUNT] =
+uint16_t           motorMoveSpeed0;
+uint16_t           motorMoveSpeed1;
+uint16_t           motorMoveSpeed2;
+uint16_t           motorMoveSpeed3;
+#if MOTOR_COUNT > 4
+uint16_t           motorMoveSpeed4;
+uint16_t           motorMoveSpeed5;
+uint16_t           motorMoveSpeed6;
+uint16_t           motorMoveSpeed7;
+#endif
+uint16_t         * motorMoveSpeed[MOTOR_COUNT] =
 {
   &motorMoveSpeed0, &motorMoveSpeed1, &motorMoveSpeed2, &motorMoveSpeed3,
+#if MOTOR_COUNT > 4
+  &motorMoveSpeed4, &motorMoveSpeed5, &motorMoveSpeed6, &motorMoveSpeed7
+#endif
 };
 
 #define P2P_MOVE_COUNT 7
@@ -198,32 +221,32 @@ struct Motor
   uint8_t   dirPin;
 
   // pre-computed move
-  float		moveTime[P2P_MOVE_COUNT];
-  int32_t	movePosition[P2P_MOVE_COUNT];
-  float		moveVelocity[P2P_MOVE_COUNT];
-  float		moveAcceleration[P2P_MOVE_COUNT];
+  float   moveTime[P2P_MOVE_COUNT];
+  int32_t movePosition[P2P_MOVE_COUNT];
+  float   moveVelocity[P2P_MOVE_COUNT];
+  float   moveAcceleration[P2P_MOVE_COUNT];
 
-  float		gomoMoveTime[P2P_MOVE_COUNT];
-  int32_t	gomoMovePosition[P2P_MOVE_COUNT];
-  float		gomoMoveVelocity[P2P_MOVE_COUNT];
-  float		gomoMoveAcceleration[P2P_MOVE_COUNT];
+  float   gomoMoveTime[P2P_MOVE_COUNT];
+  int32_t gomoMovePosition[P2P_MOVE_COUNT];
+  float   gomoMoveVelocity[P2P_MOVE_COUNT];
+  float   gomoMoveAcceleration[P2P_MOVE_COUNT];
 
   uint16_t currentMove;
-  float		 currentMoveTime;
+  float    currentMoveTime;
 
-  volatile	boolean   dir;
+  volatile  boolean   dir;
 
-  int32_t	position;
-  int32_t	destination;
+  int32_t position;
+  int32_t destination;
 
-  float		maxVelocity;			//Orig - delete later
-  float		maxAcceleration;		//Orig - delete later
+  float   maxVelocity;      //Orig - delete later
+  float   maxAcceleration;    //Orig - delete later
 
-  float		moveMaxVelocity;		//Pass this into calculator for synchronized moves - needs to be float for now
-  float		moveMaxAcceleration;  //Pass this into calculator for synchronized moves - needs to be float for now
+  float   moveMaxVelocity;    //Pass this into calculator for synchronized moves - needs to be float for now
+  float   moveMaxAcceleration;  //Pass this into calculator for synchronized moves - needs to be float for now
 
-  float		jogMaxVelocity;		//replaced the original maxVelocity
-  float		jogMaxAcceleration;   //replaced the original maxAcceleration
+  float   jogMaxVelocity;   //replaced the original maxVelocity
+  float   jogMaxAcceleration;   //replaced the original maxAcceleration
 
   uint16_t  nextMotorMoveSteps;
   uint16_t  nextMotorMoveSpeed;
@@ -231,9 +254,9 @@ struct Motor
 
 Motor motors[MOTOR_COUNT];
 
-uint16_t	  velocityUpdateCounter;
-byte		  	sendPositionCounter;
-boolean			hardStopRequested;
+uint16_t    velocityUpdateCounter;
+byte        sendPositionCounter;
+boolean     hardStopRequested;
 
 uint8_t     sendPosition = 0; // Bit array for the motors
 
@@ -250,15 +273,6 @@ void killSwitch()
 
 void DFSetup()
 {
-  //delay(1000);
-  //lcd.setup();
-  //delay(100);
-
-  //lcd.empty();
-  //if (PINOUT_VERSION == 4)  lcd.at(1,1,"eMotimo TB3Black");
-  //if (PINOUT_VERSION == 3)  lcd.at(1,1,"eMotimoTB3Orange");
-  //lcd.at(2,1,"Dragonframe 1.26");
-
   goMoReady = false;
   lastUserData = 0;
   msgState = MSG_STATE_START;
@@ -416,6 +430,7 @@ void DFSetup()
   // SET UP interrupt timer
 
 #if (BOARD == ARDUINO) || (BOARD == ARDUINOMEGA)
+
   TCCR1A = 0;
   TCCR1B = _BV(WGM13);
 
@@ -434,7 +449,6 @@ ISR(TIMER1_OVF_vect) //timer interrupt
 
   if (toggleStep)
   {
-    //PIN_ON(MOTOR3_STEP_PORT, MOTOR3_STEP_PIN); // this is just for clock cycle mapping
     // MOTOR 1
     if (motorMoveSteps0)
     {
@@ -489,6 +503,63 @@ ISR(TIMER1_OVF_vect) //timer interrupt
         PIN_ON(MOTOR3_STEP_PORT, MOTOR3_STEP_PIN);
       }
     }
+
+#if MOTOR_COUNT > 4
+
+    // MOTOR 5
+    if (motorMoveSteps4)
+    {
+      uint16_t a = motorAccumulator4;
+      motorAccumulator4 += motorMoveSpeed4;
+      if (motorAccumulator4 < a)
+      {
+        motorMoveSteps4--;
+
+        PIN_ON(MOTOR4_STEP_PORT, MOTOR4_STEP_PIN);
+      }
+    }
+
+    // MOTOR 6
+    if (motorMoveSteps5)
+    {
+      uint16_t a = motorAccumulator5;
+      motorAccumulator5 += motorMoveSpeed5;
+      if (motorAccumulator5 < a)
+      {
+        motorMoveSteps5--;
+
+        PIN_ON(MOTOR5_STEP_PORT, MOTOR5_STEP_PIN);
+      }
+    }
+
+    // MOTOR 7
+    if (motorMoveSteps6)
+    {
+      uint16_t a = motorAccumulator6;
+      motorAccumulator6 += motorMoveSpeed6;
+      if (motorAccumulator6 < a)
+      {
+        motorMoveSteps6--;
+
+        PIN_ON(MOTOR6_STEP_PORT, MOTOR6_STEP_PIN);
+      }
+    }
+
+    // MOTOR 8
+    if (motorMoveSteps7)
+    {
+      uint16_t a = motorAccumulator7;
+      motorAccumulator7 += motorMoveSpeed7;
+      if (motorAccumulator7 < a)
+      {
+        motorMoveSteps7--;
+
+        PIN_ON(MOTOR7_STEP_PORT, MOTOR7_STEP_PIN);
+      }
+    }
+
+#endif
+
   }
   else
   {
@@ -514,6 +585,13 @@ ISR(TIMER1_OVF_vect) //timer interrupt
     PIN_OFF(MOTOR1_STEP_PORT, MOTOR1_STEP_PIN);
     PIN_OFF(MOTOR2_STEP_PORT, MOTOR2_STEP_PIN);
     PIN_OFF(MOTOR3_STEP_PORT, MOTOR3_STEP_PIN);
+
+#if MOTOR_COUNT > 4
+    PIN_OFF(MOTOR4_STEP_PORT, MOTOR4_STEP_PIN);
+    PIN_OFF(MOTOR5_STEP_PORT, MOTOR5_STEP_PIN);
+    PIN_OFF(MOTOR6_STEP_PORT, MOTOR6_STEP_PIN);
+    PIN_OFF(MOTOR7_STEP_PORT, MOTOR7_STEP_PIN);
+#endif
   }
 }
 
@@ -521,14 +599,14 @@ ISR(TIMER1_OVF_vect) //timer interrupt
 /*
  * For stepper-motor timing, every clock cycle counts.
  */
- 
- 
+
+
 void DFloop()
 {
-  #if (BOARD == ARDUINO || BOARD == ARDUINOMEGA)
+#if (BOARD == ARDUINO || BOARD == ARDUINOMEGA)
   //int32_t *ramValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
   //int32_t *ramNotValues = (int32_t *)malloc(sizeof(int32_t) * MOTOR_COUNT);
-  #endif
+#endif
 
   while (true)
   {
@@ -536,7 +614,7 @@ void DFloop()
     processSerialCommand();
 
     // check if we have serial output
-    #if (BOARD == ARDUINO) || (BOARD == ARDUINOMEGA)
+#if (BOARD == ARDUINO) || (BOARD == ARDUINOMEGA)
     if (*txBufPtr)
     {
       if ((TX_UCSRA) & (1 << TX_UDRE))
@@ -547,7 +625,7 @@ void DFloop()
         if (!*txBufPtr)  nextMessage();
       }
     }
-    #endif
+#endif
 
     if (!sendPositionCounter)
     {
@@ -597,7 +675,7 @@ void updateMotorVelocities()
       }
       else
       {
-        motor->currentMoveTime += 0.05f;
+        motor->currentMoveTime += 0.05f; // Still working on a 20Hz update rate
 
         if (motor->currentMoveTime >= motor->moveTime[seg])
         {
@@ -618,17 +696,18 @@ void updateMotorVelocities()
 
         motor->position = xn;
       }
-    }//end if motor moving
-  }//end motor count routine
+    }
+  }
   nextMoveLoaded = true;
 }
 
 /*
  * Set up the axis for pulses per second (approximate)
- */
+*/
 void setPulsesPerSecond(uint8_t motorIndex, uint16_t pulsesPerSecond)
 {
-  if (pulsesPerSecond < 100)		pulsesPerSecond = 100;
+  if (pulsesPerSecond > 20000)  pulsesPerSecond = 20000;
+  if (pulsesPerSecond < 100)    pulsesPerSecond = 100;
 
   //uint16_t itersPerSecond = 1000000L / TIME_CHUNK;
 
@@ -764,7 +843,7 @@ sa
  *
  * Returns command code for completed command.
  */
- 
+
 byte processUserMessage(char data)
 {
   byte cmd = CMD_NONE;
@@ -1123,7 +1202,7 @@ void sendMessage(byte msg, byte motorIndex)
     txMsgBuffer.buffer[txMsgBuffer.head].motor = motorIndex;
     txMsgBuffer.head = i;
 
-    if (!*txBufPtr)	nextMessage();
+    if (!*txBufPtr)  nextMessage();
   }
 
 #else
@@ -1510,223 +1589,223 @@ void setupBlur(uint8_t motorIndex, uint16_t exposure, uint16_t blur, int32_t p0,
 
 float calculateVelocityMotor(uint8_t motorIndex, float local_time, float local_ramp)
 {
-	Motor *motor = &motors[motorIndex];
-	float new_time=local_time;
-	//set
+  Motor *motor = &motors[motorIndex];
+  float new_time=local_time;
+  //set
 
-	motor->moveMaxVelocity = abs(motor->destination - motor->position)/(local_time * (1.0-local_ramp));
-	//enforce the max velocity
-	if  (motor->moveMaxVelocity > motor->jogMaxVelocity) // we need to figure out new times 
-	{
-		new_time = abs(motor->destination-motor->position)/(motor->jogMaxVelocity * (1.0-local_ramp));
-		motor->moveMaxVelocity = motor->jogMaxVelocity;
-	}
+  motor->moveMaxVelocity = abs(motor->destination - motor->position)/(local_time * (1.0-local_ramp));
+  //enforce the max velocity
+  if  (motor->moveMaxVelocity > motor->jogMaxVelocity) // we need to figure out new times 
+  {
+    new_time = abs(motor->destination-motor->position)/(motor->jogMaxVelocity * (1.0-local_ramp));
+    motor->moveMaxVelocity = motor->jogMaxVelocity;
+  }
 
-	//we can do anything for acceleration
-	motor->moveMaxAcceleration = motor->moveMaxVelocity /(local_ramp * local_time);
-	//return velocitytemp;
-	#if DEBUG_MOTOR
-	Serial.print("moveMaxVelocity:");Serial.println(motor->moveMaxVelocity);
-	Serial.print("moveMaxAcceleration:");Serial.println(motor->moveMaxAcceleration);
-	#endif
-	return new_time; //returns the time
+  //we can do anything for acceleration
+  motor->moveMaxAcceleration = motor->moveMaxVelocity /(local_ramp * local_time);
+  //return velocitytemp;
+  #if DEBUG_MOTOR
+  Serial.print("moveMaxVelocity:");Serial.println(motor->moveMaxVelocity);
+  Serial.print("moveMaxAcceleration:");Serial.println(motor->moveMaxAcceleration);
+  #endif
+  return new_time; //returns the time
 }
 
 
 void calculateVelocityMotorold(uint8_t motorIndex, float local_time, float local_ramp)
 {
-	Motor *motor = &motors[motorIndex];
-	//set
+  Motor *motor = &motors[motorIndex];
+  //set
 
-	motor->moveMaxVelocity = abs(motor->destination - motor->position) / (local_time * (1.0 - local_ramp));
-	motor->moveMaxAcceleration = motor->moveMaxVelocity /(local_ramp*local_time);
-	//return velocitytemp;
-	#if DEBUG_MOTOR
-	Serial.print("moveMaxVelocity:");Serial.println(motor->moveMaxVelocity);
-	Serial.print("moveMaxAcceleration:");Serial.println(motor->moveMaxAcceleration);
-	#endif
+  motor->moveMaxVelocity = abs(motor->destination - motor->position) / (local_time * (1.0 - local_ramp));
+  motor->moveMaxAcceleration = motor->moveMaxVelocity /(local_ramp*local_time);
+  //return velocitytemp;
+  #if DEBUG_MOTOR
+  Serial.print("moveMaxVelocity:");Serial.println(motor->moveMaxVelocity);
+  Serial.print("moveMaxAcceleration:");Serial.println(motor->moveMaxAcceleration);
+  #endif
 }
 
 
 void synched3PtMove_max(int32_t xtarget, int32_t ytarget, int32_t ztarget) //
 {
-	//Clean up positions so we don't drift
-	motors[0].position = current_steps.x;
-	motors[1].position = current_steps.y;
-	motors[2].position = current_steps.z;
+  //Clean up positions so we don't drift
+  motors[0].position = current_steps.x;
+  motors[1].position = current_steps.y;
+  motors[2].position = current_steps.z;
 
-	motors[0].destination = xtarget;
-	motors[1].destination = ytarget;
-	motors[2].destination = ztarget;
+  motors[0].destination = xtarget;
+  motors[1].destination = ytarget;
+  motors[2].destination = ztarget;
 
-	//Calculate the fastest move times based on max speeds and accelerations, we will recalc later after figuring out dominant axix (limiting axis)
-	calculatePointToPoint_jog(0,xtarget);
-	calculatePointToPoint_jog(1,ytarget);
-	calculatePointToPoint_jog(2,ztarget); 
+  //Calculate the fastest move times based on max speeds and accelerations, we will recalc later after figuring out dominant axix (limiting axis)
+  calculatePointToPoint_jog(0,xtarget);
+  calculatePointToPoint_jog(1,ytarget);
+  calculatePointToPoint_jog(2,ztarget); 
 
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{
-		DisplayMove(mot);
-	}
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {
+    DisplayMove(mot);
+  }
 
-	//Figure out what the longest time needed for each of the axis at maxspeed
+  //Figure out what the longest time needed for each of the axis at maxspeed
 
-	float MotorTotalMoveTime[3]={0,0,0};
+  float MotorTotalMoveTime[3]={0,0,0};
 
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{  
-		for (uint8_t seg = 0; seg < 3; seg++) //segments
-		{
-			MotorTotalMoveTime[mot]+=motors[mot].moveTime[seg];
-		}
-		#if DEBUG_MOTOR
-		Serial.print("Motor");
-		Serial.print(mot);
-		Serial.print(" TotalMaxMoveTime");
-		Serial.println(MotorTotalMoveTime[mot]);
-		#endif
-	}
-	//Determine dominant Axis  - start with Pan or motor 0
-	float LongestMoveTime=MotorTotalMoveTime[0];
-	uint8_t DominantMotor = 0;
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {  
+    for (uint8_t seg = 0; seg < 3; seg++) //segments
+    {
+      MotorTotalMoveTime[mot]+=motors[mot].moveTime[seg];
+    }
+    #if DEBUG_MOTOR
+    Serial.print("Motor");
+    Serial.print(mot);
+    Serial.print(" TotalMaxMoveTime");
+    Serial.println(MotorTotalMoveTime[mot]);
+    #endif
+  }
+  //Determine dominant Axis  - start with Pan or motor 0
+  float LongestMoveTime=MotorTotalMoveTime[0];
+  uint8_t DominantMotor = 0;
 
-	if(MotorTotalMoveTime[1]>MotorTotalMoveTime[0]) 
-	{
-		LongestMoveTime=MotorTotalMoveTime[1];
-		DominantMotor=1;
-	}
+  if(MotorTotalMoveTime[1]>MotorTotalMoveTime[0]) 
+  {
+    LongestMoveTime=MotorTotalMoveTime[1];
+    DominantMotor=1;
+  }
 
-	if(MotorTotalMoveTime[2]>LongestMoveTime) 
-	{
-		LongestMoveTime=MotorTotalMoveTime[2];
-		DominantMotor=2;
-	}
+  if(MotorTotalMoveTime[2]>LongestMoveTime) 
+  {
+    LongestMoveTime=MotorTotalMoveTime[2];
+    DominantMotor=2;
+  }
 
-	//End of Determine dominant Axix  
-	//create branch to eiether jog back max speed, or use local time if it is longer..
-	#if DEBUG_MOTOR
-	Serial.print("LongestMoveTime");Serial.println(LongestMoveTime);
-	Serial.print("DominantMotor");Serial.println(DominantMotor);
-	#endif
-	//For dominant axis, grab the key times for keyframing the other axis
+  //End of Determine dominant Axix  
+  //create branch to eiether jog back max speed, or use local time if it is longer..
+  #if DEBUG_MOTOR
+  Serial.print("LongestMoveTime");Serial.println(LongestMoveTime);
+  Serial.print("DominantMotor");Serial.println(DominantMotor);
+  #endif
+  //For dominant axis, grab the key times for keyframing the other axis
 
-	//calculateVelocityMotor(DominantMotor, local_time, local_ramp); //this sets the velocity & accel for a movecalc
-	//calculatePointToPoint_move(DominantMotor);
-	//DisplayMove(DominantMotor);
-	float quickest_ramp = motors[DominantMotor].moveTime[0]/LongestMoveTime;
+  //calculateVelocityMotor(DominantMotor, local_time, local_ramp); //this sets the velocity & accel for a movecalc
+  //calculatePointToPoint_move(DominantMotor);
+  //DisplayMove(DominantMotor);
+  float quickest_ramp = motors[DominantMotor].moveTime[0]/LongestMoveTime;
 
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{
-		calculateVelocityMotor(mot, LongestMoveTime, quickest_ramp); //this sets the velocity & accel for a movecalc
-		calculatePointToPoint_move(mot);
-		DisplayMove(mot);
-		if (motors[mot].destination!=motors[mot].position) bitSet(motorMoving, mot);
-		else bitClear(motorMoving, mot);
-	}
-	#if DEBUG_MOTOR
-	Serial.print("motorMoving byte="); Serial.println(motorMoving);
-	#endif	  
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {
+    calculateVelocityMotor(mot, LongestMoveTime, quickest_ramp); //this sets the velocity & accel for a movecalc
+    calculatePointToPoint_move(mot);
+    DisplayMove(mot);
+    if (motors[mot].destination!=motors[mot].position) bitSet(motorMoving, mot);
+    else bitClear(motorMoving, mot);
+  }
+  #if DEBUG_MOTOR
+  Serial.print("motorMoving byte="); Serial.println(motorMoving);
+  #endif    
 }
 
 
 void synched3AxisMove_timed(int32_t xtarget, int32_t ytarget, int32_t ztarget, float local_time, float local_ramp) //
 {
-	//Clean up positions so we don't drift
-	motors[0].position = current_steps.x;
-	motors[1].position = current_steps.y;
-	motors[2].position = current_steps.z;
+  //Clean up positions so we don't drift
+  motors[0].position = current_steps.x;
+  motors[1].position = current_steps.y;
+  motors[2].position = current_steps.z;
 
-	motors[0].destination = xtarget;
-	motors[1].destination = ytarget;
-	motors[2].destination = ztarget;
+  motors[0].destination = xtarget;
+  motors[1].destination = ytarget;
+  motors[2].destination = ztarget;
 
-	//Calculate the timing for the total move with max velocities
-	calculatePointToPoint_jog(0,xtarget);
-	calculatePointToPoint_jog(1,ytarget);
-	calculatePointToPoint_jog(2,ztarget); 
+  //Calculate the timing for the total move with max velocities
+  calculatePointToPoint_jog(0,xtarget);
+  calculatePointToPoint_jog(1,ytarget);
+  calculatePointToPoint_jog(2,ztarget); 
 
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{
-		DisplayMove(mot);
-	}
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {
+    DisplayMove(mot);
+  }
 
-	//Figure out what the longest time needed for each of the axis at maxspeed
+  //Figure out what the longest time needed for each of the axis at maxspeed
 
-	float MotorTotalMoveTime[3]={0,0,0};
+  float MotorTotalMoveTime[3]={0,0,0};
 
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{  
-		for (uint8_t seg = 0; seg < 3; seg++) //segments
-		{
-			MotorTotalMoveTime[mot] += motors[mot].moveTime[seg];
-		}
-		#if DEBUG_MOTOR
-		Serial.print("Motor");
-		Serial.print(mot);
-		Serial.print(" TotalMaxMoveTime");
-		Serial.println(MotorTotalMoveTime[mot]);
-		#endif
-	}
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {  
+    for (uint8_t seg = 0; seg < 3; seg++) //segments
+    {
+      MotorTotalMoveTime[mot] += motors[mot].moveTime[seg];
+    }
+    #if DEBUG_MOTOR
+    Serial.print("Motor");
+    Serial.print(mot);
+    Serial.print(" TotalMaxMoveTime");
+    Serial.println(MotorTotalMoveTime[mot]);
+    #endif
+  }
 
-	#if DEBUG_MOTOR
-	//Determine dominant Axis  - start with Pan or motor 0
-	float LongestMoveTime = MotorTotalMoveTime[0];
-	//uint8_t DominantMotor = 0;
+  #if DEBUG_MOTOR
+  //Determine dominant Axis  - start with Pan or motor 0
+  float LongestMoveTime = MotorTotalMoveTime[0];
+  //uint8_t DominantMotor = 0;
 
-	if(MotorTotalMoveTime[1] > MotorTotalMoveTime[0]) 
-	{
-		LongestMoveTime = MotorTotalMoveTime[1];
-		//DominantMotor=1;
-	}
+  if(MotorTotalMoveTime[1] > MotorTotalMoveTime[0]) 
+  {
+    LongestMoveTime = MotorTotalMoveTime[1];
+    //DominantMotor=1;
+  }
 
-	if(MotorTotalMoveTime[2] > LongestMoveTime) 
-	{
-		LongestMoveTime = MotorTotalMoveTime[2];
-		//DominantMotor = 2;
-	}
+  if(MotorTotalMoveTime[2] > LongestMoveTime) 
+  {
+    LongestMoveTime = MotorTotalMoveTime[2];
+    //DominantMotor = 2;
+  }
 
-	//End of Determine dominant Axix  
-	//create branch to eiether jog back max speed, or use local time if it is longer..
+  //End of Determine dominant Axix  
+  //create branch to eiether jog back max speed, or use local time if it is longer..
 
-	Serial.print("LongestMoveTime");Serial.println(LongestMoveTime);
-	Serial.print("DominantMotor");Serial.println(DominantMotor);
-	#endif
-	//For dominant axis, grab the key times for keyframing the other axis
+  Serial.print("LongestMoveTime");Serial.println(LongestMoveTime);
+  Serial.print("DominantMotor");Serial.println(DominantMotor);
+  #endif
+  //For dominant axis, grab the key times for keyframing the other axis
 
-	//calculateVelocityMotor(DominantMotor, local_time, local_ramp); //this sets the velocity & accel for a movecalc
-	//calculatePointToPoint_move(DominantMotor);
-	//DisplayMove(DominantMotor);
-	//float quickest_ramp = motors[DominantMotor].moveTime[0] / LongestMoveTime;
+  //calculateVelocityMotor(DominantMotor, local_time, local_ramp); //this sets the velocity & accel for a movecalc
+  //calculatePointToPoint_move(DominantMotor);
+  //DisplayMove(DominantMotor);
+  //float quickest_ramp = motors[DominantMotor].moveTime[0] / LongestMoveTime;
 
-	//Check our velocity calc
+  //Check our velocity calc
 
-	float limited_motor_move_time_max = 0;
-	maxVelLimit = false;
-	for (uint8_t mot = 0; mot < 3; mot++)
-	{
-		float limited_motor_move_time = calculateVelocityMotor(mot, local_time, local_ramp);
-		if (limited_motor_move_time > limited_motor_move_time_max) limited_motor_move_time_max = limited_motor_move_time;
-		calculatePointToPoint_move(mot);
-		DisplayMove(mot);
-		if (motors[mot].destination != motors[mot].position)  bitSet(motorMoving, mot);
-		else                                                  bitClear(motorMoving, mot);
-	}
+  float limited_motor_move_time_max = 0;
+  maxVelLimit = false;
+  for (uint8_t mot = 0; mot < 3; mot++)
+  {
+    float limited_motor_move_time = calculateVelocityMotor(mot, local_time, local_ramp);
+    if (limited_motor_move_time > limited_motor_move_time_max) limited_motor_move_time_max = limited_motor_move_time;
+    calculatePointToPoint_move(mot);
+    DisplayMove(mot);
+    if (motors[mot].destination != motors[mot].position)  bitSet(motorMoving, mot);
+    else                                                  bitClear(motorMoving, mot);
+  }
 
-	if (limited_motor_move_time_max > local_time)
-	{  //run the routine again with new max time if the real calculated values hit limits.
-		maxVelLimit = true;
-		for (uint8_t mot = 0; mot < 3; mot++)
-		{
-			calculateVelocityMotor(mot, limited_motor_move_time_max, local_ramp);
-			calculatePointToPoint_move(mot);
-			DisplayMove(mot);
-			if (motors[mot].destination!=motors[mot].position)  bitSet(motorMoving, mot);
-			else                                                bitClear(motorMoving, mot);
-		}
-	}
-	#if DEBUG_MOTOR
-	Serial.print("motorMoving byte="); Serial.println(motorMoving);
-	#endif
+  if (limited_motor_move_time_max > local_time)
+  {  //run the routine again with new max time if the real calculated values hit limits.
+    maxVelLimit = true;
+    for (uint8_t mot = 0; mot < 3; mot++)
+    {
+      calculateVelocityMotor(mot, limited_motor_move_time_max, local_ramp);
+      calculatePointToPoint_move(mot);
+      DisplayMove(mot);
+      if (motors[mot].destination!=motors[mot].position)  bitSet(motorMoving, mot);
+      else                                                bitClear(motorMoving, mot);
+    }
+  }
+  #if DEBUG_MOTOR
+  Serial.print("motorMoving byte="); Serial.println(motorMoving);
+  #endif
 }
 
 
@@ -1823,94 +1902,94 @@ void calculatePointToPoint_move(uint8_t motorIndex)
 
 void calculatePointToPoint_jog(uint8_t motorIndex, int32_t destination)
 {
-	Motor *motor = &motors[motorIndex];
+  Motor *motor = &motors[motorIndex];
 
-	uint32_t moveCount;
-	moveCount = 0;
+  uint32_t moveCount;
+  moveCount = 0;
 
-	for (uint8_t i = 0; i < P2P_MOVE_COUNT; i++)
-	{
-		motor->moveTime[i] = 0;
-		motor->moveVelocity[i] = 0;
-		motor->moveAcceleration[i] = 0;
-	}
-	motor->currentMoveTime = 0;
-	motor->movePosition[0] = motor->position;
+  for (uint8_t i = 0; i < P2P_MOVE_COUNT; i++)
+  {
+    motor->moveTime[i] = 0;
+    motor->moveVelocity[i] = 0;
+    motor->moveAcceleration[i] = 0;
+  }
+  motor->currentMoveTime = 0;
+  motor->movePosition[0] = motor->position;
 
-	uint32_t tmax = motor->jogMaxVelocity / motor->jogMaxAcceleration;
-	uint32_t dmax = motor->jogMaxVelocity * tmax;
+  uint32_t tmax = motor->jogMaxVelocity / motor->jogMaxAcceleration;
+  uint32_t dmax = motor->jogMaxVelocity * tmax;
 
-	uint32_t dist = abs(destination - motor->position);
-	int8_t dir = destination > motor->position ? 1 : -1;
+  uint32_t dist = abs(destination - motor->position);
+  int8_t dir = destination > motor->position ? 1 : -1;
 
-	/* 
-	if (motor->nextMotorMoveSpeed > 5) // we need to account for existing velocity
-	{
-		float vi = (motor->dir ? 1 : -1) * 20 * motor->nextMotorMoveSpeed / 65.536f;
-		float ti = fabs(vi / motor->jogMaxAcceleration);
-		float di = 0.5f * motor->jogMaxAcceleration * ti * ti;
+  /* 
+  if (motor->nextMotorMoveSpeed > 5) // we need to account for existing velocity
+  {
+    float vi = (motor->dir ? 1 : -1) * 20 * motor->nextMotorMoveSpeed / 65.536f;
+    float ti = fabs(vi / motor->jogMaxAcceleration);
+    float di = 0.5f * motor->jogMaxAcceleration * ti * ti;
 
-		if (vi * dir < 0) // switching directions
-		{
-			motor->moveTime[moveCount] = ti;
-			motor->moveAcceleration[moveCount] = dir * motor->jogMaxAcceleration;
-			motor->moveVelocity[moveCount] = vi;
-			moveCount++;
+    if (vi * dir < 0) // switching directions
+    {
+      motor->moveTime[moveCount] = ti;
+      motor->moveAcceleration[moveCount] = dir * motor->jogMaxAcceleration;
+      motor->moveVelocity[moveCount] = vi;
+      moveCount++;
 
-			dist += di;
-		}
-		else if (dist < di) // must decelerate and switch directions
-		{
-			motor->moveTime[moveCount] = ti;
-			motor->moveAcceleration[moveCount] = -dir * motor->jogMaxAcceleration;
-			motor->moveVelocity[moveCount] = vi;
-			moveCount++;
+      dist += di;
+    }
+    else if (dist < di) // must decelerate and switch directions
+    {
+      motor->moveTime[moveCount] = ti;
+      motor->moveAcceleration[moveCount] = -dir * motor->jogMaxAcceleration;
+      motor->moveVelocity[moveCount] = vi;
+      moveCount++;
 
-			dist = (di - dist);
-			dir = -dir;
-		}
-		else // further on in same direction
-		{
-			dist += di;
-			motor->movePosition[0] -= dir * di;
+      dist = (di - dist);
+      dir = -dir;
+    }
+    else // further on in same direction
+    {
+      dist += di;
+      motor->movePosition[0] -= dir * di;
 
-			motor->currentMoveTime = ti;
-		}
-	}
-	*/
-	float t = tmax;
-	if (dist <= dmax)
-	{
-		t = sqrt(dist / motor->jogMaxAcceleration);
-	}
+      motor->currentMoveTime = ti;
+    }
+  }
+  */
+  float t = tmax;
+  if (dist <= dmax)
+  {
+    t = sqrt(dist / motor->jogMaxAcceleration);
+  }
 
-	motor->moveTime[moveCount] = t;
-	motor->moveAcceleration[moveCount] = dir * motor->jogMaxAcceleration;
+  motor->moveTime[moveCount] = t;
+  motor->moveAcceleration[moveCount] = dir * motor->jogMaxAcceleration;
 
-	if (dist > dmax)
-	{
-		moveCount++;
-		dist -= dmax;
-		float tconst = dist / motor->jogMaxVelocity;
-		motor->moveTime[moveCount] = tconst;
-		motor->moveAcceleration[moveCount] = 0;
-	}
+  if (dist > dmax)
+  {
+    moveCount++;
+    dist -= dmax;
+    float tconst = dist / motor->jogMaxVelocity;
+    motor->moveTime[moveCount] = tconst;
+    motor->moveAcceleration[moveCount] = 0;
+  }
 
-	moveCount++;
-	motor->moveTime[moveCount] = t;
-	motor->moveAcceleration[moveCount] = dir * -motor->jogMaxAcceleration;
+  moveCount++;
+  motor->moveTime[moveCount] = t;
+  motor->moveAcceleration[moveCount] = dir * -motor->jogMaxAcceleration;
 
-	for (uint8_t i = 1; i <= moveCount; i++)
-	{
-		float t = motor->moveTime[i - 1];
-		motor->movePosition[i] = (int32_t)(motor->movePosition[i - 1] + motor->moveVelocity[i - 1] * t + 0.5f * motor->moveAcceleration[i - 1] * t * t);
-		motor->moveVelocity[i] = motor->moveVelocity[i - 1] + motor->moveAcceleration[i - 1] * t;
-	}
-	motor->movePosition[moveCount + 1] = destination;
-	for (uint8_t i = 0; i <= moveCount; i++)
-	{
-		motor->moveAcceleration[i] *= 0.5f; // pre-multiply here for later position calculation
-	}
-	motor->currentMove = 0;
-	return;
+  for (uint8_t i = 1; i <= moveCount; i++)
+  {
+    float t = motor->moveTime[i - 1];
+    motor->movePosition[i] = (int32_t)(motor->movePosition[i - 1] + motor->moveVelocity[i - 1] * t + 0.5f * motor->moveAcceleration[i - 1] * t * t);
+    motor->moveVelocity[i] = motor->moveVelocity[i - 1] + motor->moveAcceleration[i - 1] * t;
+  }
+  motor->movePosition[moveCount + 1] = destination;
+  for (uint8_t i = 0; i <= moveCount; i++)
+  {
+    motor->moveAcceleration[i] *= 0.5f; // pre-multiply here for later position calculation
+  }
+  motor->currentMove = 0;
+  return;
 }

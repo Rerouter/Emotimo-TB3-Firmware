@@ -200,7 +200,7 @@ void Choose_Program()
             break;
   
           case SETUPMENU:   //setup menu
-            progstep_goto(901);
+            progstep_goto(900);
             break;
   
           case AUXDISTANCE:   //

@@ -583,9 +583,27 @@ void button_actions290()
   switch (HandleButtons())
   {
     case C_Pressed:
+      camera_fired = 0; //reset the counter
+      Program_Engaged = true; //leave this for pano
+      redraw = true; 
+      progstep = 250;
+      current_steps.x = motors[0].position; //get our motor position variable synced
+      current_steps.y = motors[1].position; //get our motor position variable synced
+      setPulsesPerSecond(0, 10000);
+      setPulsesPerSecond(1, 10000);
+      setupMotorMove(0, 0);
+      setupMotorMove(1, 0);
+      updateMotorVelocities();
+      do 
+      {
+         if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+      }
+      while (motorMoving);
+      break;
+
+    case Z_Pressed:
       if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       if (POWERSAVE_AUX > PWR_PROGRAM_ON)  disable_AUX();
-      //Program_Engaged=true;
       camera_fired = 0;
       current_steps.x = motors[0].position; //get our motor position variable synced
       current_steps.y = motors[1].position; //get our motor position variable synced

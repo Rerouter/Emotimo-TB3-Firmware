@@ -588,7 +588,9 @@ void PanoEnd ()
   {
     lcd.empty();
     draw(58, 1, 1); //lcd.at(1,1,"Program Complete");
-    draw(59, 2, 1); //lcd.at(2,1," Repeat Press C");
+    delay(prompt_time);
+    lcd.at(2,1,"Setting Press Z");
+    draw(59, 1, 1); //lcd.at(2,1," Repeat Press C");
     redraw = false;
     delay(prompt_time);
   }
@@ -620,3 +622,51 @@ void PanoEnd ()
 //    button_actions_end_of_program();
 //  }
 //}
+
+
+
+void Set_Shot_Repeat()
+{ //
+  if (redraw) {
+    lcd.empty();
+    lcd.at(1, 1, "Select Shot Type");
+    if (!sequence_repeat_type) lcd.at(2, 1, "Run Once");
+    else                       lcd.at(2, 1, "Continuous Loop");
+    redraw = false;
+    delay(prompt_time);
+  }
+
+  if ((millis() - NClastread) > NCdelay) {
+    NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+
+    switch(joy_capture_y_map())
+    {
+      case -1: // Up
+        if (!sequence_repeat_type) {
+          sequence_repeat_type = true;
+          redraw = true;
+        }
+        break;
+  
+      case 1: // Down
+        if (sequence_repeat_type) {
+          sequence_repeat_type = false;
+          redraw = true;
+        }
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        progstep_forward();
+        break;
+  
+      case Z_Pressed:
+        progstep_backward();
+        break;
+    }
+  }
+}

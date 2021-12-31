@@ -52,14 +52,14 @@ void eeprom_saved( boolean saved )
 
 void eeprom_write( uint16_t pos, bool& val )
 {
-  EEPROM.write(pos, val);
+  EEPROM.update(pos, val);
   // indicate that memory has been saved
   eeprom_saved(true);
 }
 
 void eeprom_write( uint16_t pos, uint8_t& val )
 {
-  EEPROM.write(pos, val);
+  EEPROM.update(pos, val);
   // indicate that memory has been saved
   eeprom_saved(true);
 }
@@ -67,7 +67,7 @@ void eeprom_write( uint16_t pos, uint8_t& val )
 
 void eeprom_write( uint16_t pos, int8_t& val )
 {
-  EEPROM.write(pos, val);
+  EEPROM.update(pos, val);
   // indicate that memory has been saved
   eeprom_saved(true);
 }
@@ -112,7 +112,7 @@ void eeprom_write_final( uint16_t pos, byte& val, byte len )
 {
   byte* p = (byte*)(void*)&val;
   for ( uint8_t i = 0; i < len; i++ )
-    EEPROM.write(pos++, *p++);
+    EEPROM.update(pos++, *p++);
 
   // indicate that memory has been saved
   eeprom_saved(true);

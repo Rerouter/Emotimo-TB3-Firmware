@@ -239,7 +239,7 @@ boolean       MOVE_REVERSED_FOR_RUN;
 uint8_t       LCD_BRIGHTNESS_RUNNING; //0 is off 8 is max
 uint8_t       LCD_BRIGHTNESS_MENU;    //0 is off 8 is max
 uint16_t      AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 steps per second.
-uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 32000;
+uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 45000;
 uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 32000;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
 boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
@@ -628,16 +628,25 @@ void loop()
 
       //--------------------------------------------------------------------------------------------------------------
 
-      //start of setup
-      
+      //start of Settings menu
+  
+      case 900:  Settings_Menu();                    break;  // Better settings menu    
       case 901:  Setup_AUX_ON();                     break;  // AUX_ON
-      case 902:  Setup_PAUSE_ENABLED();              break;  // PAUSE_ENABLED
+      case 902:  Setup_AUX_Motor_DIR();              break;  // LCD Bright
       case 903:  Setup_POWERSAVE_PT();               break;  // POWERSAVE_PT
       case 904:  Setup_POWERSAVE_AUX();              break;  // POWERSAVE_AUX
-      case 905:  Setup_LCD_BRIGHTNESS_DURING_RUN();  break;  // LCD Bright
-      case 906:  Setup_Max_AUX_Motor_Speed();        break;  // Aux Motor Max Speed
-      case 907:  Setup_AUX_Motor_DIR();              break;  // LCD Bright
-      case 908:  ReturnToMenu();                     break;  // Exit
+      case 905:  Setup_LCD_BRIGHTNESS_DURING_RUN();  break;  // LCD Bright Running
+      case 906:  Setup_LCD_BRIGHTNESS_DURING_MENU(); break;  // LCD Bright Menu
+      case 907:  Setup_Max_AUX_Motor_Speed();        break;  // MAX_SPEED_AUX
+      case 908:  Setup_Max_PAN_Motor_Speed();        break;  // MAX_SPEED_PAN
+      case 909:  Setup_Max_TILT_Motor_Speed();       break;  // MAX_SPEED_TILT
+      case 910:  Setup_PAUSE_ENABLED();              break;  // PAUSE_ENABLED
+      case 911:  ReturnToMenu();                     break;  // PANO_SERPENTINE
+      case 912:  ReturnToMenu();                     break;  // JOY_X_INVERT
+      case 913:  ReturnToMenu();                     break;  // JOY_Y_INVERT
+      case 914:  ReturnToMenu();                     break;  // ACC_X_INVERT
+      case 915:  ReturnToMenu();                     break;  // SWAP_X_Y_AXIS
+      case 916:  ReturnToMenu();                     break;  // SWAP_X_Z_AXIS
       
       //end of setup
 

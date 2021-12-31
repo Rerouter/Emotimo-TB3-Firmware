@@ -141,7 +141,7 @@ void NunChuckProcessData()
 
   if (AUX_REV) acc_x_axis = -acc_x_axis;
   if (joy_x_axis) joy_x_axis = -joy_x_axis;
-  if (joy_y_axis) joy_y_axis = -joy_y_axis;
+  //if (joy_y_axis) joy_y_axis = -joy_y_axis;
 
   //create a deadband
   const uint8_t deadband  = 7;   // results in 100-7 or +-93 - this is for the joystick
@@ -305,11 +305,6 @@ void updateMotorVelocities2()   //Happens  20 times a second
   int32_t signedMotorMoveSpeedTarget1 = (int32_t(joy_y_axis) * joy_y_axis * joy_y_axis) >> 4;
   int32_t signedMotorMoveSpeedTarget2 = (int32_t(acc_x_axis) * acc_x_axis * acc_x_axis) >> 4;
 
-  // Speed Limiting
-  if (signedMotorMoveSpeedTarget0 > PAN_MAX_JOG_STEPS_PER_SEC) signedMotorMoveSpeedTarget0 = PAN_MAX_JOG_STEPS_PER_SEC;
-  if (signedMotorMoveSpeedTarget1 > TILT_MAX_JOG_STEPS_PER_SEC) signedMotorMoveSpeedTarget1 = TILT_MAX_JOG_STEPS_PER_SEC;
-  if (signedMotorMoveSpeedTarget2 > AUX_MAX_JOG_STEPS_PER_SEC) signedMotorMoveSpeedTarget2 = AUX_MAX_JOG_STEPS_PER_SEC;
-  
   //pan accel
   if (signedMotorMoveSpeedTarget0 != signedlastMotorMoveSpeed0)
   {
@@ -355,9 +350,17 @@ void updateMotorVelocities2()   //Happens  20 times a second
     }
   }
 
-  motors[0].nextMotorMoveSpeed = abs(signedMotorMoveSpeedTarget0); //top is 65535
-  motors[1].nextMotorMoveSpeed = abs(signedMotorMoveSpeedTarget1); //top is 65535
-  motors[2].nextMotorMoveSpeed = abs(signedMotorMoveSpeedTarget2); //top is 65535
+  motors[0].dir = (signedMotorMoveSpeedTarget0 > 0) ? 1 : 0;
+  motors[1].dir = (signedMotorMoveSpeedTarget1 > 0) ? 1 : 0;
+  motors[2].dir = (signedMotorMoveSpeedTarget2 > 0) ? 1 : 0;
+
+  signedMotorMoveSpeedTarget0 = constrain(abs(signedMotorMoveSpeedTarget0), 0, PAN_MAX_JOG_STEPS_PER_SEC);
+  signedMotorMoveSpeedTarget1 = constrain(abs(signedMotorMoveSpeedTarget1), 0, TILT_MAX_JOG_STEPS_PER_SEC);
+  signedMotorMoveSpeedTarget2 = constrain(abs(signedMotorMoveSpeedTarget2), 0, AUX_MAX_JOG_STEPS_PER_SEC);
+
+  motors[0].nextMotorMoveSpeed = signedMotorMoveSpeedTarget0; //top is 65535
+  motors[1].nextMotorMoveSpeed = signedMotorMoveSpeedTarget1; //top is 65535
+  motors[2].nextMotorMoveSpeed = signedMotorMoveSpeedTarget2; //top is 65535
 
   for (uint8_t mot = 0; mot < 3; mot++)
   {
@@ -366,9 +369,6 @@ void updateMotorVelocities2()   //Happens  20 times a second
     //Serial.print("motorMoving:");Serial.println(motorMoving);
   }
 
-  motors[0].dir = (signedMotorMoveSpeedTarget0 > 0) ? 1 : 0;
-  motors[1].dir = (signedMotorMoveSpeedTarget1 > 0) ? 1 : 0;
-  motors[2].dir = (signedMotorMoveSpeedTarget2 > 0) ? 1 : 0;
 
   *motorAccumulator[0] = 65535;
   *motorAccumulator[1] = 65535;
