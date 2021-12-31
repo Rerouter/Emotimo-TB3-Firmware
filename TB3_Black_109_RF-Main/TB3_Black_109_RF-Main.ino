@@ -213,14 +213,6 @@ boolean       Program_Engaged =        false;
 boolean       Move_Engaged =           false;
 boolean       Flag_Wait_For_Trigger = false;
 
-//New Powersave flags
-/*Power Save explanation
-  We can power up and power down the Pan Tilt motors together.  We can power up and power down the Aux motor port as well.  We see three levels of power saving:
-  1)  None - Motors are always on - for VFX work where power isn't a factor and precision is most important.  Motors will get warm here on hot days.
-  2)  Low - only at the end of program
-  3)  Standard - Power up the motors for the shooting time (all the time we hold the trigger down), and move, power down between shots.
-  4)  High - Only power on for motor moves, turn off the motors when we reach the shooting position.
-*/
 
 enum powersave : uint8_t {
   PWR_ALWAYS_ON    = 0, // Motors are always on,
@@ -504,9 +496,10 @@ void loop()
   { //use debugging WHEN HIT here for monitoring - {!sequence_repeat_type},{progstep},{progtype},{camera_fired}
     switch (progstep)
     {
+      case 0:  Choose_Program();      break;
+
       //start of 2 point SMS/Video routine
       
-      case 0:  Choose_Program();      break; 
 //      case 1:  Move_to_Startpoint();  break;  // Move to Start Point
 //      case 2:  Move_to_Endpoint();    break;  // Move to End Point
       case 1:  Move_to_Point_X(0);    break;  // Move Point 0
@@ -553,7 +546,7 @@ void loop()
 
       //start of the three point move
       
-      case 100:  Choose_Program();      break;
+      case 100:  ReturnToMenu();        break;
       case 101:  Move_to_Point_X(0);    break;  // Move Point 0
       case 102:  Move_to_Point_X(1);    break;  // Move Point 1
       case 103:  Move_to_Point_X(2);    break;  // Move Point 2
@@ -576,11 +569,11 @@ void loop()
       //Step 1 - Put a point in the upper right corner - set zeros, pan up and right to hit same point with lower left corner of viewfinder
       //Display values  - write to ram - use these values
 
-      case 200:  Choose_Program();             break;
+      case 200:  ReturnToMenu();               break;
       case 201:  Set_angle_of_view();          break;
-      case 202:  Define_Overlap_Percentage();  break;
-      case 203:  Move_to_Point_X(0);           break;
-      case 204:  Move_to_Point_X(1);           break;
+      case 202:  Move_to_Point_X(0);           break;
+      case 203:  Move_to_Point_X(1);           break;
+      case 204:  Define_Overlap_Percentage();  break;
       case 205:  Set_Static_Time();            break;
       case 206:  Pano_Review_Confirm();        break;
       
@@ -588,7 +581,7 @@ void loop()
 
       case 250:  PanoLoop();                   break;  // loop for Pano
       case 290:  PanoEnd();                    break;  // finished up pano
-      case 299:  Pano_Paused_Menu();           break;
+      case 299:  Pano_Paused_Menu();           break;  // Pausing menu
 
       //----------------------------------------------------------------------------------------------------------------------------
 
@@ -600,7 +593,7 @@ void loop()
       //Step 1 - Put a point in the upper right corner - set zeros, pan up and right to hit same point with lower left corner of viewfinder
       //Display values  - write to ram - use these values
 
-      case 300:  Choose_Program();             break;
+      case 300:  ReturnToMenu();               break;
       case 301:  Set_angle_of_view();          break;
       case 302:  Define_Overlap_Percentage();  break;
       case 303:  Move_to_Point_X(0);           break;  // set subject point
@@ -614,7 +607,7 @@ void loop()
 
       //start of entered distance on aux mode
       
-      case 400:  Choose_Program();        break;
+      case 400:  ReturnToMenu();          break;
       case 401:  Move_to_Startpoint();    break;  // Move to Start Point
       case 402:  Enter_Aux_Endpoint();    break;  // Move to End Point
       case 403:  Set_Cam_Interval();      break;  // Set Camera Interval
