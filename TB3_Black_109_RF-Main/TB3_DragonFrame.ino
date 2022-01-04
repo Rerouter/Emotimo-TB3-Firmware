@@ -660,9 +660,6 @@ void updateMotorVelocities()
 
   for (uint8_t m = 0; m < MOTOR_COUNT; m++)
   {
-    motors[m].nextMotorMoveSteps = 0;
-    motors[m].nextMotorMoveSpeed = 0;
-
     if (bitRead(motorMoving, m))
     {
       Motor *motor = &motors[m];
@@ -688,7 +685,7 @@ void updateMotorVelocities()
 
         uint32_t dx = abs(xn - motor->position);
 
-        motors[m].nextMotorMoveSpeed = max(1, min(65535, dx * 65535 / 1000));
+        motors[m].nextMotorMoveSpeed = max(1, min(motors[m].jogMaxVelocity, dx * 65535 / 1000));
         motors[m].nextMotorMoveSteps = dx;
 
         boolean forward = xn > motor->position;
@@ -696,6 +693,11 @@ void updateMotorVelocities()
 
         motor->position = xn;
       }
+    }
+    else
+    {
+      motors[m].nextMotorMoveSteps = 0;
+      motors[m].nextMotorMoveSpeed = 0;
     }
   }
   nextMoveLoaded = true;
@@ -1768,7 +1770,7 @@ void synched3AxisMove_timed(int32_t xtarget, int32_t ytarget, int32_t ztarget, f
   //create branch to eiether jog back max speed, or use local time if it is longer..
 
   Serial.print("LongestMoveTime");Serial.println(LongestMoveTime);
-  Serial.print("DominantMotor");Serial.println(DominantMotor);
+  //Serial.print("DominantMotor");Serial.println(DominantMotor);
   #endif
   //For dominant axis, grab the key times for keyframing the other axis
 

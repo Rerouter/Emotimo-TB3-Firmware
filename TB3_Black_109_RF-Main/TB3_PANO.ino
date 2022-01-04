@@ -589,10 +589,6 @@ void button_actions290()
       progstep = 250;
       current_steps.x = motors[0].position; //get our motor position variable synced
       current_steps.y = motors[1].position; //get our motor position variable synced
-      setPulsesPerSecond(0, 10000);
-      setPulsesPerSecond(1, 10000);
-      setupMotorMove(0, 0);
-      setupMotorMove(1, 0);
       updateMotorVelocities();
       do 
       {

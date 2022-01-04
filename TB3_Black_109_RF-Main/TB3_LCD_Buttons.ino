@@ -467,7 +467,7 @@ void button_actions_move_x(uint8_t Point)
           lcd.empty();
           lcd.at (1, 5, "AOV Set");
         }
-        else if (progstep == 204) //pano - calculate other values UD050715
+        else if (progstep == 203) //pano - calculate other values UD050715
         {
           calc_pano_move();
         }
