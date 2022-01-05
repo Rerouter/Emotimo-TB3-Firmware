@@ -231,8 +231,8 @@ boolean       MOVE_REVERSED_FOR_RUN;
 uint8_t       LCD_BRIGHTNESS_RUNNING; //0 is off 8 is max
 uint8_t       LCD_BRIGHTNESS_MENU;    //0 is off 8 is max
 uint16_t      AUX_MAX_JOG_STEPS_PER_SEC; //value x 1000  20 is the top or 20000 steps per second.
-uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 45000;
-uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 32000;
+uint16_t      PAN_MAX_JOG_STEPS_PER_SEC = 60000;
+uint16_t      TILT_MAX_JOG_STEPS_PER_SEC = 55000;
 boolean       AUX_REV;  //1=Aux Enabled, 0=Aux disabled
 boolean       SERPENTINE = 1; // 0=All rows start from same side, 1 = Rows alternate to minimise time
 
@@ -569,13 +569,18 @@ void loop()
       //Step 1 - Put a point in the upper right corner - set zeros, pan up and right to hit same point with lower left corner of viewfinder
       //Display values  - write to ram - use these values
 
-      case 200:  ReturnToMenu();               break;
-      case 201:  Set_angle_of_view();          break;
-      case 202:  Move_to_Point_X(0);           break;
-      case 203:  Move_to_Point_X(1);           break;
-      case 204:  Define_Overlap_Percentage();  break;
-      case 205:  Set_Static_Time();            break;
-      case 206:  Pano_Review_Confirm();        break;
+      case 200:  GigaPano_Menu();              break;
+      case 201:  Set_angle_of_view();          break;  // Set AOV
+      case 202:  Move_to_Point_Pano_X(0);      break;  // Set Corner 1
+      case 203:  Move_to_Point_Pano_X(1);      break;  // Set Corner 2
+      case 204:  Define_Overlap_Percentage();  break;  // Set Overlap %
+      case 205:  Set_Static_Time();            break;  // Set Camera Shutter Time
+      case 206:  ReturnToMenu();               break;  // Set Minimum Move Time
+      case 207:  ReturnToMenu();               break;  // Set Serpentine Mode
+      case 208:  ReturnToMenu();               break;  // Set Serpentine Mode
+      case 209:  ReturnToMenu();               break;  // Set Looping
+      case 210:  Pano_Review_Confirm();        break;  // Start the sequence
+
       
       //end of Pano Mode
 

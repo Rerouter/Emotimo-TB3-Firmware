@@ -137,7 +137,7 @@ void InProg_Select_Option()
 
     switch(joy_capture_y_map())
     {
-      case -1: // Up
+      case 1: // Up
         inprogtype++;
         if (inprogtype > (INPROG_OPTIONS - 1)) 	inprogtype = (INPROG_OPTIONS - 1);
         else
@@ -146,7 +146,7 @@ void InProg_Select_Option()
         }
         break;
   
-      case 1: // Down
+      case -1: // Down
         inprogtype--;
         if (inprogtype > (INPROG_OPTIONS - 1))	inprogtype = 0;
         else

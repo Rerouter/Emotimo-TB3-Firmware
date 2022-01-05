@@ -550,14 +550,14 @@ void Set_Shot_Repeat()
 
     switch(joy_capture_y_map())
     {
-      case -1: // Up
+      case 1: // Up
         if (!sequence_repeat_type) {
           sequence_repeat_type = true;
           redraw = true;
         }
         break;
   
-      case 1: // Down
+      case -1: // Down
         if (sequence_repeat_type) {
           sequence_repeat_type = false;
           redraw = true;

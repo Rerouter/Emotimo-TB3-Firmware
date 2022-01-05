@@ -179,7 +179,7 @@ void Pano_Paused_Menu()
     
     switch(joy_capture_y_map())
     {
-      case -1: // Up
+      case 1: // Up
         panoprogtype++;
         if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = 0;
         else
@@ -188,7 +188,7 @@ void Pano_Paused_Menu()
         }
         break;
   
-      case 1: // Down
+      case -1: // Down
         panoprogtype--;
         if (panoprogtype > (PANO_OPTIONS - 1))  panoprogtype = (PANO_OPTIONS - 1);
         else

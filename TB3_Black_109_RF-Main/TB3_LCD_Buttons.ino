@@ -22,26 +22,22 @@
   =========================================
 
 */
-
-void ReturnToMenu()
-{
-  progtype = 0;
-  progstep_goto(0);
-  lcd.empty();
-  lcd.at(1, 1, "Return Main Menu");
-  delay(prompt_time);
-}
-int32_t	aux_dist;
-
-// Should belong in Pano, need to shift out
-uint32_t  Pan_AOV_steps;
-uint32_t  Tilt_AOV_steps;
+int32_t  aux_dist;
 
 bool cursorpos = 0;
 enum cursorpos : bool {
   cursorleft = 0,
   cursorright = 1
 };
+
+
+void ReturnToMenu()
+{
+  progstep_goto(0);
+  lcd.empty();
+  lcd.at(1, 1, "Return Main Menu");
+  delay(prompt_time);
+}
 
 
 void Choose_Program()
@@ -113,13 +109,13 @@ void Choose_Program()
     
     switch(joy_capture_y_map())
     {
-      case -1: // Up
+      case 1: // Up
         redraw = true;
         if (progtype)  { progtype--;                  }
         else           { progtype = (MENU_ITEMS - 1); } // accomodating rollover
         break;
 
-      case 1: // Down
+      case -1: // Down
         redraw = true;
         if (progtype == (MENU_ITEMS - 1)) { progtype = 0; }
         else                              { progtype++;   }
@@ -186,7 +182,7 @@ void Choose_Program()
             REVERSE_PROG_ORDER = false;
             Trigger_Type = Static_Time_Trigger; // default this for static time selection
             interval = 100;//default this to low value to insure we don't have left over values from old progam delaying shots.
-            progstep_goto(201);
+            progstep_goto(200);
             break;
   
           case PORTRAITPANO:  //Pano Beta
@@ -460,24 +456,27 @@ void button_actions_move_x(uint8_t Point)
         Serial.print(motor_steps_pt[Point][2]); Serial.println();
   #endif
   
-        if (progstep == 201 || progstep == 301) //set angle of view UD050715
+        if (progstep == 202) //pano - calculate other values UD050715
         {
-          Pan_AOV_steps  = current_steps.x; //Serial.println(Pan_AOV_steps);
-          Tilt_AOV_steps = current_steps.y; //Serial.println(Tilt_AOV_steps);
-          lcd.empty();
-          lcd.at (1, 5, "AOV Set");
+          lcd.at (1, 1, " Corner 1 Set ");
+          delay(prompt_time);
+          progstep_goto(200);
+          break;
         }
         else if (progstep == 203) //pano - calculate other values UD050715
         {
           calc_pano_move();
+          lcd.at (1, 1, " Corner 2 Set ");
+          delay(prompt_time);
+          progstep_goto(200);
+          break;
         }
         else if (progstep == 303) // PORTRAITPANO Method UD050715
         {
           lcd.empty();
           lcd.at (1, 4, "Center Set");
+          delay(prompt_time);
         }
-  
-        delay(prompt_time);
         progstep_forward();
         break;
      
@@ -495,7 +494,8 @@ void button_actions_move_x(uint8_t Point)
           }
         }
         while (motorMoving); // Wait for the motors to stop
-        progstep_backward();
+        if (progstep == 201 || progstep == 202 || progstep == 203) progstep_goto(200);
+        else                                                       progstep_backward();
       break;
   }
 }
@@ -802,11 +802,13 @@ void button_actions_stat_time()
       lcd.empty();
       draw(25, 1, 1); //lcd.at(1,1,"Static Time Set"); // try this to push correct character
       delay(prompt_time);
-      progstep_forward();
+      if (progstep == 205) progstep_goto(200);
+      else                 progstep_forward();
       break;
 
     case Z_Pressed:
-      progstep_backward();
+      if (progstep == 205) progstep_goto(200);
+      else                 progstep_backward();
       break;
 
     case CZ_Pressed:

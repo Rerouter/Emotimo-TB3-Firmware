@@ -668,6 +668,7 @@ void updateMotorVelocities()
       if (motor->moveTime[seg] == 0)
       {
         motors[m].nextMotorMoveSpeed = 0;
+        motors[m].nextMotorMoveSteps = 0;
         bitClear(motorMoving, m);
       }
       else
@@ -696,8 +697,8 @@ void updateMotorVelocities()
     }
     else
     {
-      motors[m].nextMotorMoveSteps = 0;
       motors[m].nextMotorMoveSpeed = 0;
+      motors[m].nextMotorMoveSteps = 0;
     }
   }
   nextMoveLoaded = true;

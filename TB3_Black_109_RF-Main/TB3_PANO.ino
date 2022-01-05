@@ -27,7 +27,14 @@ uint32_t	total_pano_shots; //rows x columns for display
 int32_t		step_per_pano_shot_x = 0; // Calculated value for how many steps in a pano move
 int32_t		step_per_pano_shot_y = 0; // Calculated value for how many steps in a pano move
 float     local_total_pano_move_time = 0;
+int32_t   AOV_Offset_X = 1;
+int32_t   AOV_Offset_Y = 1;
+int32_t   Corner2_x = 0;
+int32_t   Corner2_y = 0;
 
+// Should belong in Pano, need to shift out
+uint32_t  Pan_AOV_steps;
+uint32_t  Tilt_AOV_steps;
 
 //---------------------------------------------------------------------------------------------------
 
@@ -85,6 +92,95 @@ int8_t TopThird7by5 [36][2] = {{ 0, 0}, { 0,-1}, { 0,-2}, {-1,-2}, {-1,-1}, {-1,
                                {-3, 1}, {-3, 0}, {-3,-1}, {-3,-2}, {-3,-3}, { 0, 0}};
 
 
+
+
+#define Gigapano_Options  10    //up this when code for gotoframe
+enum Gigapano : uint8_t {
+  GIGAPANO_AOV_SET            = 0,
+  GIGAPANO_CORNER_1_SET       = 1,
+  GIGAPANO_CORNER_2_SET       = 2,
+  GIGAPANO_OVERLAP_SET        = 3,
+  GIGAPANO_CAMERA_FIRE_TIME   = 4,
+  GIGAPANO_MINIMUM_MOVE_TIME  = 5,
+  GIGAPANO_TRIGGER_TYPE       = 6,
+  GIGAPANO_SERPENTINE         = 7,
+  GIGAPANO_LOOP               = 8,
+  GIGAPANO_START              = 9
+};
+uint8_t Gigapano_Item = 0;
+
+
+void GigaPano_Menu()
+{
+  if (redraw)
+  {
+    lcd.at(1,1," Gigapano Menu ");
+    switch(Gigapano_Item)
+    {                                             //0123456789ABCDEF
+      case GIGAPANO_AOV_SET:            lcd.at(2,1," Set Image AOV  ");  break;
+      case GIGAPANO_CORNER_1_SET:       lcd.at(2,1," Set Corner 1   ");  break;
+      case GIGAPANO_CORNER_2_SET:       lcd.at(2,1," Set Corner 2   ");  break;
+      case GIGAPANO_OVERLAP_SET:        lcd.at(2,1," Set Overlap%   ");  break;
+      case GIGAPANO_CAMERA_FIRE_TIME:   lcd.at(2,1," Set Static Time");  break;
+      case GIGAPANO_MINIMUM_MOVE_TIME:  lcd.at(2,1,"Set Minimum Time");  break;
+      case GIGAPANO_TRIGGER_TYPE:       lcd.at(2,1,"Set Trigger Type");  break;
+      case GIGAPANO_SERPENTINE:         lcd.at(2,1," Serpentine     ");  break;
+      case GIGAPANO_LOOP:               lcd.at(2,1," Loop Setting   ");  break;
+      case GIGAPANO_START:              lcd.at(2,1," Start Shooting ");  break;
+    }
+    delay(prompt_time);
+    redraw = false;
+  }
+
+  if ((millis() - NClastread) > NCdelay) {
+    NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+
+    switch(joy_capture_y_map())
+    {
+       case 1: // Up
+        if (Gigapano_Item == (Gigapano_Options - 1)) Gigapano_Item = 0;
+        else                                         Gigapano_Item++;
+        redraw = true;
+        break;
+        
+      case -1: // Down
+        if (Gigapano_Item) Gigapano_Item--;
+        else               Gigapano_Item = Gigapano_Options - 1;
+        redraw = true;
+        break;
+    }
+    
+    switch(HandleButtons())
+    {
+      case C_Pressed:
+        switch(Gigapano_Item)
+        {
+          case GIGAPANO_AOV_SET:           progstep_goto(201);  break;
+          case GIGAPANO_CORNER_1_SET:      progstep_goto(202);  break;
+          case GIGAPANO_CORNER_2_SET:      progstep_goto(203);  break;
+          case GIGAPANO_OVERLAP_SET:       progstep_goto(204);  break;
+          case GIGAPANO_CAMERA_FIRE_TIME:  progstep_goto(205);  break;
+          case GIGAPANO_MINIMUM_MOVE_TIME: progstep_goto(206);  break;
+          case GIGAPANO_TRIGGER_TYPE:      progstep_goto(207);  break;
+          case GIGAPANO_SERPENTINE:        progstep_goto(208);  break;
+          case GIGAPANO_LOOP:              progstep_goto(209);  break;
+          case GIGAPANO_START:             progstep_goto(210);  break;
+        }
+        break;
+    
+      case Z_Pressed:
+        ReturnToMenu();
+        break;
+    }
+  }
+}
+
+
+
+
+
 void Set_angle_of_view()
 {
   if (redraw)
@@ -95,15 +191,28 @@ void Set_angle_of_view()
     draw(75, 1, 1); // lcd.at(1, 1, "Set Angle o'View");
     draw(76, 2, 2); // lcd.at(2, 2, "C-Set, Z-Reset");
     delay(prompt_time);
-    
-    current_steps.x = Pan_AOV_steps;
-    current_steps.y = Tilt_AOV_steps;
-    
+
+    // Save where we where so we can return there after adjusting
+    if (Corner2_x == 0) Corner2_x = current_steps.x;
+    if (Corner2_y == 0) Corner2_y = current_steps.y;
+
+    // If its the first time, save the offset (can be out of order)
+    if (AOV_Offset_X == 1) AOV_Offset_X = current_steps.x;
+    // If its already saved but the motors have moved since, update
+    else {
+      AOV_Offset_X = current_steps.x + Pan_AOV_steps;
+    }
+
+    if (AOV_Offset_Y == 1) AOV_Offset_Y = current_steps.y;
+    else {
+      AOV_Offset_Y = current_steps.y + Tilt_AOV_steps;
+    }
+
     lcd.empty();
     draw(77, 1, 1); //lcd.at(1, 1, "Pan AOV: ");
-    lcd.at(1, 11, steps_to_deg_decimal(0));
+    lcd.at(1, 11, steps_to_deg_decimal(current_steps.x - AOV_Offset_X));
     draw(78, 2, 1); //lcd.at(2, 1, "Tilt AOV: ");
-    lcd.at(2, 11, steps_to_deg_decimal(0));
+    lcd.at(2, 11, steps_to_deg_decimal(current_steps.y - AOV_Offset_Y));
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
@@ -118,11 +227,213 @@ void Set_angle_of_view()
     NunChuckProcessData();
     updateMotorVelocities2();
 
-    lcd.at(1, 11, steps_to_deg_decimal(current_steps.x));
-    lcd.at(2, 11, steps_to_deg_decimal(current_steps.y));
-    button_actions_move_x(1);
+    lcd.at(1, 11, steps_to_deg_decimal(current_steps.x - AOV_Offset_X));
+    lcd.at(2, 11, steps_to_deg_decimal(current_steps.y - AOV_Offset_Y));
+    button_actions_set_aov();
   }
 }
+
+
+void button_actions_set_aov()
+{
+  switch (HandleButtons())
+  {
+    case CZ_Held:
+        AOV_Offset_X = current_steps.x;
+        AOV_Offset_Y = current_steps.y;
+        Pan_AOV_steps = 0;
+        Tilt_AOV_steps = 0;
+        break;
+            
+    case C_Pressed:
+        Motor_Stop();
+        Pan_AOV_steps  = (current_steps.x - AOV_Offset_X); //Serial.println(Pan_AOV_steps);
+        Tilt_AOV_steps = (current_steps.y - AOV_Offset_Y); //Serial.println(Tilt_AOV_steps);
+        motors[0].position = current_steps.x;
+        motors[1].position = current_steps.y;
+        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+        {
+          lcd.empty();
+          lcd.at (1, 1, "Position Reset ");
+          delay(prompt_time);
+          setupMotorMove(0, Corner2_x);
+          setupMotorMove(1, Corner2_y);
+          Corner2_x = 0;
+          Corner2_y = 0;
+          updateMotorVelocities();
+          do 
+          {
+             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          }
+          while (motorMoving);
+        }
+        lcd.empty();
+        lcd.at (1, 5, "AOV Set");
+        delay(prompt_time);
+        progstep_goto(200);
+        break;
+
+    case Z_Held:
+        Motor_Stop();
+        motors[0].position = current_steps.x;
+        motors[1].position = current_steps.y;
+        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+        {
+          lcd.empty();
+          lcd.at (1, 1, "Position Reset ");
+          delay(prompt_time);
+          setupMotorMove(0, Corner2_x);
+          setupMotorMove(1, Corner2_y);
+          Corner2_x = 0;
+          Corner2_y = 0;
+          updateMotorVelocities();
+          do 
+          {
+             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          }
+          while (motorMoving);
+        }
+        progstep_goto(200);
+      break;
+  }
+}
+
+
+void Motor_Stop()
+{
+  //this puts input to zero to allow a stop
+  NunChuckClearData();
+
+  do //run this loop until the motors stop
+  {
+    //Serial.print("motorMoving:");Serial.println(motorMoving);
+    if (!nextMoveLoaded)
+    {
+      updateMotorVelocities2();
+    }
+  }
+  while (motorMoving); // Wait for the motors to stop
+}
+
+
+void Move_to_Point_Pano_X(uint8_t Point)
+{
+  if (redraw)
+  {
+    lcd.empty();
+
+    if (Point == 0)
+    {
+        bool changed = 0;
+        if (Corner2_x == 0) Corner2_x = current_steps.x; changed = 1;
+        if (Corner2_y == 0) Corner2_y = current_steps.y; changed = 1;
+
+        if (changed)
+        {
+          lcd.empty();
+          lcd.at (1, 1, "Move to Corner ");
+          delay(prompt_time);
+          motors[0].position = current_steps.x;
+          motors[1].position = current_steps.y;
+          setupMotorMove(0, 0);
+          setupMotorMove(1, 0);
+          updateMotorVelocities();
+          do 
+          {
+             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          }
+          while (motorMoving);
+        }
+    }
+
+    if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
+    else draw(3, 2, 1); //lcd.at(2,1,CZ1);
+
+    //   Velocity Engine update
+    DFSetup(); //setup the ISR
+    delay(prompt_time);
+    redraw = false;
+  }
+
+  //  Velocity Engine update
+  if (!nextMoveLoaded && (millis() - NClastread) > NCdelay)
+  {
+    NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+    updateMotorVelocities2();
+    button_actions_move_pano_x(Point); //check buttons
+  }
+}
+
+
+void button_actions_move_pano_x(uint8_t Point)
+{
+  switch (HandleButtons())
+  {            
+    case C_Pressed:
+      Motor_Stop();
+      motors[0].position = current_steps.x;
+      motors[1].position = current_steps.y;
+      if (Point == 0)
+      {
+        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+        {
+          lcd.empty();
+          lcd.at (1, 1, "Position Reset ");
+          delay(prompt_time);
+          setupMotorMove(0, Corner2_x + current_steps.x);
+          setupMotorMove(1, Corner2_y + current_steps.y);
+          Corner2_x = 0;
+          Corner2_y = 0;
+          updateMotorVelocities();
+          do 
+          {
+             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          }
+          while (motorMoving);
+        }
+        set_position(0, 0, 0); //reset for home position
+        lcd.at (1, 1, " Corner 1 Set ");
+        delay(prompt_time);
+      }
+
+      else if (Point == 1)
+      {
+        calc_pano_move();
+        lcd.at (1, 1, " Corner 2 Set ");
+        delay(prompt_time);
+      }
+
+      progstep_goto(200);
+      break;
+
+    case Z_Pressed:
+      Motor_Stop();
+      motors[0].position = current_steps.x;
+      motors[1].position = current_steps.y;
+      if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+      {
+        lcd.empty();
+        lcd.at (1, 1, "Position Reset ");
+        delay(prompt_time);
+        setupMotorMove(0, Corner2_x + current_steps.x);
+        setupMotorMove(1, Corner2_y + current_steps.y);
+        Corner2_x = 0;
+        Corner2_y = 0;
+        updateMotorVelocities();
+        do 
+        {
+           if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+        }
+        while (motorMoving);
+      }
+      progstep_goto(200);
+      break;
+  }
+}
+
+
 
 
 void Define_Overlap_Percentage()
@@ -178,11 +489,8 @@ void button_actions_olpercentage()
   switch (HandleButtons())
   {
     case C_Pressed: // perform all calcs based on Angle of view and percentage overlap
-      Pan_AOV_steps  = abs(current_steps.x);
-      Tilt_AOV_steps = abs(current_steps.y);
-  
-      steps_per_shot_max_x = Pan_AOV_steps  * (100 - olpercentage) / 100;
-      steps_per_shot_max_y = Tilt_AOV_steps * (100 - olpercentage) / 100;
+      steps_per_shot_max_x = abs(Pan_AOV_steps)  * (100 - olpercentage) / 100;
+      steps_per_shot_max_y = abs(Tilt_AOV_steps) * (100 - olpercentage) / 100;
       
       #if DEBUG_PANO
       Serial.print("steps_per_shot_max_x: "); Serial.println(steps_per_shot_max_x);
@@ -192,11 +500,14 @@ void button_actions_olpercentage()
       lcd.empty();
       draw(80, 1, 3); // lcd.at(1,3,"Overlap Set");
       delay(prompt_time);
-      progstep_forward();
+
+      if (progstep == 204) progstep_goto(200);
+      else                 progstep_forward();
       break;
 
     case Z_Pressed:
-      progstep_backward();
+      if (progstep == 204) progstep_goto(200);
+      else                 progstep_backward();
       break;
   }
 }
@@ -233,13 +544,13 @@ void Set_PanoArrayType()
 
     switch(joy_capture_y_map())
     {
-      case -1: // Up
+      case 1: // Up
         PanoArrayType++;
         if (PanoArrayType > PanoArrayTypeOptions)  { PanoArrayType = 1; }
         else                                       { redraw = true; }
         break;
   
-      case 1: // Down
+      case -1: // Down
         PanoArrayType--;
         if (PanoArrayType < 1) { PanoArrayType = PanoArrayTypeOptions; }
         else                   { redraw = true; }
