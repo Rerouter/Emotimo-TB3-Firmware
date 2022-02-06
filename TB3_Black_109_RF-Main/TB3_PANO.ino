@@ -60,36 +60,42 @@ enum PanoArrayType : uint8_t {
 //  2, 1 |  1, 1 |  0, 1 | -1, 1 | -2, 1
 //  2, 2 |  1, 2 |  0, 2 | -1, 2 | -2, 2
 
-int8_t OnionArray9 [10][2] =  {{ 0, 0}, { 0,-1}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, {0, 0}};
+int8_t OnionArray9 [10][2] =  {{ 0, 0}, { 0, -1}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1, -1}, {0, 0}};
 
-int8_t OnionArray25 [26][2] = {{ 0, 0}, { 0,-1}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, {1,-2},
-                               { 0,-2}, {-1,-2}, {-2,-2}, {-2,-1}, {-2,-0}, {-2, 1}, {-2, 2}, {-1, 2}, { 0, 2}, {1, 2},
-                               { 2, 2}, { 2, 1}, { 2, 0}, { 2,-1}, { 2,-2}, {0, 0}};
+int8_t OnionArray25 [26][2] = {{ 0, 0}, { 0, -1}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1, -1}, {1, -2},
+  { 0, -2}, { -1, -2}, { -2, -2}, { -2, -1}, { -2, -0}, { -2, 1}, { -2, 2}, { -1, 2}, { 0, 2}, {1, 2},
+  { 2, 2}, { 2, 1}, { 2, 0}, { 2, -1}, { 2, -2}, {0, 0}
+};
 
-int8_t SevenByThree[22][2] =  {{ 0, 0}, { 0,-1}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, {2,-1},
-                               { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3,-1}, {-2,-1}, {-2, 0}, {-2, 1}, {-3, 1}, {-3, 0},
-                               {-3,-1}, { 0, 0}};
+int8_t SevenByThree[22][2] =  {{ 0, 0}, { 0, -1}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1, -1}, {2, -1},
+  { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3, -1}, { -2, -1}, { -2, 0}, { -2, 1}, { -3, 1}, { -3, 0},
+  { -3, -1}, { 0, 0}
+};
 
-int8_t NineByFive_1[46][2] =  {{ 0, 0}, { 0,-1}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, { 2,-1},
-                               { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3,-1}, { 4,-1}, { 4, 0}, { 4, 1}, { 4, 2}, { 3, 2},
-                               { 2, 2}, { 1, 2}, { 0, 2}, {-1, 2}, {-2, 2}, {-2, 1}, {-2, 0}, {-2,-1}, {-3,-1}, {-3, 0},
-                               {-3, 1}, {-3, 2}, {-4, 2}, {-4, 1}, {-4, 0}, {-4,-1}, {-4,-2}, {-3,-2}, {-2,-2}, {-1,-2},
-                               { 0,-2}, { 1,-2}, { 2,-2}, { 3,-2}, { 4,-2}, { 0, 0}};
+int8_t NineByFive_1[46][2] =  {{ 0, 0}, { 0, -1}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1, -1}, { 2, -1},
+  { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3, -1}, { 4, -1}, { 4, 0}, { 4, 1}, { 4, 2}, { 3, 2},
+  { 2, 2}, { 1, 2}, { 0, 2}, { -1, 2}, { -2, 2}, { -2, 1}, { -2, 0}, { -2, -1}, { -3, -1}, { -3, 0},
+  { -3, 1}, { -3, 2}, { -4, 2}, { -4, 1}, { -4, 0}, { -4, -1}, { -4, -2}, { -3, -2}, { -2, -2}, { -1, -2},
+  { 0, -2}, { 1, -2}, { 2, -2}, { 3, -2}, { 4, -2}, { 0, 0}
+};
 
-int8_t NineByFive_2[46][2] =  {{ 0, 0}, { 0,-1}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1,-1}, { 2,-1},
-                               { 2, 0}, { 2, 1}, { 2, 2}, { 1, 2}, { 0, 2}, {-1, 2}, {-2, 2}, {-2, 1}, {-2, 0}, {-2,-1},
-                               {-2,-2}, {-1,-2}, { 0,-2}, { 1,-2}, { 2,-2}, { 3,-2}, { 3,-1}, { 3, 0}, { 3, 1}, { 3, 2},
-                               { 4, 2}, { 4, 1}, { 4, 0}, { 4,-1}, { 4,-2}, {-3,-2}, {-3,-1}, {-3, 0}, {-3, 1}, {-3, 2},
-                               {-4, 2}, {-4, 1}, {-4, 0}, {-4,-1}, {-4,-2}, { 0, 0}};
+int8_t NineByFive_2[46][2] =  {{ 0, 0}, { 0, -1}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0}, { 1, -1}, { 2, -1},
+  { 2, 0}, { 2, 1}, { 2, 2}, { 1, 2}, { 0, 2}, { -1, 2}, { -2, 2}, { -2, 1}, { -2, 0}, { -2, -1},
+  { -2, -2}, { -1, -2}, { 0, -2}, { 1, -2}, { 2, -2}, { 3, -2}, { 3, -1}, { 3, 0}, { 3, 1}, { 3, 2},
+  { 4, 2}, { 4, 1}, { 4, 0}, { 4, -1}, { 4, -2}, { -3, -2}, { -3, -1}, { -3, 0}, { -3, 1}, { -3, 2},
+  { -4, 2}, { -4, 1}, { -4, 0}, { -4, -1}, { -4, -2}, { 0, 0}
+};
 
-int8_t TopThird25 [26][2] =   {{ 0, 0}, { 0,-1}, { 0,-2}, {-1,-2}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0},
-                               { 1,-1}, { 1,-2}, { 2, 1}, { 2, 0}, { 2,-1}, { 2,-2}, { 2,-3}, { 1,-3}, { 0,-3}, {-1,-3},
-                               {-2,-3}, {-2,-2}, {-2,-1}, {-2, 0}, {-2, 1}, { 0, 0}};
+int8_t TopThird25 [26][2] =   {{ 0, 0}, { 0, -1}, { 0, -2}, { -1, -2}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0},
+  { 1, -1}, { 1, -2}, { 2, 1}, { 2, 0}, { 2, -1}, { 2, -2}, { 2, -3}, { 1, -3}, { 0, -3}, { -1, -3},
+  { -2, -3}, { -2, -2}, { -2, -1}, { -2, 0}, { -2, 1}, { 0, 0}
+};
 
-int8_t TopThird7by5 [36][2] = {{ 0, 0}, { 0,-1}, { 0,-2}, {-1,-2}, {-1,-1}, {-1, 0}, {-1, 1}, { 0, 1}, { 1, 1}, { 1, 0},
-                               { 1,-1}, { 1,-2}, { 2,-2}, { 2,-1}, { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3,-1}, { 3,-2},
-                               { 3,-3}, { 2,-3}, { 1,-3}, { 0,-3}, {-1,-3}, {-2,-3}, {-2,-2}, {-2,-1}, {-2, 0}, {-2, 1},
-                               {-3, 1}, {-3, 0}, {-3,-1}, {-3,-2}, {-3,-3}, { 0, 0}};
+int8_t TopThird7by5 [36][2] = {{ 0, 0}, { 0, -1}, { 0, -2}, { -1, -2}, { -1, -1}, { -1, 0}, { -1, 1}, { 0, 1}, { 1, 1}, { 1, 0},
+  { 1, -1}, { 1, -2}, { 2, -2}, { 2, -1}, { 2, 0}, { 2, 1}, { 3, 1}, { 3, 0}, { 3, -1}, { 3, -2},
+  { 3, -3}, { 2, -3}, { 1, -3}, { 0, -3}, { -1, -3}, { -2, -3}, { -2, -2}, { -2, -1}, { -2, 0}, { -2, 1},
+  { -3, 1}, { -3, 0}, { -3, -1}, { -3, -2}, { -3, -3}, { 0, 0}
+};
 
 
 
@@ -114,19 +120,19 @@ void GigaPano_Menu()
 {
   if (redraw)
   {
-    lcd.at(1,1," Gigapano Menu ");
-    switch(Gigapano_Item)
-    {                                             //0123456789ABCDEF
-      case GIGAPANO_AOV_SET:            lcd.at(2,1," Set Image AOV  ");  break;
-      case GIGAPANO_CORNER_1_SET:       lcd.at(2,1," Set Corner 1   ");  break;
-      case GIGAPANO_CORNER_2_SET:       lcd.at(2,1," Set Corner 2   ");  break;
-      case GIGAPANO_OVERLAP_SET:        lcd.at(2,1," Set Overlap%   ");  break;
-      case GIGAPANO_CAMERA_FIRE_TIME:   lcd.at(2,1," Set Static Time");  break;
-      case GIGAPANO_MINIMUM_MOVE_TIME:  lcd.at(2,1,"Set Minimum Time");  break;
-      case GIGAPANO_TRIGGER_TYPE:       lcd.at(2,1,"Set Trigger Type");  break;
-      case GIGAPANO_SERPENTINE:         lcd.at(2,1," Serpentine     ");  break;
-      case GIGAPANO_LOOP:               lcd.at(2,1," Loop Setting   ");  break;
-      case GIGAPANO_START:              lcd.at(2,1," Start Shooting ");  break;
+    lcd.at(1, 1, " Gigapano Menu ");
+    switch (Gigapano_Item)
+    { //0123456789ABCDEF
+      case GIGAPANO_AOV_SET:            lcd.at(2, 1, " Set Image AOV  ");  break;
+      case GIGAPANO_CORNER_1_SET:       lcd.at(2, 1, " Set Corner 1   ");  break;
+      case GIGAPANO_CORNER_2_SET:       lcd.at(2, 1, " Set Corner 2   ");  break;
+      case GIGAPANO_OVERLAP_SET:        lcd.at(2, 1, " Set Overlap%   ");  break;
+      case GIGAPANO_CAMERA_FIRE_TIME:   lcd.at(2, 1, " Set Static Time");  break;
+      case GIGAPANO_MINIMUM_MOVE_TIME:  lcd.at(2, 1, "Set Minimum Time");  break;
+      case GIGAPANO_TRIGGER_TYPE:       lcd.at(2, 1, "Set Trigger Type");  break;
+      case GIGAPANO_SERPENTINE:         lcd.at(2, 1, " Serpentine     ");  break;
+      case GIGAPANO_LOOP:               lcd.at(2, 1, " Loop Setting   ");  break;
+      case GIGAPANO_START:              lcd.at(2, 1, " Start Shooting ");  break;
     }
     delay(prompt_time);
     redraw = false;
@@ -137,25 +143,25 @@ void GigaPano_Menu()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    switch(joy_capture_y_map())
+    switch (joy_capture_y_map())
     {
-       case 1: // Up
+      case 1: // Up
         if (Gigapano_Item == (Gigapano_Options - 1)) Gigapano_Item = 0;
         else                                         Gigapano_Item++;
         redraw = true;
         break;
-        
+
       case -1: // Down
         if (Gigapano_Item) Gigapano_Item--;
         else               Gigapano_Item = Gigapano_Options - 1;
         redraw = true;
         break;
     }
-    
-    switch(HandleButtons())
+
+    switch (HandleButtons())
     {
       case C_Pressed:
-        switch(Gigapano_Item)
+        switch (Gigapano_Item)
         {
           case GIGAPANO_AOV_SET:           progstep_goto(201);  break;
           case GIGAPANO_CORNER_1_SET:      progstep_goto(202);  break;
@@ -169,7 +175,7 @@ void GigaPano_Menu()
           case GIGAPANO_START:             progstep_goto(210);  break;
         }
         break;
-    
+
       case Z_Pressed:
         ReturnToMenu();
         break;
@@ -178,35 +184,22 @@ void GigaPano_Menu()
 }
 
 
-
-
-
 void Set_angle_of_view()
 {
   if (redraw)
   {
-    AUX_ON = false; // turn off Aux as only PT Needed for this step
-
-    lcd.empty();
-    draw(75, 1, 1); // lcd.at(1, 1, "Set Angle o'View");
-    draw(76, 2, 2); // lcd.at(2, 2, "C-Set, Z-Reset");
+    if (POWERSAVE_PT <= PWR_MOVEONLY_ON)   enable_PT(); // Turn on power to the motors if move only
+    lcd.at(1, 1, " Set AOV Size  ");
+    lcd.at(2, 1, " C-Set  Z-Exit ");
+    delay(prompt_time);
+    lcd.at(2, 1, "    CZ-Clear   ");
     delay(prompt_time);
 
-    // Save where we where so we can return there after adjusting
-    if (Corner2_x == 0) Corner2_x = current_steps.x;
-    if (Corner2_y == 0) Corner2_y = current_steps.y;
-
-    // If its the first time, save the offset (can be out of order)
     if (AOV_Offset_X == 1) AOV_Offset_X = current_steps.x;
-    // If its already saved but the motors have moved since, update
-    else {
-      AOV_Offset_X = current_steps.x + Pan_AOV_steps;
-    }
+    else                   AOV_Offset_X = current_steps.x + Pan_AOV_steps;
 
     if (AOV_Offset_Y == 1) AOV_Offset_Y = current_steps.y;
-    else {
-      AOV_Offset_Y = current_steps.y + Tilt_AOV_steps;
-    }
+    else                   AOV_Offset_Y = current_steps.y + Tilt_AOV_steps;
 
     lcd.empty();
     draw(77, 1, 1); //lcd.at(1, 1, "Pan AOV: ");
@@ -239,63 +232,85 @@ void button_actions_set_aov()
   switch (HandleButtons())
   {
     case CZ_Held:
-        AOV_Offset_X = current_steps.x;
-        AOV_Offset_Y = current_steps.y;
-        Pan_AOV_steps = 0;
-        Tilt_AOV_steps = 0;
-        break;
-            
+      AOV_Offset_X = current_steps.x;
+      AOV_Offset_Y = current_steps.y;
+      Pan_AOV_steps = 0;
+      Tilt_AOV_steps = 0;
+      break;
+
     case C_Pressed:
-        Motor_Stop();
-        Pan_AOV_steps  = (current_steps.x - AOV_Offset_X); //Serial.println(Pan_AOV_steps);
-        Tilt_AOV_steps = (current_steps.y - AOV_Offset_Y); //Serial.println(Tilt_AOV_steps);
-        motors[0].position = current_steps.x;
-        motors[1].position = current_steps.y;
-        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
-        {
-          lcd.empty();
-          lcd.at (1, 1, "Position Reset ");
-          delay(prompt_time);
-          setupMotorMove(0, Corner2_x);
-          setupMotorMove(1, Corner2_y);
-          Corner2_x = 0;
-          Corner2_y = 0;
-          updateMotorVelocities();
-          do 
-          {
-             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
-          }
-          while (motorMoving);
-        }
+      Motor_Stop();
+      Pan_AOV_steps  = (current_steps.x - AOV_Offset_X); //Serial.println(Pan_AOV_steps);
+      Tilt_AOV_steps = (current_steps.y - AOV_Offset_Y); //Serial.println(Tilt_AOV_steps);
+      motors[0].position = current_steps.x;
+      motors[1].position = current_steps.y;
+      if (Corner2_x || Corner2_y)
+      {
         lcd.empty();
-        lcd.at (1, 5, "AOV Set");
+        lcd.at (1, 1, "Position Reset ");
+        lcd.at (2, 1, "   Corner 2    ");
         delay(prompt_time);
-        progstep_goto(200);
-        break;
+        setupMotorMove(0, Corner2_x);
+        setupMotorMove(1, Corner2_y);
+        updateMotorVelocities();
+        do
+        {
+          if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+        }
+        while (motorMoving);
+      }
+      lcd.empty();
+      lcd.at (1, 5, "AOV Set");
+      delay(prompt_time);
+      if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      progstep_goto(200);
+      break;
 
     case Z_Held:
-        Motor_Stop();
-        motors[0].position = current_steps.x;
-        motors[1].position = current_steps.y;
-        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+      Motor_Stop();
+      motors[0].position = current_steps.x;
+      motors[1].position = current_steps.y;
+      if (Corner2_x || Corner2_y)
+      {
+        lcd.empty();
+        lcd.at (1, 1, "Position Reset ");
+        lcd.at (2, 1, "   Corner 2    ");
+        delay(prompt_time);
+        setupMotorMove(0, Corner2_x);
+        setupMotorMove(1, Corner2_y);
+        updateMotorVelocities();
+        do
         {
-          lcd.empty();
-          lcd.at (1, 1, "Position Reset ");
-          delay(prompt_time);
-          setupMotorMove(0, Corner2_x);
-          setupMotorMove(1, Corner2_y);
-          Corner2_x = 0;
-          Corner2_y = 0;
-          updateMotorVelocities();
-          do 
-          {
-             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
-          }
-          while (motorMoving);
+          if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
         }
-        progstep_goto(200);
+        while (motorMoving);
+      }
+      if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
+      progstep_goto(200);
       break;
   }
+}
+
+
+String steps_to_deg_decimal(int32_t steps)
+{
+  //Function is tested for 0 to 99.99 degrees - at 100 degrees and over, the decimal place moves.
+  if (steps < 0) steps = -steps;
+  String Degree_display = "";
+
+  uint32_t temp_degs = (steps * 9L) / 4000L; //  9/4000 = 1/444.4444
+  uint16_t temp_mod =  (steps * 9L) % 4000L;
+  uint8_t  temp_tenths      = temp_mod / 400L;
+  uint8_t  temp_hundredths  = temp_mod / 40L - temp_tenths * 10;
+  uint8_t  temp_thousandths = temp_mod / 4L - temp_tenths * 100 - temp_hundredths * 10;
+
+  if (temp_degs < 10) Degree_display += " ";
+  Degree_display += temp_degs;
+  Degree_display += ".";
+  Degree_display += temp_tenths;
+  Degree_display += temp_hundredths;
+  Degree_display += temp_thousandths;
+  return Degree_display;
 }
 
 
@@ -320,38 +335,40 @@ void Move_to_Point_Pano_X(uint8_t Point)
 {
   if (redraw)
   {
-    lcd.empty();
-
+    if (POWERSAVE_PT <= PWR_MOVEONLY_ON)   enable_PT(); // Turn on power to the motors if move only
+    motors[0].position = current_steps.x;
+    motors[1].position = current_steps.y;
     if (Point == 0)
     {
-        bool changed = 0;
-        if (Corner2_x == 0) Corner2_x = current_steps.x; changed = 1;
-        if (Corner2_y == 0) Corner2_y = current_steps.y; changed = 1;
-
-        if (changed)
+      if (Corner2_x || Corner2_y)
+      {
+        lcd.empty(); //123456789ABCDEF
+        lcd.at (1, 1, "Position Reset ");
+        lcd.at (2, 1, "   Corner 1    ");
+        delay(prompt_time);
+        setupMotorMove(0, 0);
+        setupMotorMove(1, 0);
+        updateMotorVelocities();
+        do
         {
-          lcd.empty();
-          lcd.at (1, 1, "Move to Corner ");
-          delay(prompt_time);
-          motors[0].position = current_steps.x;
-          motors[1].position = current_steps.y;
-          setupMotorMove(0, 0);
-          setupMotorMove(1, 0);
-          updateMotorVelocities();
-          do 
-          {
-             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
-          }
-          while (motorMoving);
+          if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
         }
+        while (motorMoving);
+      }
+      lcd.at(1, 1, " Set Corner 1  ");
+      lcd.at(2, 1, " C-Set  Z-Exit ");
+      delay(prompt_time);
     }
-
-    if (Point == 0) draw(14, 2, 6); //lcd.at(2,6,"C-Next");
-    else draw(3, 2, 1); //lcd.at(2,1,CZ1);
+    else if (Point == 1)
+    { //123456789ABCDEF
+      lcd.empty();
+      lcd.at(1, 1, " Set Corner 2  ");
+      lcd.at(2, 1, " C-Set  Z-Exit ");
+      delay(prompt_time);
+    }
 
     //   Velocity Engine update
     DFSetup(); //setup the ISR
-    delay(prompt_time);
     redraw = false;
   }
 
@@ -370,30 +387,35 @@ void Move_to_Point_Pano_X(uint8_t Point)
 void button_actions_move_pano_x(uint8_t Point)
 {
   switch (HandleButtons())
-  {            
+  {
     case C_Pressed:
       Motor_Stop();
       motors[0].position = current_steps.x;
       motors[1].position = current_steps.y;
       if (Point == 0)
       {
-        if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+        if (Corner2_x || Corner2_y)
         {
-          lcd.empty();
+          Corner2_x -= current_steps.x; // We moved corner 1, need to add on the change to preserve corner 2
+          Corner2_y -= current_steps.y;
+          set_position(0, 0, 0); //reset for home position
+          lcd.empty(); //123456789ABCDEF
           lcd.at (1, 1, "Position Reset ");
+          lcd.at (2, 1, "   Corner 2    ");
           delay(prompt_time);
-          setupMotorMove(0, Corner2_x + current_steps.x);
-          setupMotorMove(1, Corner2_y + current_steps.y);
-          Corner2_x = 0;
-          Corner2_y = 0;
+          setupMotorMove(0, Corner2_x);
+          setupMotorMove(1, Corner2_y);
           updateMotorVelocities();
-          do 
+          do
           {
-             if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+            if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
           }
           while (motorMoving);
         }
-        set_position(0, 0, 0); //reset for home position
+        else
+        {
+          set_position(0, 0, 0); //reset for home position
+        }
         lcd.at (1, 1, " Corner 1 Set ");
         delay(prompt_time);
       }
@@ -402,9 +424,11 @@ void button_actions_move_pano_x(uint8_t Point)
       {
         calc_pano_move();
         lcd.at (1, 1, " Corner 2 Set ");
+        Corner2_x = current_steps.x;
+        Corner2_y = current_steps.y;
         delay(prompt_time);
       }
-
+      if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       progstep_goto(200);
       break;
 
@@ -412,28 +436,26 @@ void button_actions_move_pano_x(uint8_t Point)
       Motor_Stop();
       motors[0].position = current_steps.x;
       motors[1].position = current_steps.y;
-      if (Corner2_x && Corner2_y && (Corner2_x != current_steps.x || Corner2_y != current_steps.y))
+      if (Corner2_x || Corner2_y)
       {
         lcd.empty();
         lcd.at (1, 1, "Position Reset ");
+        lcd.at (2, 1, "   Corner 2    ");
         delay(prompt_time);
         setupMotorMove(0, Corner2_x + current_steps.x);
         setupMotorMove(1, Corner2_y + current_steps.y);
-        Corner2_x = 0;
-        Corner2_y = 0;
         updateMotorVelocities();
-        do 
+        do
         {
-           if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+          if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
         }
         while (motorMoving);
       }
+      if (POWERSAVE_PT > PWR_PROGRAM_ON)   disable_PT();
       progstep_goto(200);
       break;
   }
 }
-
-
 
 
 void Define_Overlap_Percentage()
@@ -455,10 +477,14 @@ void Define_Overlap_Percentage()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    olpercentage += joy_capture3(1);
-    if (!olpercentage || olpercentage > 200) { olpercentage = 99; }
-    else if (olpercentage > 99)              { olpercentage = 1;  }
-  
+    olpercentage -= joy_capture3(1);
+    if (!olpercentage || olpercentage > 200) {
+      olpercentage = 99;
+    }
+    else if (olpercentage > 99)              {
+      olpercentage = 1;
+    }
+
     if (olpercentage_last != olpercentage)
     {
       Display_olpercentage(olpercentage);
@@ -491,12 +517,12 @@ void button_actions_olpercentage()
     case C_Pressed: // perform all calcs based on Angle of view and percentage overlap
       steps_per_shot_max_x = abs(Pan_AOV_steps)  * (100 - olpercentage) / 100;
       steps_per_shot_max_y = abs(Tilt_AOV_steps) * (100 - olpercentage) / 100;
-      
-      #if DEBUG_PANO
+
+#if DEBUG_PANO
       Serial.print("steps_per_shot_max_x: "); Serial.println(steps_per_shot_max_x);
       Serial.print("steps_per_shot_max_y: "); Serial.println(steps_per_shot_max_y);
-      #endif
-      
+#endif
+
       lcd.empty();
       draw(80, 1, 3); // lcd.at(1,3,"Overlap Set");
       delay(prompt_time);
@@ -513,13 +539,112 @@ void button_actions_olpercentage()
 }
 
 
+void Set_Static_Time_Pano()
+{
+  if (redraw)
+  {
+    lcd.empty();
+    draw(22, 1, 1); //lcd.at(1,1,"Set Static Time");
+    delay(prompt_time);
+    lcd.empty();
+    draw(23, 1, 1); //lcd.at(1,1,"Stat_T:   .  sec");
+    draw(3, 2, 1); //lcd.at(2,1,CZ1);
+    max_shutter = 36000; //pano modes = 3600.0 Seconds
+    DisplayStatic_tm_Pano(static_tm);
+    redraw = false;
+  }
+
+  if ((millis() - NClastread) > NCdelay) {
+    uint16_t static_tm_last = static_tm;
+    NClastread = millis();
+    NunChuckRequestData();
+    NunChuckProcessData();
+
+    static_tm += joy_capture3(1);
+    uint16_t maxval = max_shutter;
+    uint16_t overflowval = max(maxval + 100, 65400);
+    if (!static_tm || static_tm > overflowval) { static_tm = maxval; }
+    else if (static_tm > maxval)               { static_tm = 1; }
+    
+    if (static_tm_last != static_tm) {
+      DisplayStatic_tm_Pano(static_tm);
+      delay(prompt_delay);
+    }
+    button_actions_stat_time_pano();  //read buttons, look for c button press to set interval
+  }
+}
+
+
+void DisplayStatic_tm_Pano(uint16_t static_time)
+{                                                     //89ABCDEF
+  if      (Trigger_Type == Flash_Trigger)     lcd.at(1,8," Flash  ");
+  else if (Trigger_Type == Video_Trigger)     lcd.at(1,8," Video  ");
+  else if (Trigger_Type == External_Trigger)  lcd.at(1,8," Extern ");
+  else if (Trigger_Type == Button_Trigger)    lcd.at(1,8," Button ");
+  else
+  {
+    if (static_time < 10)
+    {
+      lcd.at(1, 8, " 0.   ");
+      lcd.at(1, 11, static_time % 10);
+    }
+    else if (static_tm < 100)
+    {
+      lcd.at(1, 8, "  .   ");
+      lcd.at(1, 9, static_time / 10);
+      lcd.at(1, 11, static_time % 10);
+    }
+    else if (static_tm < 1000)
+    {
+      lcd.at(1, 8, "   .  ");
+      lcd.at(1, 9, static_time / 10);
+      lcd.at(1, 12, static_time % 10);
+    }
+    else if (static_tm < 10000)
+    { 
+      lcd.at(1, 8, "    . ");
+      lcd.at(1, 9, static_tm / 10);
+      lcd.at(1, 13, static_tm % 10);
+    }
+    else
+    {
+      lcd.at(1, 8, "    . ");
+      lcd.at(1, 8, static_time / 10);
+      lcd.at(1, 13, static_time % 10);
+    }
+  }
+}
+
+
+void button_actions_stat_time_pano()
+{
+  switch (HandleButtons())
+  {
+    case C_Pressed:
+      lcd.empty();
+      draw(25, 1, 1); //lcd.at(1,1,"Static Time Set"); // try this to push correct character
+      delay(prompt_time);
+      progstep_goto(200);
+      break;
+
+    case Z_Pressed:
+      progstep_goto(200);
+      break;
+
+    case CZ_Pressed:
+      static_tm = 1;
+      break;
+  }
+}
+
+
 void Set_PanoArrayType()
 {
   if (redraw)
   {
     lcd.empty();
     lcd.at(1, 2, "Set Array Type");
-    switch(PanoArrayType)
+    switch (PanoArrayType)
     {
       case PANO_9ShotCenter:  lcd.at(2, 3, "9-Shot Center");  total_shots_x = 3;  total_shots_y = 3;  break;
       case PANO_25ShotCenter: lcd.at(2, 2, "25-Shot Center"); total_shots_x = 5;  total_shots_y = 5;  break;
@@ -528,11 +653,11 @@ void Set_PanoArrayType()
       case PANO_9X5Type2:     lcd.at(2, 4, "9x5 Type 2");     total_shots_x = 9;  total_shots_y = 5;  break;
       case PANO_5x5TopThird:  lcd.at(2, 4, "5x5 Top1/3");     total_shots_x = 5;  total_shots_y = 5;  break;
       case PANO_7X5TopThird:  lcd.at(2, 4, "7x5 Top1/3");     total_shots_x = 7;  total_shots_y = 5;  break;
-    }	
+    }
 
     total_pano_shots = total_shots_x * total_shots_y;
     camera_total_shots = total_pano_shots + 1; //set this to allow us to compare in main loops
-    
+
     delay(prompt_time);
     redraw = false;
   }
@@ -542,18 +667,26 @@ void Set_PanoArrayType()
     NunChuckRequestData();
     NunChuckProcessData();
 
-    switch(joy_capture_y_map())
+    switch (joy_capture_y_map())
     {
       case 1: // Up
         PanoArrayType++;
-        if (PanoArrayType > PanoArrayTypeOptions)  { PanoArrayType = 1; }
-        else                                       { redraw = true; }
+        if (PanoArrayType > PanoArrayTypeOptions)  {
+          PanoArrayType = 1;
+        }
+        else                                       {
+          redraw = true;
+        }
         break;
-  
+
       case -1: // Down
         PanoArrayType--;
-        if (PanoArrayType < 1) { PanoArrayType = PanoArrayTypeOptions; }
-        else                   { redraw = true; }
+        if (PanoArrayType < 1) {
+          PanoArrayType = PanoArrayTypeOptions;
+        }
+        else                   {
+          redraw = true;
+        }
         break;
     }
 
@@ -562,7 +695,7 @@ void Set_PanoArrayType()
       case C_Pressed:
         progstep_forward();
         break;
-  
+
       case Z_Pressed:
         progstep_backward();
         break;
@@ -571,44 +704,23 @@ void Set_PanoArrayType()
 }
 
 
-String steps_to_deg_decimal(int32_t steps)
-{
-  //Function is tested for 0 to 99.99 degrees - at 100 degrees and over, the decimal place moves.
-  if (steps < 0) steps = -steps;
-  String Degree_display = "";
-
-  uint32_t temp_degs = (steps * 9L) / 4000L; //  9/4000 = 1/444.4444
-  uint16_t temp_mod =  (steps * 9L) % 4000L;
-  uint8_t  temp_tenths      = temp_mod / 400L;
-  uint8_t  temp_hundredths  = temp_mod / 40L - temp_tenths * 10;
-  uint8_t  temp_thousandths = temp_mod / 4L - temp_tenths * 100 - temp_hundredths * 10;
-  
-  if (temp_degs < 10) Degree_display += " ";
-  Degree_display += temp_degs;
-  Degree_display += ".";
-  Degree_display += temp_tenths;
-  Degree_display += temp_hundredths;
-  Degree_display += temp_thousandths;
-  return Degree_display;
-}
-
-
 void Pano_Review_Confirm()
 {
   if (redraw)
   {
+    calc_pano_move();
     lcd.empty();
     draw(41, 1, 4); //lcd.at(1,4,"Review and");
     draw(42, 2, 2); //lcd.at(2,2,"Confirm Setting");
     delay(prompt_time);
-    
+
     reviewprog = 1;
     camera_fired = 0;
-    
+
     local_total_pano_move_time = total_shots_x * total_shots_y * sqrt(steps_per_shot_max_x / (PAN_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
     local_total_pano_move_time += total_shots_y * sqrt(steps_per_shot_max_y / (TILT_MAX_JOG_STEPS_PER_SEC / 2.0)) * 2;
     total_pano_move_time = local_total_pano_move_time;
-    
+
     lcd.empty();
     Pano_DisplayReviewProg();
     display_last_tm = millis();
@@ -641,11 +753,11 @@ void Pano_Review_Confirm()
 
 void pano_button_actions_review()
 {
-  switch(HandleButtons())
+  switch (HandleButtons())
   {
     case C_Pressed:
       lcd.empty();
-  
+
       if (start_delay_sec)
       {
         lcd.at(1, 2, "Delaying Start");
@@ -653,22 +765,22 @@ void pano_button_actions_review()
         lcd.empty();
       }
       disable_AUX();  //
-  
+
       draw(49, 1, 1); //lcd.at(1,1,"Program Running");
       delay(prompt_time);
-  
+
       //static_tm = 1; //use a tenth of a second
       //Trigger_Type = ; // calc interval based on static time only
       //Trigger_Type = static_tm; // calc interval based on static time only
       interval = (static_tm + 3) * 100; //tenths of a second to ms
       interval_tm = 0; //set this to 0 to immediately trigger the first shot
-  
+
       if (Trigger_Type > External_Trigger)
       { //SMS Mode
         lcd.empty(); //clear for non video
         progstep = 250; //  move to the main programcamera_real_fire
       }
-  
+
       camera_fired = 0; //reset the counter
       Program_Engaged = true; //leave this for pano
       Flag_Wait_For_Trigger = true; //just to start off first shot immediately
@@ -725,8 +837,12 @@ void Pano_DisplayReviewProg()
       lcd.at(2, 2, "Press C Button");
 
       start_delay_sec += joy_capture3(1);
-      if (start_delay_sec > 60000)      { start_delay_sec = 1800; }
-      else if (start_delay_sec > 1800)  { start_delay_sec = 0;    }
+      if (start_delay_sec > 60000)      {
+        start_delay_sec = 1800;
+      }
+      else if (start_delay_sec > 1800)  {
+        start_delay_sec = 0;
+      }
       delay(prompt_delay);
       lcd.at(1, 10, start_delay_sec);
       break;
@@ -746,8 +862,12 @@ void move_motors_pano_basic()
 
   index_y = camera_fired / total_shots_x;
   x_mod_pass_1 = camera_fired % total_shots_x;
-  if(SERPENTINE) { even_odd_row = index_y % 2; }
-  else           { even_odd_row = 0; }
+  if (SERPENTINE) {
+    even_odd_row = index_y % 2;
+  }
+  else           {
+    even_odd_row = 0;
+  }
   slope_adjustment = even_odd_row * ((total_shots_x - 1) - 2 * x_mod_pass_1);
   index_x = x_mod_pass_1 + slope_adjustment;
 
@@ -774,8 +894,12 @@ void move_motors_pano_accel()
 
   index_y = camera_fired / total_shots_x;
   x_mod_pass_1 = camera_fired % total_shots_x;
-  if(SERPENTINE) { even_odd_row = index_y % 2; }
-  else           { even_odd_row = 0; }
+  if (SERPENTINE) {
+    even_odd_row = index_y % 2;
+  }
+  else           {
+    even_odd_row = 0;
+  }
   slope_adjustment = even_odd_row * ((total_shots_x - 1) - 2 * x_mod_pass_1);
   index_x = x_mod_pass_1 + slope_adjustment;
 
@@ -800,7 +924,7 @@ void move_motors_accel_array()
   int32_t x = 0;
   int32_t y = 0;
 
-  switch(PanoArrayType)
+  switch (PanoArrayType)
   {
     case PANO_9ShotCenter:
       x = steps_per_shot_max_x * OnionArray9[camera_fired][0];
@@ -867,7 +991,7 @@ void Move_to_Origin()
 
 void calc_pano_move() //pano - calculate other values
 {
-  // Assumes there is always some remainder from the division adding 1 image, 
+  // Assumes there is always some remainder from the division adding 1 image,
   // Also need a second extra image as it doesnt account for the width of the image
   total_shots_x = (abs(current_steps.x) / steps_per_shot_max_x) + 2;
   total_shots_y = (abs(current_steps.y) / steps_per_shot_max_y) + 2;
@@ -896,14 +1020,14 @@ void button_actions290()
     case C_Pressed:
       camera_fired = 0; //reset the counter
       Program_Engaged = true; //leave this for pano
-      redraw = true; 
+      redraw = true;
       progstep = 250;
       current_steps.x = motors[0].position; //get our motor position variable synced
       current_steps.y = motors[1].position; //get our motor position variable synced
       updateMotorVelocities();
-      do 
+      do
       {
-         if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
+        if (!nextMoveLoaded)  updateMotorVelocities();  //finished up the interrupt routine
       }
       while (motorMoving);
       break;

@@ -122,7 +122,7 @@ uint8_t      Move_State_3PT = LeadIn3PT;
 
 
 enum Trigger_Type : uint16_t {
-  Feedback_Trigger    = 1,  // Wait for camera hot shoe singal feedback to advance
+  Flash_Trigger       = 1,  // Wait for camera hot shoe flash signal + static time to advance
   Video_Trigger       = 2,  // Basically just keep the camera pins held for the entire program
   External_Trigger    = 3,  // Only advance a program when an external trigger signal is recieved
   Button_Trigger      = 4,  // Only advance a program when the C button is held
