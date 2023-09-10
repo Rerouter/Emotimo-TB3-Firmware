@@ -1,33 +1,50 @@
 # Emotimo-TB3-Firmware
 My work on improving the firmware from the last release, I'm not opposed to easy enough requests, 
 
-Changes so far:
-- Currently broken the X point moves.... working on it, my usual work is panoramas so took a while to notice
-- Standardised all Button and joystick handling
-- Standardised min-max in user controlled settings and made options roll over instead of constraining at the ends
-- Rescoped a lot of variables that didnt need to be global, and moved globals that didnt need to be user accessed
-- Started work on reducing most of the floating point math that did not need to be floating point.
-- Made all functions use the same set max speed limits, allowing the user to instead control.
-- Started trying to shift code to files where it makes sense for them to live
+Rewrite Progress:
 
-Nunchuck Related:
-- Wrapped the button handling up into its own function to make behaviour consistant
-- Cleaned the joystick handling into a smaller set of functions, and made user control follow the speed limits
-- Added deadband to all joystick handling, and cleaned up the exponential functions
-- Made it that if the nunchuck disconnects while user is controlling motion, it will stop moving
-- Stopped hammering on the nunchuck faster than it can actually update, greatly reducing read errors.
+Panoramas class now handles Timelapses, Panoramas, Keyframe Moves and any combination of the above, so if your after a Keyframed Hyperlapse of Panoramas, I have you covered and would really love to know who you are :)
+- Needs better documentation for plumbing as it has too much packed in that brick
+- It needs the GUI parts to set up and run it fleshed out, including a pause menu
+- As part of the GUI I want to do a dry run option where it will show you how it plans to move if there are keyframes or the corners of the panorama
 
-LCD Related:
-- Increased LCD baud rate up to 57600 instead of the original 9600
-- Standardised all commands issued to the lcd
-- Fixed some LCD text offsets / typos
+LCD class talks via Bit-Bang Serial, its as non blocking as I can make it, you queue up a screen of content and check in when its done,
+- Each function checks if there is room in the buffer to write before it does, its there more to catch any issues in defining the menu's where I did not wait long enoug
+- I remade the clear functions, as printing 2x20 characters takes less time than the proper clear command interestingly,
+- Every command the LCD supports is covered, everything is non blocking,
 
-Camera Related:
-- Wrapped the camera up into self contained functions so taking photos in functions is simplified
-- Laid the groundwork for a minimum focus time before taking a photo, to make the time an image is taken more consistant
-- Started working on external trigger modes in all modes, my hope being to connect the trigger to the camera flash shoe pin, and only update after the camera has completed a shot, e.g. if a focus takes longer than expected.
+Motion Control, Took Multi/AccelStepper and converted the whole thing over to non blocking integer math and added better acceleration profiles
+- It still needs polishing as it really could be shifted over to compile time sizing of the number of instances,
+- the handle function might need to pass off things to the task schedualer as it does not really need to babysit them
+- Should move the powersaving functionality into AccelStepper, to keep Multistepper as a glorified group of for loops
+- It can now do proper linear acceleration and torque limited curves for steppers, it needs to be tested but should be very fast
+- I don't like using SQRT in loops, but the approximation method is fast enough for most use cases, you can drop the approximation counter down to 8 if its really needed, 10 is better
 
-Panorama Related:
-- Improved accuracy of time estimates significantly, now should be within 5% as it does try and account for move time, not just image time
-- Extended maximum exposure time out to 1 hour, for astrophotography related things, in reality 15 minutes would be enough, but why limit 
-- Built a proper pause menu, you can now skip forward or backward to any image, change the exposure time, and hopefully more soon.
+Task Schedualer,
+- It exists so that I don't need to hammer calling each libraries run / handle functions, when something is due to be called it will run,
+- you pass in a libraries handle function and it will keep calling it until the timestamp returned is 0,
+- It sorts the tasks as they are added, moving some of the computation cost so that the check that something is due to run is a single check per loop for arbitary many items
+- Eventually I would want to hook it up to a hardware timer such that I'm not needing to hammer anything at all,
+
+GUI
+- I've got the core fleshed out, its structure definition will not be that different from the older style, but it will be much more dense and easier to change things around on.
+- Currently it falls into 3 cases, a Menu. Setting or Jogging, where if you want to just call a function you point it at the function to call.
+- It needs the old structure migrated across and plumbed into the different classes,
+
+Nunchuck
+- Its been fleshed out, but it needs further simplification for the button logic, enums in the GUI code will be nice, 
+- I'm working on the button states being released, pressed or held, which gives quite a few possible combinations to hopefully simplify some things,
+- Joystick direction code is about as good as I can get it, Accelerometer code now can get pitch / roll, less sure how I want to use these
+- Does proper drift correction and the deadband is correcly approached so that there is no sharp knee when you cross it.
+
+Camera class handles the camera related stuff, its effectivly just a state machine
+- I have connected up the external trigger code in here, but needs some thinking on plumbing
+- e.g. if you hooked the trigger signal up to the flash shoe to have things iterate forward as fast as the camera allows and would lead to pausing on focus fail
+
+What else:
+- Floating point is gone apart from 1 place
+- Array accesses now use sizeof() to make sure things are hard to take out of bounds
+- There are very few if any globals at present, and I will likely need to slice up the EEPROM to store a settings item per class
+- The EEPROM will likely end up a struct of structs to keep reading and writing fairly clean as things shift about
+- It easily fits on an uno now, its night and day in terms of program space and RAM requirements, but the GUI will chew back some of the program space
+- I need to re-add the dragonFrame serial protocol, I'm also planning to make it togglable for LX200 protocol for widefeild astrophotography
